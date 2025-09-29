@@ -437,4 +437,7 @@ const styles = StyleSheet.create({
     color: Colors.light.muted,
     marginTop: Spacing.xs,
   },
+  skeletonContainer: {
+    marginTop: Spacing.md,
+  },
 });
