@@ -478,13 +478,50 @@ metadata:
   test_sequence: 1
   run_ui: false
 
+  - task: "Phase 0 Polish - SmartButton Integration"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/SmartButton.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "✅ SmartButton component fully enhanced with disabled/inFlight states, debouncing, web a11y (onClick + onPress, Enter/Space support, visible focus ring), loading spinners. Replaced TouchableOpacity in Dashboard, Messages, and Auth screens. Component includes proper accessibility labels, 44pt minimum hit area, and cross-platform compatibility."
+
+  - task: "Phase 0 Polish - Skeleton Loaders"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/SkeletonLoader.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "✅ Comprehensive skeleton loader system created with pre-built components (SkeletonText, SkeletonCard, SkeletonConversationItem, SkeletonMealCard). Integrated into Messages screen for initial loading and Dashboard for meal plan generation loading. Animated shimmer effect for better UX feedback."
+
+  - task: "Phase 0 Polish - Auth Hardening Complete"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/services/api.ts, /app/frontend/src/context/AuthContext.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "✅ Auth hardening already complete from previous phase: Token refresh logic on 401 errors, French error messages, comprehensive logout clearing both storages, persistent authentication state management. No additional changes needed."
+
 test_plan:
   current_focus:
-    - "Phase 0 Completion Verification"
-    - "Comprehensive Test Report Generation"
+    - "Phase 0 Polish Completion Testing"
+    - "SmartButton Integration Verification"
+    - "Skeleton Loader UX Testing"
+    - "Web Accessibility Testing (focus ring, keyboard navigation)"
   stuck_tasks:
     - "AI Meal Plan Generation - budget exceeded"
-    - "Frontend Browser Testing - Expo tunnel conflicts"
   test_all: false
   test_priority: "high_first"
 
