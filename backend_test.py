@@ -402,7 +402,7 @@ class YaCookAPITester:
                 if response.status in [200, 201]:
                     data = await response.json()
                     comment_id = data.get("id")
-                    logger.info(f"✅ Comment created: {data.get('content')[:50]}...")
+                    logger.info(f"✅ Comment created: {data.get('body')[:50]}...")
                 else:
                     logger.error(f"❌ Comment creation failed with status {response.status}")
                     text = await response.text()
