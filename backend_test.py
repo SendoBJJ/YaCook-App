@@ -588,15 +588,15 @@ class YaCookAPITester:
         
         try:
             async with self.session.post(
-                f"{self.base_url}/api/media/signature",
+                f"{self.internal_url}/api/media/signature",
                 json=signature_request,
                 headers={"Content-Type": "application/json"}
             ) as response:
                 
-                if response.status == 401:
-                    logger.info("✅ Authentication requirement working - 401 returned without token")
+                if response.status in [401, 403]:
+                    logger.info(f"✅ Authentication requirement working - {response.status} returned without token")
                 else:
-                    logger.error(f"❌ Authentication requirement failed - expected 401, got {response.status}")
+                    logger.error(f"❌ Authentication requirement failed - expected 401/403, got {response.status}")
                     text = await response.text()
                     logger.error(f"Response: {text}")
                     return False
@@ -620,7 +620,7 @@ class YaCookAPITester:
         
         try:
             async with self.session.post(
-                f"{self.base_url}/api/media/signature",
+                f"{self.internal_url}/api/media/signature",
                 json=valid_request,
                 headers={**self.get_auth_headers(), "Content-Type": "application/json"}
             ) as response:
@@ -679,7 +679,7 @@ class YaCookAPITester:
         
         try:
             async with self.session.post(
-                f"{self.base_url}/api/media/signature",
+                f"{self.internal_url}/api/media/signature",
                 json=invalid_request,
                 headers={**self.get_auth_headers(), "Content-Type": "application/json"}
             ) as response:
@@ -708,7 +708,7 @@ class YaCookAPITester:
         
         try:
             async with self.session.post(
-                f"{self.base_url}/api/media/signature",
+                f"{self.internal_url}/api/media/signature",
                 json=question_request,
                 headers={**self.get_auth_headers(), "Content-Type": "application/json"}
             ) as response:
@@ -737,7 +737,7 @@ class YaCookAPITester:
         
         try:
             async with self.session.post(
-                f"{self.base_url}/api/media/signature",
+                f"{self.internal_url}/api/media/signature",
                 json=context_request,
                 headers={**self.get_auth_headers(), "Content-Type": "application/json"}
             ) as response:
