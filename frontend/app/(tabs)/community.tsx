@@ -442,14 +442,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.background,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
+    paddingHorizontal: Spacing.md,
   },
   tab: {
     flex: 1,
     paddingVertical: Spacing.md,
     alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomWidth: 2,
     borderBottomColor: Colors.light.primary,
   },
   tabText: {
@@ -461,12 +463,127 @@ const styles = StyleSheet.create({
     color: Colors.light.primary,
     fontWeight: FontWeight.semibold,
   },
-  scrollView: {
-    flex: 1,
-  },
   scrollContent: {
+    flexGrow: 1,
+  },
+  feedContent: {
     paddingBottom: 100,
   },
+  // Skeleton styles
+  skeletonContainer: {
+    padding: Spacing.lg,
+  },
+  skeletonCard: {
+    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    ...Shadow.small,
+  },
+  skeletonHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  skeletonAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.light.border,
+    marginRight: Spacing.md,
+  },
+  skeletonAuthor: {
+    flex: 1,
+  },
+  skeletonAuthorName: {
+    height: 16,
+    backgroundColor: Colors.light.border,
+    borderRadius: 4,
+    width: '40%',
+    marginBottom: 4,
+  },
+  skeletonAuthorTime: {
+    height: 12,
+    backgroundColor: Colors.light.border,
+    borderRadius: 4,
+    width: '25%',
+  },
+  skeletonTitle: {
+    height: 20,
+    backgroundColor: Colors.light.border,
+    borderRadius: 4,
+    width: '80%',
+    marginBottom: Spacing.sm,
+  },
+  skeletonDescription: {
+    height: 14,
+    backgroundColor: Colors.light.border,
+    borderRadius: 4,
+    width: '100%',
+    marginBottom: Spacing.md,
+  },
+  skeletonTags: {
+    flexDirection: 'row',
+  },
+  skeletonTag: {
+    height: 24,
+    width: 60,
+    backgroundColor: Colors.light.border,
+    borderRadius: 12,
+    marginRight: Spacing.xs,
+  },
+  // Empty state styles
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xxl,
+  },
+  emptyStateTitle: {
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
+    color: Colors.light.text,
+    textAlign: 'center',
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
+  },
+  emptyStateText: {
+    fontSize: FontSize.md,
+    color: Colors.light.muted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: Spacing.xl,
+  },
+  emptyStateCTAs: {
+    width: '100%',
+    gap: Spacing.md,
+  },
+  emptyCTAButton: {
+    flexDirection: 'row',
+    backgroundColor: Colors.light.primary,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.medium,
+  },
+  secondaryCTAButton: {
+    backgroundColor: Colors.light.background,
+    borderWidth: 2,
+    borderColor: Colors.light.primary,
+  },
+  emptyCTAButtonText: {
+    color: Colors.light.background,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    marginLeft: Spacing.sm,
+  },
+  secondaryCTAButtonText: {
+    color: Colors.light.primary,
+  },
+  // AI Prompt styles
   aiPromptCard: {
     backgroundColor: Colors.light.background,
     margin: Spacing.lg,
@@ -489,6 +606,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.light.muted,
     marginBottom: Spacing.lg,
+    lineHeight: 20,
   },
   aiPromptButton: {
     flexDirection: 'row',
@@ -508,102 +626,72 @@ const styles = StyleSheet.create({
   disabledButton: {
     opacity: 0.7,
   },
-  feed: {
-    paddingHorizontal: Spacing.lg,
-  },
-  recipeCard: {
+  // Post styles
+  postCard: {
     backgroundColor: Colors.light.background,
+    marginHorizontal: Spacing.lg,
+    marginVertical: Spacing.sm,
+    padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.lg,
     ...Shadow.medium,
   },
-  recipeImagePlaceholder: {
-    height: 200,
-    backgroundColor: Colors.light.card,
-    borderTopLeftRadius: BorderRadius.lg,
-    borderTopRightRadius: BorderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  recipeContent: {
-    padding: Spacing.lg,
-  },
-  recipeHeader: {
+  postHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.sm,
+    alignItems: 'center',
+    marginBottom: Spacing.md,
   },
-  recipeTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
-    color: Colors.light.text,
-    flex: 1,
-    marginRight: Spacing.md,
-  },
-  recipeAuthor: {
+  authorInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   authorAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.xs,
+    marginRight: Spacing.md,
   },
   authorInitial: {
     color: Colors.light.background,
-    fontSize: FontSize.sm,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.semibold,
   },
   authorName: {
-    fontSize: FontSize.sm,
-    color: Colors.light.muted,
+    fontSize: FontSize.md,
     fontWeight: FontWeight.medium,
+    color: Colors.light.text,
   },
-  recipeDescription: {
+  postTime: {
+    fontSize: FontSize.xs,
+    color: Colors.light.muted,
+    marginTop: 2,
+  },
+  postTypeIndicator: {
+    padding: Spacing.xs,
+  },
+  postTitle: {
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    color: Colors.light.text,
+    marginBottom: Spacing.sm,
+    lineHeight: 24,
+  },
+  postDescription: {
     fontSize: FontSize.md,
     color: Colors.light.muted,
-    marginBottom: Spacing.md,
     lineHeight: 20,
-  },
-  recipeInfo: {
     marginBottom: Spacing.md,
   },
-  recipeStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: Spacing.md,
-  },
-  statText: {
-    fontSize: FontSize.sm,
-    color: Colors.light.muted,
-    marginLeft: 4,
-  },
-  difficultyBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.sm,
-    marginLeft: 'auto',
-  },
-  difficultyText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semibold,
-    textTransform: 'capitalize',
-  },
-  tags: {
+  postTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: Spacing.md,
   },
-  tag: {
+  postTag: {
     backgroundColor: Colors.light.card,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
@@ -611,7 +699,7 @@ const styles = StyleSheet.create({
     marginRight: Spacing.xs,
     marginBottom: Spacing.xs,
   },
-  tagText: {
+  postTagText: {
     fontSize: FontSize.xs,
     color: Colors.light.text,
     fontWeight: FontWeight.medium,
@@ -621,35 +709,59 @@ const styles = StyleSheet.create({
     color: Colors.light.muted,
     alignSelf: 'center',
   },
-  recipeActions: {
+  postEngagement: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     paddingTop: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: Colors.light.border,
   },
-  actionButton: {
+  engagementItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  actionText: {
+  engagementText: {
     fontSize: FontSize.sm,
     color: Colors.light.muted,
     marginLeft: 4,
     fontWeight: FontWeight.medium,
   },
-  loadMoreButton: {
-    backgroundColor: Colors.light.background,
-    margin: Spacing.lg,
-    marginTop: 0,
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+  // Footer loader
+  footerLoader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    ...Shadow.small,
+    paddingVertical: Spacing.lg,
   },
-  loadMoreText: {
-    fontSize: FontSize.md,
-    color: Colors.light.primary,
-    fontWeight: FontWeight.semibold,
+  footerLoaderText: {
+    fontSize: FontSize.sm,
+    color: Colors.light.muted,
+    marginLeft: Spacing.sm,
+  },
+  // Floating Action Buttons
+  fabContainer: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: Spacing.md,
+  },
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.light.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Shadow.large,
+  },
+  secondaryFab: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.light.background,
+    borderWidth: 2,
+    borderColor: Colors.light.primary,
   },
 });
