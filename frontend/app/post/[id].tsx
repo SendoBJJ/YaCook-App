@@ -3,22 +3,21 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
-  Alert,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
+  Image,
+  Dimensions,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useAuth } from '../../src/context/AuthContext';
 import { postsApi, commentsApi } from '../../src/services/api';
 import { Colors } from '../../src/constants/Colors';
-import { Spacing, BorderRadius, FontSize, FontWeight, Shadow } from '../../src/constants/Layout';
-import { Post, Comment } from '../../src/types';
+import { Spacing, BorderRadius, FontSize, FontWeight } from '../../src/constants/Layout';
+import { SmartButton } from '../../src/components/SmartButton';
+import { SkeletonText, SkeletonCard } from '../../src/components/SkeletonLoader';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 export default function PostDetailScreen() {
   const { user } = useAuth();
