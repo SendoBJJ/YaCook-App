@@ -716,10 +716,17 @@ async def create_comment(
         
         return CommentResponse(
             id=str(result.inserted_id),
+            body=created_comment["body"],
+            post_id=str(created_comment["post_id"]),
+            parent_id=str(created_comment["parent_id"]) if created_comment.get("parent_id") else None,
             author_id=str(user_id),
             author_name=author.get("display_name") or f"{author.get('first_name', '')} {author.get('last_name', '')}".strip(),
             author_avatar=author.get("avatar_url"),
-            **{k: v for k, v in created_comment.items() if k not in ["_id", "author_id"]}
+            likes_count=created_comment["likes_count"],
+            replies_count=created_comment["replies_count"],
+            is_deleted=created_comment["is_deleted"],
+            created_at=created_comment["created_at"],
+            updated_at=created_comment["updated_at"]
         )
         
     except HTTPException:
