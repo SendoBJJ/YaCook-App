@@ -63,11 +63,41 @@ export default function DashboardScreen() {
       if (response.success) {
         setMealPlan(response.meal_plan);
       } else {
-        Alert.alert('Erreur', 'Impossible de générer le plan de repas');
+        // Friendly fallback message
+        Alert.alert(
+          'Service temporairement indisponible', 
+          'Plan de repas indisponible pour le moment. Réessayez plus tard.'
+        );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating meal plan:', error);
-      Alert.alert('Erreur', 'Erreur lors de la génération du plan de repas');
+      
+      // Log detailed error for debugging
+      console.error('AI Meal Plan Generation Error:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        timestamp: new Date().toISOString(),
+      });
+      
+      // User-friendly French error message
+      if (error.response?.status === 500) {
+        Alert.alert(
+          'Service temporairement indisponible',
+          'Plan de repas indisponible pour le moment. Réessayez plus tard.'
+        );
+      } else if (error.response?.status === 429) {
+        Alert.alert(
+          'Limite temporaire atteinte',
+          'Trop de demandes récentes. Veuillez patienter avant de réessayer.'
+        );
+      } else {
+        Alert.alert(
+          'Erreur de connexion',
+          'Vérifiez votre connexion internet et réessayez.'
+        );
+      }
     } finally {
       setIsGenerating(false);
     }
