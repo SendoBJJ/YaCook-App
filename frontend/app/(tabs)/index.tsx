@@ -205,7 +205,7 @@ export default function DashboardScreen() {
         }
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Header with user greeting */}
+        {/* Header with user greeting and avatar */}
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>
@@ -213,9 +213,7 @@ export default function DashboardScreen() {
             </Text>
             <Text style={styles.subGreeting}>Prêt à cuisiner aujourd'hui ?</Text>
           </View>
-          <TouchableOpacity onPress={handleLogout}>
-            <Ionicons name="log-out" size={24} color={Colors.light.muted} />
-          </TouchableOpacity>
+          {renderUserAvatar()}
         </View>
 
         {/* Calorie progress ring */}
