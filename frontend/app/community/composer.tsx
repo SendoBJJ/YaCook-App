@@ -18,25 +18,117 @@ import * as ImagePicker from 'expo-image-picker';
 import { postsApi } from '../../src/services/api';
 import { uploadImageToCloudinary } from '../../src/services/cloudinaryService';
 import { Colors } from '../../src/constants/Colors';
-import { Spacing, BorderRadius, FontSize, FontWeight, Shadow } from '../../src/constants/Layout';
+import { Spacing, BorderRadius, FontSize, FontWeight } from '../../src/constants/Layout';
 import { SmartButton } from '../../src/components/SmartButton';
 import { Toast } from '../../src/components/Toast';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-interface PostType {
-  type: 'recipe' | 'question';
+interface Ingredient {
+  name: string;
+  quantity: string;
+  unit: string;
+}
+
+interface Step {
+  order: number;
+  instruction: string;
 }
 
 export default function ComposerScreen() {
   const params = useLocalSearchParams<{ type?: string }>();
-  const [postType, setPostType] = useState<'recipe' | 'question'>((params.type as 'recipe' | 'question') || 'recipe');
+  const postType = (params.type as 'recipe' | 'question') || 'recipe';
+
+  // Basic post fields
   const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
+  const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
-  const [isPublic, setIsPublic] = useState(true);
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Recipe-specific fields
+  const [servings, setServings] = useState('4');
+  const [prepTime, setPrepTime] = useState('');
+  const [cookTime, setCookTime] = useState('');
+  const [ingredients, setIngredients] = useState<Ingredient[]>([
+    { name: '', quantity: '', unit: 'g' }
+  ]);
+  const [steps, setSteps] = useState<Step[]>([
+    { order: 1, instruction: '' }
+  ]);
+
+  // State management
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
+  useEffect(() => {
+    // Request permissions for image picker
+    (async () => {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission requise',
+          'L\'accès à la galerie photo est nécessaire pour ajouter des images.'
+        );
+      }
+    })();
+  }, []);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+        exif: false,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        setImageUri(asset.uri);
+        
+        // Start upload immediately
+        setIsImageUploading(true);
+        setUploadProgress(0);
+        
+        try {
+          await uploadImageToCloudinary(asset.uri, {
+            postType,
+            tags: [postType, 'community'],
+            onProgress: (progress) => setUploadProgress(progress),
+            onComplete: (result) => {
+              console.log('Upload successful:', result.secure_url);
+              setImageUri(result.secure_url);
+              showToast('Image uploadée avec succès !');
+            },
+            onError: (error) => {
+              console.error('Upload failed:', error);
+              showToast('Échec de l\'upload de l\'image');
+              setImageUri(null);
+            }
+          });
+        } finally {
+          setIsImageUploading(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      showToast('Erreur lors de la sélection de l\'image');
+    }
+  };
+
+  const removeImage = () => {
+    setImageUri(null);
+    setUploadProgress(0);
+  };
 
   const handleAddTag = () => {
     if (currentTag.trim() && !tags.includes(currentTag.trim()) && tags.length < 5) {
@@ -49,247 +141,430 @@ export default function ComposerScreen() {
     setTags(prev => prev.filter(tag => tag !== tagToRemove));
   };
 
-  const handleSubmit = async () => {
-    if (!title.trim() || !body.trim()) {
-      Alert.alert('Erreur', 'Veuillez remplir le titre et le contenu');
-      return;
+  const addIngredient = () => {
+    setIngredients([...ingredients, { name: '', quantity: '', unit: 'g' }]);
+  };
+
+  const removeIngredient = (index: number) => {
+    if (ingredients.length > 1) {
+      setIngredients(ingredients.filter((_, i) => i !== index));
     }
+  };
+
+  const updateIngredient = (index: number, field: keyof Ingredient, value: string) => {
+    const updatedIngredients = ingredients.map((ingredient, i) =>
+      i === index ? { ...ingredient, [field]: value } : ingredient
+    );
+    setIngredients(updatedIngredients);
+  };
+
+  const addStep = () => {
+    setSteps([...steps, { order: steps.length + 1, instruction: '' }]);
+  };
+
+  const removeStep = (index: number) => {
+    if (steps.length > 1) {
+      const updatedSteps = steps
+        .filter((_, i) => i !== index)
+        .map((step, i) => ({ ...step, order: i + 1 }));
+      setSteps(updatedSteps);
+    }
+  };
+
+  const updateStep = (index: number, instruction: string) => {
+    const updatedSteps = steps.map((step, i) =>
+      i === index ? { ...step, instruction } : step
+    );
+    setSteps(updatedSteps);
+  };
+
+  const validateForm = (): boolean => {
+    if (!title.trim()) {
+      showToast('Le titre est requis');
+      return false;
+    }
+
+    if (!description.trim()) {
+      showToast('La description est requise');
+      return false;
+    }
+
+    if (postType === 'recipe') {
+      const hasValidIngredients = ingredients.some(ing => 
+        ing.name.trim() && ing.quantity.trim()
+      );
+      if (!hasValidIngredients) {
+        showToast('Au moins un ingrédient complet est requis');
+        return false;
+      }
+
+      const hasValidSteps = steps.some(step => step.instruction.trim());
+      if (!hasValidSteps) {
+        showToast('Au moins une étape d\'instruction est requise');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
     try {
       setIsSubmitting(true);
-      
+
       const postData = {
         type: postType,
         title: title.trim(),
-        body: body.trim(),
+        content: description.trim(),
+        image_url: imageUri || undefined,
         tags: tags,
-        is_public: isPublic
+        ...(postType === 'recipe' && {
+          recipe_data: {
+            servings: parseInt(servings) || 4,
+            prep_time_minutes: prepTime ? parseInt(prepTime) : undefined,
+            cook_time_minutes: cookTime ? parseInt(cookTime) : undefined,
+            ingredients: ingredients
+              .filter(ing => ing.name.trim() && ing.quantity.trim())
+              .map(ing => ({
+                name: ing.name.trim(),
+                quantity: ing.quantity.trim(),
+                unit: ing.unit
+              })),
+            instructions: steps
+              .filter(step => step.instruction.trim())
+              .map(step => ({
+                order: step.order,
+                instruction: step.instruction.trim()
+              }))
+          }
+        })
       };
 
-      const newPost = await postsApi.createPost(postData);
-      
-      Alert.alert(
-        'Post créé ! ✅',
-        `Votre ${postType === 'recipe' ? 'recette' : 'question'} a été publiée avec succès.`,
-        [
-          {
-            text: 'Voir le post',
-            onPress: () => {
-              router.dismiss();
-              router.push({
-                pathname: '/post/[id]',
-                params: { id: newPost.id }
-              });
-            }
-          },
-          {
-            text: 'Continuer',
-            onPress: () => router.dismiss(),
-            style: 'cancel'
-          }
-        ]
-      );
-      
-    } catch (error) {
+      console.log('🚀 Creating post:', postData);
+      const response = await postsApi.createPost(postData);
+
+      if (response.success) {
+        showToast(postType === 'recipe' ? 'Recette créée avec succès !' : 'Question publiée avec succès !');
+        // Navigate back after brief delay
+        setTimeout(() => {
+          router.back();
+        }, 1500);
+      } else {
+        throw new Error('Failed to create post');
+      }
+
+    } catch (error: any) {
       console.error('Error creating post:', error);
-      Alert.alert('Erreur', 'Impossible de créer le post. Veuillez réessayer.');
+      showToast(error.response?.data?.detail || 'Erreur lors de la publication');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    if (title.trim() || body.trim()) {
-      Alert.alert(
-        'Abandonner ?',
-        'Voulez-vous vraiment abandonner ? Vos modifications seront perdues.',
-        [
-          { text: 'Continuer l\'édition', style: 'cancel' },
-          { text: 'Abandonner', style: 'destructive', onPress: () => router.dismiss() }
-        ]
-      );
-    } else {
-      router.dismiss();
-    }
-  };
-
-  const renderPostTypeSelector = () => (
-    <View style={styles.postTypeContainer}>
-      <Text style={styles.sectionTitle}>Type de post</Text>
-      <View style={styles.postTypeSelector}>
-        <TouchableOpacity
-          style={[styles.typeButton, postType === 'recipe' && styles.activeTypeButton]}
-          onPress={() => setPostType('recipe')}
-          activeOpacity={0.8}
+  const renderImageSection = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Photo (optionnelle)</Text>
+      
+      {imageUri ? (
+        <View style={styles.imageContainer}>
+          <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+          {isImageUploading && (
+            <View style={styles.uploadOverlay}>
+              <View style={styles.progressContainer}>
+                <View style={[styles.progressBar, { width: `${uploadProgress}%` }]} />
+              </View>
+              <Text style={styles.uploadText}>Upload: {uploadProgress}%</Text>
+            </View>
+          )}
+          <SmartButton
+            style={styles.removeImageButton}
+            onPress={removeImage}
+            disabled={isImageUploading}
+            accessibilityLabel="Supprimer l'image"
+          >
+            <Ionicons name="close" size={20} color={Colors.light.background} />
+          </SmartButton>
+        </View>
+      ) : (
+        <SmartButton
+          style={styles.addImageButton}
+          onPress={pickImage}
+          disabled={isImageUploading}
+          accessibilityLabel="Ajouter une image"
         >
-          <Ionicons 
-            name="restaurant" 
-            size={20} 
-            color={postType === 'recipe' ? Colors.light.background : Colors.light.primary} 
-          />
-          <Text style={[styles.typeButtonText, postType === 'recipe' && styles.activeTypeButtonText]}>
-            Recette
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.typeButton, postType === 'question' && styles.activeTypeButton]}
-          onPress={() => setPostType('question')}
-          activeOpacity={0.8}
-        >
-          <Ionicons 
-            name="help-circle" 
-            size={20} 
-            color={postType === 'question' ? Colors.light.background : Colors.light.primary} 
-          />
-          <Text style={[styles.typeButtonText, postType === 'question' && styles.activeTypeButtonText]}>
-            Question
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <Ionicons name="image" size={24} color={Colors.light.primary} />
+          <Text style={styles.addImageText}>Ajouter une photo</Text>
+        </SmartButton>
+      )}
     </View>
   );
 
-  const renderTagsInput = () => (
-    <View style={styles.tagsContainer}>
-      <Text style={styles.sectionTitle}>Tags (optionnel)</Text>
-      
-      {tags.length > 0 && (
-        <View style={styles.tagsList}>
-          {tags.map((tag, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.tagChip}
-              onPress={() => handleRemoveTag(tag)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.tagChipText}>{tag}</Text>
-              <Ionicons name="close-circle" size={16} color={Colors.light.background} />
-            </TouchableOpacity>
+  const renderBasicFields = () => (
+    <>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          {postType === 'recipe' ? 'Nom de la recette' : 'Titre de la question'}
+        </Text>
+        <TextInput
+          style={styles.input}
+          placeholder={postType === 'recipe' ? 'Ex: Spaghetti Carbonara' : 'Ex: Comment réussir une pâte à crêpes ?'}
+          placeholderTextColor={Colors.light.muted}
+          value={title}
+          onChangeText={setTitle}
+          maxLength={100}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Description</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          placeholder={postType === 'recipe' ? 'Décrivez votre recette...' : 'Décrivez votre question en détail...'}
+          placeholderTextColor={Colors.light.muted}
+          value={description}
+          onChangeText={setDescription}
+          multiline
+          numberOfLines={4}
+          maxLength={500}
+        />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Tags</Text>
+        <View style={styles.tagsContainer}>
+          {tags.map((tag) => (
+            <View key={tag} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
+              <SmartButton
+                style={styles.tagRemove}
+                onPress={() => handleRemoveTag(tag)}
+                accessibilityLabel={`Supprimer le tag ${tag}`}
+              >
+                <Ionicons name="close" size={14} color={Colors.light.primary} />
+              </SmartButton>
+            </View>
           ))}
         </View>
-      )}
-      
-      <View style={styles.tagInputContainer}>
-        <TextInput
-          style={styles.tagInput}
-          value={currentTag}
-          onChangeText={setCurrentTag}
-          placeholder="Ajouter un tag..."
-          placeholderTextColor={Colors.light.muted}
-          onSubmitEditing={handleAddTag}
-          returnKeyType="done"
-          maxLength={20}
-        />
-        <TouchableOpacity
-          style={[styles.addTagButton, !currentTag.trim() && styles.disabledButton]}
-          onPress={handleAddTag}
-          disabled={!currentTag.trim() || tags.length >= 5}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="add" size={20} color={Colors.light.background} />
-        </TouchableOpacity>
+        {tags.length < 5 && (
+          <View style={styles.tagInputContainer}>
+            <TextInput
+              style={styles.tagInput}
+              placeholder="Ajouter un tag"
+              placeholderTextColor={Colors.light.muted}
+              value={currentTag}
+              onChangeText={setCurrentTag}
+              onSubmitEditing={handleAddTag}
+              maxLength={20}
+            />
+            <SmartButton
+              style={styles.tagAddButton}
+              onPress={handleAddTag}
+              disabled={!currentTag.trim()}
+              accessibilityLabel="Ajouter le tag"
+            >
+              <Ionicons name="add" size={20} color={Colors.light.primary} />
+            </SmartButton>
+          </View>
+        )}
       </View>
-      
-      <Text style={styles.tagHint}>
-        {tags.length}/5 tags • Appuyez sur un tag pour le supprimer
-      </Text>
-    </View>
+    </>
   );
+
+  const renderRecipeFields = () => {
+    if (postType !== 'recipe') return null;
+
+    return (
+      <>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Informations générales</Text>
+          <View style={styles.row}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Portions</Text>
+              <TextInput
+                style={styles.smallInput}
+                placeholder="4"
+                placeholderTextColor={Colors.light.muted}
+                value={servings}
+                onChangeText={setServings}
+                keyboardType="numeric"
+                maxLength={2}
+              />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Préparation (min)</Text>
+              <TextInput
+                style={styles.smallInput}
+                placeholder="30"
+                placeholderTextColor={Colors.light.muted}
+                value={prepTime}
+                onChangeText={setPrepTime}
+                keyboardType="numeric"
+                maxLength={3}
+              />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Cuisson (min)</Text>
+              <TextInput
+                style={styles.smallInput}
+                placeholder="20"
+                placeholderTextColor={Colors.light.muted}
+                value={cookTime}
+                onChangeText={setCookTime}
+                keyboardType="numeric"
+                maxLength={3}
+              />
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Ingrédients</Text>
+            <SmartButton
+              style={styles.addButton}
+              onPress={addIngredient}
+              accessibilityLabel="Ajouter un ingrédient"
+            >
+              <Ionicons name="add" size={20} color={Colors.light.primary} />
+            </SmartButton>
+          </View>
+          
+          {ingredients.map((ingredient, index) => (
+            <View key={index} style={styles.ingredientRow}>
+              <TextInput
+                style={[styles.input, styles.ingredientInput]}
+                placeholder="Nom de l'ingrédient"
+                placeholderTextColor={Colors.light.muted}
+                value={ingredient.name}
+                onChangeText={(value) => updateIngredient(index, 'name', value)}
+              />
+              <TextInput
+                style={[styles.input, styles.quantityInput]}
+                placeholder="Qté"
+                placeholderTextColor={Colors.light.muted}
+                value={ingredient.quantity}
+                onChangeText={(value) => updateIngredient(index, 'quantity', value)}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={[styles.input, styles.unitInput]}
+                placeholder="g"
+                placeholderTextColor={Colors.light.muted}
+                value={ingredient.unit}
+                onChangeText={(value) => updateIngredient(index, 'unit', value)}
+              />
+              {ingredients.length > 1 && (
+                <SmartButton
+                  style={styles.removeButton}
+                  onPress={() => removeIngredient(index)}
+                  accessibilityLabel="Supprimer l'ingrédient"
+                >
+                  <Ionicons name="remove" size={16} color={Colors.light.error} />
+                </SmartButton>
+              )}
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Instructions</Text>
+            <SmartButton
+              style={styles.addButton}
+              onPress={addStep}
+              accessibilityLabel="Ajouter une étape"
+            >
+              <Ionicons name="add" size={20} color={Colors.light.primary} />
+            </SmartButton>
+          </View>
+          
+          {steps.map((step, index) => (
+            <View key={index} style={styles.stepRow}>
+              <View style={styles.stepNumber}>
+                <Text style={styles.stepNumberText}>{step.order}</Text>
+              </View>
+              <TextInput
+                style={[styles.input, styles.stepInput]}
+                placeholder="Décrivez cette étape..."
+                placeholderTextColor={Colors.light.muted}
+                value={step.instruction}
+                onChangeText={(value) => updateStep(index, value)}
+                multiline
+                numberOfLines={2}
+              />
+              {steps.length > 1 && (
+                <SmartButton
+                  style={styles.removeButton}
+                  onPress={() => removeStep(index)}
+                  accessibilityLabel="Supprimer l'étape"
+                >
+                  <Ionicons name="remove" size={16} color={Colors.light.error} />
+                </SmartButton>
+              )}
+            </View>
+          ))}
+        </View>
+      </>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleCancel} style={styles.headerButton}>
-          <Text style={styles.cancelText}>Annuler</Text>
-        </TouchableOpacity>
-        
-        <Text style={styles.headerTitle}>Créer un post</Text>
-        
-        <TouchableOpacity 
-          onPress={handleSubmit} 
-          style={[styles.headerButton, styles.publishButton, (!title.trim() || !body.trim() || isSubmitting) && styles.disabledButton]}
-          disabled={!title.trim() || !body.trim() || isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator size="small" color={Colors.light.background} />
-          ) : (
-            <Text style={styles.publishText}>Publier</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+      <KeyboardAvoidingView
         style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          {renderPostTypeSelector()}
-          
-          {/* Title Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.sectionTitle}>Titre *</Text>
-            <TextInput
-              style={styles.titleInput}
-              value={title}
-              onChangeText={setTitle}
-              placeholder={postType === 'recipe' ? 'Ex: Gratin de saumon aux brocolis' : 'Ex: Comment réussir une pâte à crêpes ?'}
-              placeholderTextColor={Colors.light.muted}
-              maxLength={150}
-              multiline
-            />
-            <Text style={styles.characterCount}>{title.length}/150</Text>
-          </View>
-
-          {/* Body Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.sectionTitle}>
-              {postType === 'recipe' ? 'Recette' : 'Détails'} *
-            </Text>
-            <TextInput
-              style={styles.bodyInput}
-              value={body}
-              onChangeText={setBody}
-              placeholder={
-                postType === 'recipe' 
-                  ? 'Décrivez votre recette: ingrédients, étapes de préparation, conseils...'
-                  : 'Décrivez votre question en détail...'
-              }
-              placeholderTextColor={Colors.light.muted}
-              multiline
-              maxLength={5000}
-              textAlignVertical="top"
-            />
-            <Text style={styles.characterCount}>{body.length}/5000</Text>
-          </View>
-
-          {renderTagsInput()}
-
-          {/* Privacy Toggle */}
-          <View style={styles.privacyContainer}>
-            <View style={styles.privacyHeader}>
-              <Ionicons name={isPublic ? 'globe' : 'lock-closed'} size={20} color={Colors.light.text} />
-              <Text style={styles.privacyTitle}>
-                {isPublic ? 'Post public' : 'Post privé'}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.toggleButton, isPublic && styles.toggleButtonActive]}
-              onPress={() => setIsPublic(!isPublic)}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.toggleIndicator, isPublic && styles.toggleIndicatorActive]} />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.privacyDescription}>
-            {isPublic 
-              ? 'Votre post sera visible par tous les utilisateurs de YaCook'
-              : 'Votre post ne sera visible que par vous'
-            }
+        {/* Header */}
+        <View style={styles.header}>
+          <SmartButton
+            style={styles.headerButton}
+            onPress={() => router.back()}
+            accessibilityLabel="Retour"
+          >
+            <Ionicons name="close" size={24} color={Colors.light.text} />
+          </SmartButton>
+          <Text style={styles.headerTitle}>
+            {postType === 'recipe' ? 'Nouvelle recette' : 'Nouvelle question'}
           </Text>
+          <SmartButton
+            style={styles.headerButton}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+            loading={isSubmitting}
+            accessibilityLabel="Publier"
+          >
+            <Text style={[
+              styles.publishText,
+              isSubmitting && styles.publishTextDisabled
+            ]}>
+              Publier
+            </Text>
+          </SmartButton>
+        </View>
+
+        {/* Content */}
+        <ScrollView
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {renderImageSection()}
+          {renderBasicFields()}
+          {renderRecipeFields()}
+          
+          {/* Bottom padding for iOS keyboard */}
+          <View style={{ height: 100 }} />
         </ScrollView>
+
+        {/* Toast */}
+        {toastMessage && (
+          <Toast
+            message={toastMessage}
+            onDismiss={() => setToastMessage('')}
+          />
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -300,209 +575,253 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.light.background,
   },
+  keyboardView: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-  },
-  headerButton: {
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+    backgroundColor: Colors.light.background,
   },
-  publishButton: {
-    backgroundColor: Colors.light.primary,
-  },
-  cancelText: {
-    fontSize: FontSize.md,
-    color: Colors.light.muted,
-    fontWeight: FontWeight.medium,
+  headerButton: {
+    padding: Spacing.sm,
   },
   headerTitle: {
     fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
+    fontWeight: FontWeight.semiBold,
     color: Colors.light.text,
   },
   publishText: {
     fontSize: FontSize.md,
-    color: Colors.light.background,
-    fontWeight: FontWeight.semibold,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: 100,
-  },
-  postTypeContainer: {
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    color: Colors.light.text,
-    marginBottom: Spacing.md,
-  },
-  postTypeSelector: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  typeButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    borderWidth: 2,
-    borderColor: Colors.light.primary,
-    backgroundColor: Colors.light.background,
-  },
-  activeTypeButton: {
-    backgroundColor: Colors.light.primary,
-  },
-  typeButtonText: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
-    color: Colors.light.primary,
-    marginLeft: Spacing.sm,
-  },
-  activeTypeButtonText: {
-    color: Colors.light.background,
-  },
-  inputContainer: {
-    marginBottom: Spacing.xl,
-  },
-  titleInput: {
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
-    color: Colors.light.text,
-    backgroundColor: Colors.light.background,
-    minHeight: 60,
-  },
-  bodyInput: {
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
-    fontSize: FontSize.md,
-    color: Colors.light.text,
-    backgroundColor: Colors.light.background,
-    height: 200,
-  },
-  characterCount: {
-    fontSize: FontSize.xs,
-    color: Colors.light.muted,
-    textAlign: 'right',
-    marginTop: Spacing.xs,
-  },
-  tagsContainer: {
-    marginBottom: Spacing.xl,
-  },
-  tagsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: Spacing.md,
-    gap: Spacing.xs,
-  },
-  tagChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.primary,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.lg,
-  },
-  tagChipText: {
-    fontSize: FontSize.sm,
-    color: Colors.light.background,
     fontWeight: FontWeight.medium,
-    marginRight: Spacing.xs,
+    color: Colors.light.primary,
   },
-  tagInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
+  publishTextDisabled: {
+    opacity: 0.6,
   },
-  tagInput: {
+  content: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    fontSize: FontSize.md,
-    color: Colors.light.text,
-    backgroundColor: Colors.light.background,
+    paddingHorizontal: Spacing.md,
   },
-  addTagButton: {
-    backgroundColor: Colors.light.primary,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    justifyContent: 'center',
-    alignItems: 'center',
+  section: {
+    marginVertical: Spacing.md,
   },
-  tagHint: {
-    fontSize: FontSize.xs,
-    color: Colors.light.muted,
-    marginTop: Spacing.sm,
-  },
-  privacyContainer: {
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: Spacing.sm,
   },
-  privacyHeader: {
+  sectionTitle: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+    color: Colors.light.text,
+    marginBottom: Spacing.sm,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    fontSize: FontSize.md,
+    color: Colors.light.text,
+    backgroundColor: Colors.light.background,
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  inputGroup: {
+    flex: 1,
+    marginHorizontal: Spacing.xs,
+  },
+  inputLabel: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+    color: Colors.light.text,
+    marginBottom: Spacing.xs,
+  },
+  smallInput: {
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    fontSize: FontSize.md,
+    color: Colors.light.text,
+    backgroundColor: Colors.light.background,
+    textAlign: 'center',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: Spacing.sm,
+  },
+  tag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.primary + '15',
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    marginRight: Spacing.xs,
+    marginBottom: Spacing.xs,
+  },
+  tagText: {
+    fontSize: FontSize.sm,
+    color: Colors.light.primary,
+    marginRight: Spacing.xs,
+  },
+  tagRemove: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tagInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  privacyTitle: {
+  tagInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
     color: Colors.light.text,
+    backgroundColor: Colors.light.background,
+    marginRight: Spacing.sm,
+  },
+  tagAddButton: {
+    padding: Spacing.sm,
+  },
+  addButton: {
+    padding: Spacing.xs,
+  },
+  removeButton: {
+    padding: Spacing.xs,
     marginLeft: Spacing.sm,
   },
-  toggleButton: {
-    width: 50,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: Colors.light.border,
-    padding: 2,
+  ingredientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  ingredientInput: {
+    flex: 3,
+    marginRight: Spacing.xs,
+  },
+  quantityInput: {
+    flex: 1,
+    marginRight: Spacing.xs,
+    textAlign: 'center',
+  },
+  unitInput: {
+    flex: 1,
+    marginRight: Spacing.xs,
+    textAlign: 'center',
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.sm,
+  },
+  stepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.light.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  stepNumberText: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold,
+    color: Colors.light.background,
+  },
+  stepInput: {
+    flex: 1,
+    minHeight: 60,
+    textAlignVertical: 'top',
+  },
+  imageContainer: {
+    position: 'relative',
+    marginBottom: Spacing.sm,
+  },
+  imagePreview: {
+    width: screenWidth - (Spacing.md * 2),
+    height: (screenWidth - (Spacing.md * 2)) * 9 / 16,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.light.muted,
+  },
+  uploadOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.md,
+  },
+  progressContainer: {
+    width: '80%',
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 2,
+    marginBottom: Spacing.sm,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: Colors.light.primary,
+    borderRadius: 2,
+  },
+  uploadText: {
+    fontSize: FontSize.sm,
+    color: Colors.light.background,
+    fontWeight: FontWeight.medium,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: Spacing.sm,
+    right: Spacing.sm,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.light.error,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  toggleButtonActive: {
-    backgroundColor: Colors.light.primary,
+  addImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.lg,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: Colors.light.border,
+    borderRadius: BorderRadius.md,
   },
-  toggleIndicator: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: Colors.light.background,
-    alignSelf: 'flex-start',
-  },
-  toggleIndicatorActive: {
-    alignSelf: 'flex-end',
-  },
-  privacyDescription: {
-    fontSize: FontSize.sm,
-    color: Colors.light.muted,
-    lineHeight: 18,
-    marginBottom: Spacing.xl,
-  },
-  disabledButton: {
-    opacity: 0.5,
+  addImageText: {
+    fontSize: FontSize.md,
+    color: Colors.light.primary,
+    fontWeight: FontWeight.medium,
+    marginLeft: Spacing.sm,
   },
 });
