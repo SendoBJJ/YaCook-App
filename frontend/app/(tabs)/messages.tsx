@@ -65,7 +65,7 @@ export default function MessagesScreen() {
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [conversations] = useState<Conversation[]>(mockConversations);
+  const [conversations] = useState<Conversation[]>([]);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
