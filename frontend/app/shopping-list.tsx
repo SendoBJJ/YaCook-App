@@ -112,7 +112,7 @@ export default function ShoppingListScreen() {
         setShoppingList(updatedList);
       }
 
-      await shoppingListApi.updateShoppingItem(itemId, { is_checked: isChecked });
+      await shoppingListApi.updateItem(itemId, { is_checked: isChecked });
     } catch (error) {
       console.error('❌ Error updating item:', error);
       Alert.alert('Erreur', 'Impossible de mettre à jour l\'article');
