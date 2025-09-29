@@ -79,8 +79,17 @@ export default function MessagesScreen() {
     conv.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleConversationPress = (conversationId: string) => {
+    router.push(`/messages/thread/${conversationId}`);
+  };
+
   const renderConversationItem = (conversation: Conversation) => (
-    <TouchableOpacity key={conversation.id} style={styles.conversationItem}>
+    <TouchableOpacity 
+      key={conversation.id} 
+      style={styles.conversationItem}
+      onPress={() => handleConversationPress(conversation.id)}
+      activeOpacity={0.8}
+    >
       <View style={styles.avatarContainer}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
