@@ -205,7 +205,20 @@ export const authApi = {
       // Continue with logout even if server request fails
       console.warn('Server logout request failed:', error);
     } finally {
+      // Clear ALL storage locations
       await tokenManager.clearTokens();
+      
+      // Clear any additional storage if needed
+      if (typeof window !== 'undefined') {
+        try {
+          window.localStorage.clear(); // Clear all localStorage
+          window.sessionStorage.clear(); // Clear all sessionStorage
+        } catch (e) {
+          console.warn('Failed to clear web storage:', e);
+        }
+      }
+      
+      console.log('✅ All tokens and storage cleared');
     }
   },
 
