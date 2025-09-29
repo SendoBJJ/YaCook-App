@@ -99,7 +99,7 @@ export default function DashboardScreen() {
         <Text style={styles.actionText}>{AppTexts.dashboard.addMeal}</Text>
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.actionButton}>
+      <TouchableOpacity style={styles.actionButton} onPress={handleShoppingListPress}>
         <Ionicons name="list" size={24} color={Colors.light.primary} />
         <Text style={styles.actionText}>{AppTexts.dashboard.groceryList}</Text>
       </TouchableOpacity>
