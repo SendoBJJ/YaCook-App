@@ -126,6 +126,11 @@ export default function MessagesScreen() {
     </View>
   );
 
+  const handleNewMessage = () => {
+    // For now, navigate to a mock thread
+    router.push('/messages/thread/new');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Search bar */}
@@ -173,7 +178,7 @@ export default function MessagesScreen() {
       </ScrollView>
 
       {/* New message button */}
-      <TouchableOpacity style={styles.newMessageButton}>
+      <TouchableOpacity style={styles.newMessageButton} onPress={handleNewMessage} activeOpacity={0.8}>
         <Ionicons name="add" size={24} color={Colors.light.background} />
       </TouchableOpacity>
     </SafeAreaView>
