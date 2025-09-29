@@ -250,25 +250,25 @@ ${response.recipe.tips ? `\n**Conseils:** ${response.recipe.tips}` : ''}`,
       </Text>
       
       <View style={styles.emptyStateCTAs}>
-        <TouchableOpacity 
+        <SmartButton 
           style={styles.emptyCTAButton}
           onPress={() => handleCreatePost('recipe')}
-          activeOpacity={0.8}
+          accessibilityLabel="Créer une nouvelle recette"
         >
           <Ionicons name="add" size={20} color={Colors.light.background} />
           <Text style={styles.emptyCTAButtonText}>Créer une recette</Text>
-        </TouchableOpacity>
+        </SmartButton>
         
-        <TouchableOpacity 
+        <SmartButton 
           style={[styles.emptyCTAButton, styles.secondaryCTAButton]}
           onPress={() => handleCreatePost('question')}
-          activeOpacity={0.8}
+          accessibilityLabel="Poser une nouvelle question"
         >
           <Ionicons name="help-circle" size={20} color={Colors.light.primary} />
           <Text style={[styles.emptyCTAButtonText, styles.secondaryCTAButtonText]}>
             Poser une question
           </Text>
-        </TouchableOpacity>
+        </SmartButton>
       </View>
     </View>
   );
