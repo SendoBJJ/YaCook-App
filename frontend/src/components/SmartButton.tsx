@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, View, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, Text, View, ActivityIndicator, Platform } from 'react-native';
 import { Colors } from '../constants/Colors';
 
 interface SmartButtonProps {
@@ -26,6 +26,7 @@ export const SmartButton: React.FC<SmartButtonProps> = ({
 }) => {
   const [isPressed, setIsPressed] = useState(false);
   const [inFlight, setInFlight] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handlePress = async () => {
     if (disabled || loading || inFlight) return;
@@ -47,6 +48,18 @@ export const SmartButton: React.FC<SmartButtonProps> = ({
     }
   };
 
+  const handleFocus = () => {
+    if (Platform.OS === 'web') {
+      setIsFocused(true);
+    }
+  };
+
+  const handleBlur = () => {
+    if (Platform.OS === 'web') {
+      setIsFocused(false);
+    }
+  };
+
   const isDisabled = disabled || loading || inFlight;
 
   return (
@@ -55,6 +68,11 @@ export const SmartButton: React.FC<SmartButtonProps> = ({
         style,
         isDisabled && { opacity: 0.6 },
         { minHeight: 44, minWidth: 44 }, // Accessibility hit area
+        // Web focus ring
+        Platform.OS === 'web' && isFocused && {
+          outline: `2px solid ${Colors.light.primary}`,
+          outlineOffset: '2px',
+        },
       ]}
       onPress={handlePress}
       onClick={handlePress} // Web compatibility
@@ -67,6 +85,8 @@ export const SmartButton: React.FC<SmartButtonProps> = ({
       // Web accessibility
       tabIndex={isDisabled ? -1 : 0}
       onKeyPress={handleKeyPress}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
       {...props}
     >
       <View style={{ 
