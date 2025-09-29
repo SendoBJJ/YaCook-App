@@ -525,7 +525,7 @@ class YaCookAPITester:
                     
                     # Verify sections are organized correctly
                     section_names = [section.get("section") for section in sections]
-                    expected_sections = ["legumes", "fromage", "produits_frais"]
+                    expected_sections = ["légumes", "produits_laitiers"]
                     
                     for expected_section in expected_sections:
                         if expected_section in section_names:
