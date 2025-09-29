@@ -255,9 +255,9 @@ frontend:
 
   - task: "Authentication Flow - Registration Screen"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/app/auth/register.tsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -267,6 +267,9 @@ frontend:
         - working: true
           agent: "testing"
           comment: "✅ Registration screen working perfectly. All form fields (first name, last name, email, password, confirm password), form validation, password visibility toggle, social login options, and navigation between login/register screens functional."
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL BUG: Registration form is NOT functional. TouchableOpacity button clicks do not trigger handleRegister function - no network requests made to /api/auth/register. Backend API confirmed working via manual testing. Issue: Same React Native Web compatibility problem with onPress handlers. Forms render and validate correctly but registration is completely broken."
 
   - task: "Tab Navigation - Dashboard"
     implemented: true
