@@ -261,6 +261,317 @@ class YaCookAPITester:
             logger.error(f"❌ User profile retrieval failed with exception: {str(e)}")
             return False
     
+    async def test_posts_api(self) -> Dict[str, Any]:
+        """Test Posts API endpoints."""
+        logger.info("Testing Posts API endpoints...")
+        
+        if not self.access_token:
+            logger.error("❌ No access token available for Posts API")
+            return {"success": False, "question_post_id": None, "recipe_post_id": None}
+        
+        results = {"success": True, "question_post_id": None, "recipe_post_id": None}
+        
+        # Test creating a question post
+        question_data = {
+            "title": "Comment préparer un soufflé parfait?",
+            "body": "Je cherche des conseils pour réussir un soufflé au fromage qui ne retombe pas. Quelles sont vos astuces?",
+            "type": "question",
+            "tags": ["soufflé", "fromage", "technique"],
+            "is_public": True
+        }
+        
+        try:
+            async with self.session.post(
+                f"{self.base_url}/api/posts",
+                json=question_data,
+                headers={**self.get_auth_headers(), "Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status in [200, 201]:
+                    data = await response.json()
+                    results["question_post_id"] = data.get("id")
+                    logger.info(f"✅ Question post created: {data.get('title')}")
+                else:
+                    logger.error(f"❌ Question post creation failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    results["success"] = False
+                    
+        except Exception as e:
+            logger.error(f"❌ Question post creation failed with exception: {str(e)}")
+            results["success"] = False
+        
+        # Test creating a recipe post
+        recipe_data = {
+            "title": "Ratatouille Traditionnelle",
+            "body": "Une délicieuse ratatouille avec des légumes de saison. Ingrédients: aubergines, courgettes, tomates, poivrons, oignons, ail, herbes de Provence.",
+            "type": "recipe",
+            "tags": ["ratatouille", "légumes", "français"],
+            "is_public": True
+        }
+        
+        try:
+            async with self.session.post(
+                f"{self.base_url}/api/posts",
+                json=recipe_data,
+                headers={**self.get_auth_headers(), "Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status in [200, 201]:
+                    data = await response.json()
+                    results["recipe_post_id"] = data.get("id")
+                    logger.info(f"✅ Recipe post created: {data.get('title')}")
+                else:
+                    logger.error(f"❌ Recipe post creation failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    results["success"] = False
+                    
+        except Exception as e:
+            logger.error(f"❌ Recipe post creation failed with exception: {str(e)}")
+            results["success"] = False
+        
+        # Test getting posts feed
+        try:
+            async with self.session.get(
+                f"{self.base_url}/api/posts",
+                params={"page": 1, "per_page": 10},
+                headers=self.get_auth_headers()
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    posts = data.get("posts", [])
+                    total = data.get("total", 0)
+                    logger.info(f"✅ Posts feed retrieved: {len(posts)} posts out of {total} total")
+                else:
+                    logger.error(f"❌ Posts feed retrieval failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    results["success"] = False
+                    
+        except Exception as e:
+            logger.error(f"❌ Posts feed retrieval failed with exception: {str(e)}")
+            results["success"] = False
+        
+        # Test getting individual post
+        if results["question_post_id"]:
+            try:
+                async with self.session.get(
+                    f"{self.base_url}/api/posts/{results['question_post_id']}",
+                    headers=self.get_auth_headers()
+                ) as response:
+                    
+                    if response.status == 200:
+                        data = await response.json()
+                        logger.info(f"✅ Individual post retrieved: {data.get('title')}")
+                    else:
+                        logger.error(f"❌ Individual post retrieval failed with status {response.status}")
+                        text = await response.text()
+                        logger.error(f"Response: {text}")
+                        results["success"] = False
+                        
+            except Exception as e:
+                logger.error(f"❌ Individual post retrieval failed with exception: {str(e)}")
+                results["success"] = False
+        
+        return results
+    
+    async def test_comments_api(self, post_id: str) -> bool:
+        """Test Comments API endpoints."""
+        logger.info("Testing Comments API endpoints...")
+        
+        if not self.access_token or not post_id:
+            logger.error("❌ No access token or post ID available for Comments API")
+            return False
+        
+        # Test creating a comment
+        comment_data = {
+            "content": "Excellente question! Pour un soufflé réussi, il faut bien battre les blancs en neige ferme et les incorporer délicatement à la préparation.",
+            "parent_id": None
+        }
+        
+        comment_id = None
+        try:
+            async with self.session.post(
+                f"{self.base_url}/api/posts/{post_id}/comments",
+                json=comment_data,
+                headers={**self.get_auth_headers(), "Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status in [200, 201]:
+                    data = await response.json()
+                    comment_id = data.get("id")
+                    logger.info(f"✅ Comment created: {data.get('content')[:50]}...")
+                else:
+                    logger.error(f"❌ Comment creation failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Comment creation failed with exception: {str(e)}")
+            return False
+        
+        # Test getting comments for post
+        try:
+            async with self.session.get(
+                f"{self.base_url}/api/posts/{post_id}/comments",
+                params={"page": 1, "per_page": 10},
+                headers=self.get_auth_headers()
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    comments = data.get("comments", [])
+                    total = data.get("total", 0)
+                    logger.info(f"✅ Comments retrieved: {len(comments)} comments out of {total} total")
+                    
+                    # Verify our comment is in the list
+                    if comment_id:
+                        comment_ids = [comment.get("id") for comment in comments]
+                        if comment_id in comment_ids:
+                            logger.info("✅ Created comment found in comments list")
+                        else:
+                            logger.warning("⚠️ Created comment not found in comments list")
+                    
+                    return True
+                else:
+                    logger.error(f"❌ Comments retrieval failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Comments retrieval failed with exception: {str(e)}")
+            return False
+    
+    async def test_shopping_list_api(self) -> bool:
+        """Test Shopping List API endpoints."""
+        logger.info("Testing Shopping List API endpoints...")
+        
+        if not self.access_token:
+            logger.error("❌ No access token available for Shopping List API")
+            return False
+        
+        # Test adding shopping list items with different sections
+        items_to_add = [
+            {
+                "name": "Aubergines",
+                "quantity": "2",
+                "unit": "pièces",
+                "section": "legumes",
+                "is_checked": False,
+                "notes": "Bien fermes et brillantes"
+            },
+            {
+                "name": "Gruyère râpé",
+                "quantity": "200",
+                "unit": "g",
+                "section": "fromage",
+                "is_checked": False,
+                "notes": "Pour le soufflé"
+            },
+            {
+                "name": "Œufs",
+                "quantity": "6",
+                "unit": "pièces",
+                "section": "produits_frais",
+                "is_checked": False,
+                "notes": "Extra frais"
+            }
+        ]
+        
+        added_item_ids = []
+        
+        for item_data in items_to_add:
+            try:
+                async with self.session.post(
+                    f"{self.base_url}/api/shopping-list/items",
+                    json=item_data,
+                    headers={**self.get_auth_headers(), "Content-Type": "application/json"}
+                ) as response:
+                    
+                    if response.status in [200, 201]:
+                        data = await response.json()
+                        item_id = data.get("id")
+                        added_item_ids.append(item_id)
+                        logger.info(f"✅ Shopping item added: {item_data['name']} to {item_data['section']} section")
+                    else:
+                        logger.error(f"❌ Shopping item addition failed with status {response.status}")
+                        text = await response.text()
+                        logger.error(f"Response: {text}")
+                        return False
+                        
+            except Exception as e:
+                logger.error(f"❌ Shopping item addition failed with exception: {str(e)}")
+                return False
+        
+        # Test getting shopping list
+        try:
+            async with self.session.get(
+                f"{self.base_url}/api/shopping-list",
+                headers=self.get_auth_headers()
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    sections = data.get("sections", [])
+                    total_items = data.get("total_items", 0)
+                    completion_percentage = data.get("completion_percentage", 0)
+                    
+                    logger.info(f"✅ Shopping list retrieved: {len(sections)} sections, {total_items} items ({completion_percentage:.1f}% complete)")
+                    
+                    # Verify sections are organized correctly
+                    section_names = [section.get("section") for section in sections]
+                    expected_sections = ["legumes", "fromage", "produits_frais"]
+                    
+                    for expected_section in expected_sections:
+                        if expected_section in section_names:
+                            logger.info(f"✅ Section {expected_section} found in shopping list")
+                        else:
+                            logger.warning(f"⚠️ Section {expected_section} not found in shopping list")
+                else:
+                    logger.error(f"❌ Shopping list retrieval failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Shopping list retrieval failed with exception: {str(e)}")
+            return False
+        
+        # Test updating a shopping list item (mark as checked)
+        if added_item_ids:
+            item_id = added_item_ids[0]
+            update_data = {
+                "is_checked": True,
+                "notes": "Acheté au marché"
+            }
+            
+            try:
+                async with self.session.put(
+                    f"{self.base_url}/api/shopping-list/items/{item_id}",
+                    json=update_data,
+                    headers={**self.get_auth_headers(), "Content-Type": "application/json"}
+                ) as response:
+                    
+                    if response.status == 200:
+                        data = await response.json()
+                        logger.info(f"✅ Shopping item updated: {data.get('name', 'Unknown')} marked as checked")
+                        return True
+                    else:
+                        logger.error(f"❌ Shopping item update failed with status {response.status}")
+                        text = await response.text()
+                        logger.error(f"Response: {text}")
+                        return False
+                        
+            except Exception as e:
+                logger.error(f"❌ Shopping item update failed with exception: {str(e)}")
+                return False
+        
+        return True
+    
     async def run_all_tests(self) -> Dict[str, bool]:
         """Run all API tests and return results."""
         logger.info("🚀 Starting YaCook API tests...")
