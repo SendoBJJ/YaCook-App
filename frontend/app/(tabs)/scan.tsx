@@ -308,7 +308,7 @@ export default function ScanScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContent}>
-          <Ionicons name="camera-off" size={64} color={Colors.light.muted} />
+          <Ionicons name="camera" size={64} color={Colors.light.muted} />
           <Text style={styles.permissionTitle}>Accès caméra requis</Text>
           <Text style={styles.permissionText}>
             YaCook a besoin d'accéder à votre caméra pour scanner les codes-barres des produits.
