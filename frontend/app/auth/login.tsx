@@ -3,13 +3,11 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +16,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { Colors } from '../../src/constants/Colors';
 import { AppTexts } from '../../src/constants/Texts';
 import { Spacing, BorderRadius, FontSize, FontWeight } from '../../src/constants/Layout';
+import { SmartButton } from '../../src/components/SmartButton';
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -34,7 +33,7 @@ export default function LoginScreen() {
 
     try {
       setIsLoading(true);
-      await login({ email: email.toLowerCase().trim(), password });
+      await login({ email: email.trim(), password });
       router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert('Erreur de connexion', error.message);
@@ -45,113 +44,103 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.appName}>{AppTexts.appName}</Text>
-            <Text style={styles.tagline}>{AppTexts.appTagline}</Text>
+            <Text style={styles.appName}>YaCook</Text>
+            <Text style={styles.tagline}>Y'a quoi ? YaCook !</Text>
           </View>
 
           {/* Login Form */}
           <View style={styles.form}>
             <Text style={styles.title}>{AppTexts.auth.loginTitle}</Text>
-            
+
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>{AppTexts.auth.email}</Text>
+              <Ionicons name="mail-outline" size={20} color={Colors.light.muted} />
               <TextInput
                 style={styles.input}
+                placeholder={AppTexts.auth.email}
+                placeholderTextColor={Colors.light.muted}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="votre.email@example.com"
-                placeholderTextColor={Colors.light.muted}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                autoComplete="email"
-                textContentType="emailAddress"
+                autoCorrect={false}
               />
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>{AppTexts.auth.password}</Text>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={[styles.input, styles.passwordInput]}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Votre mot de passe"
-                  placeholderTextColor={Colors.light.muted}
-                  secureTextEntry={!showPassword}
-                  autoComplete="password"
-                  textContentType="password"
+              <Ionicons name="lock-closed-outline" size={20} color={Colors.light.muted} />
+              <TextInput
+                style={styles.input}
+                placeholder={AppTexts.auth.password}
+                placeholderTextColor={Colors.light.muted}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <SmartButton
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.showPasswordButton}
+                accessibilityLabel={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color={Colors.light.muted}
                 />
-                <TouchableOpacity
-                  style={styles.eyeButton}
-                  onPress={() => setShowPassword(!showPassword)}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off' : 'eye'}
-                    size={20}
-                    color={Colors.light.muted}
-                  />
-                </TouchableOpacity>
-              </View>
+              </SmartButton>
             </View>
 
-            <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>
-                {AppTexts.auth.forgotPassword}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.loginButton, isLoading && styles.disabledButton]} 
+            <SmartButton
+              style={styles.loginButton}
               onPress={handleLogin}
-              onClick={handleLogin}
               disabled={isLoading}
+              loading={isLoading}
+              textStyle={styles.loginButtonText}
+              accessibilityLabel="Se connecter"
             >
-              {isLoading ? (
-                <ActivityIndicator color={Colors.light.background} />
-              ) : (
-                <Text style={styles.loginButtonText}>{AppTexts.auth.signIn}</Text>
-              )}
-            </TouchableOpacity>
+              {AppTexts.auth.login}
+            </SmartButton>
 
-            {/* Social Login */}
-            <View style={styles.socialContainer}>
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>ou</Text>
-                <View style={styles.dividerLine} />
-              </View>
+            <Link href="/auth/register" style={styles.linkContainer}>
+              <Text style={styles.linkText}>
+                {AppTexts.auth.noAccount}{' '}
+                <Text style={styles.link}>{AppTexts.auth.signUp}</Text>
+              </Text>
+            </Link>
+          </View>
 
-              <TouchableOpacity style={styles.socialButton}>
-                <Ionicons name="logo-google" size={20} color={Colors.light.text} />
-                <Text style={styles.socialButtonText}>
-                  {AppTexts.auth.continueWithGoogle}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.socialButton}>
-                <Ionicons name="logo-apple" size={20} color={Colors.light.text} />
-                <Text style={styles.socialButtonText}>
-                  {AppTexts.auth.continueWithApple}
-                </Text>
-              </TouchableOpacity>
+          {/* Social Login */}
+          <View style={styles.socialSection}>
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>ou</Text>
+              <View style={styles.divider} />
             </View>
 
-            {/* Sign up link */}
-            <View style={styles.signupContainer}>
-              <Text style={styles.signupText}>{AppTexts.auth.noAccount}</Text>
-              <Link href="/auth/register" asChild>
-                <TouchableOpacity onClick={() => router.push('/auth/register')}>
-                  <Text style={styles.signupLink}>{AppTexts.auth.createAccount}</Text>
-                </TouchableOpacity>
-              </Link>
-            </View>
+            <SmartButton
+              style={styles.socialButton}
+              onPress={() => Alert.alert('Google OAuth', 'Fonctionnalité bientôt disponible')}
+              accessibilityLabel="Se connecter avec Google"
+            >
+              <Ionicons name="logo-google" size={20} color={Colors.light.text} />
+              <Text style={styles.socialButtonText}>Continuer avec Google</Text>
+            </SmartButton>
+
+            <SmartButton
+              style={styles.socialButton}
+              onPress={() => Alert.alert('Apple OAuth', 'Fonctionnalité bientôt disponible')}
+              accessibilityLabel="Se connecter avec Apple"
+            >
+              <Ionicons name="logo-apple" size={20} color={Colors.light.text} />
+              <Text style={styles.socialButtonText}>Continuer avec Apple</Text>
+            </SmartButton>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -169,12 +158,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xl,
   },
   header: {
     alignItems: 'center',
-    marginBottom: Spacing.xxl,
+    marginBottom: Spacing.xl * 2,
   },
   appName: {
     fontSize: FontSize.xxl,
@@ -185,89 +174,83 @@ const styles = StyleSheet.create({
   tagline: {
     fontSize: FontSize.md,
     color: Colors.light.muted,
-    textAlign: 'center',
+    fontStyle: 'italic',
   },
   form: {
-    width: '100%',
+    flex: 1,
   },
   title: {
     fontSize: FontSize.xl,
-    fontWeight: FontWeight.semibold,
+    fontWeight: FontWeight.semiBold,
     color: Colors.light.text,
-    textAlign: 'center',
     marginBottom: Spacing.xl,
+    textAlign: 'center',
   },
   inputContainer: {
-    marginBottom: Spacing.lg,
-  },
-  label: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    color: Colors.light.text,
-    marginBottom: Spacing.xs,
-  },
-  input: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.light.border,
     borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    fontSize: FontSize.md,
-    color: Colors.light.text,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Platform.OS === 'ios' ? Spacing.md : Spacing.sm,
+    marginBottom: Spacing.lg,
     backgroundColor: Colors.light.background,
   },
-  passwordContainer: {
-    position: 'relative',
+  input: {
+    flex: 1,
+    fontSize: FontSize.md,
+    color: Colors.light.text,
+    marginLeft: Spacing.sm,
+    minHeight: 44,
   },
-  passwordInput: {
-    paddingRight: 50,
-  },
-  eyeButton: {
-    position: 'absolute',
-    right: Spacing.md,
-    top: '50%',
-    transform: [{ translateY: -10 }],
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: Spacing.xl,
-  },
-  forgotPasswordText: {
-    fontSize: FontSize.sm,
-    color: Colors.light.primary,
-    fontWeight: FontWeight.medium,
+  showPasswordButton: {
+    padding: Spacing.xs,
   },
   loginButton: {
     backgroundColor: Colors.light.primary,
     borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
-  disabledButton: {
-    opacity: 0.7,
+    marginTop: Spacing.lg,
+    minHeight: 48,
   },
   loginButtonText: {
     color: Colors.light.background,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
   },
-  socialContainer: {
-    marginBottom: Spacing.xl,
+  linkContainer: {
+    marginTop: Spacing.lg,
+    alignItems: 'center',
   },
-  divider: {
+  linkText: {
+    fontSize: FontSize.sm,
+    color: Colors.light.muted,
+    textAlign: 'center',
+  },
+  link: {
+    color: Colors.light.primary,
+    fontWeight: FontWeight.medium,
+  },
+  socialSection: {
+    marginTop: Spacing.xl,
+  },
+  dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
+    marginVertical: Spacing.lg,
   },
-  dividerLine: {
+  divider: {
     flex: 1,
     height: 1,
     backgroundColor: Colors.light.border,
   },
   dividerText: {
-    marginHorizontal: Spacing.lg,
-    color: Colors.light.muted,
     fontSize: FontSize.sm,
+    color: Colors.light.muted,
+    marginHorizontal: Spacing.md,
   },
   socialButton: {
     flexDirection: 'row',
@@ -276,29 +259,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.light.border,
     borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
     backgroundColor: Colors.light.background,
+    minHeight: 48,
   },
   socialButtonText: {
-    marginLeft: Spacing.md,
     fontSize: FontSize.md,
     color: Colors.light.text,
+    marginLeft: Spacing.sm,
     fontWeight: FontWeight.medium,
-  },
-  signupContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  signupText: {
-    fontSize: FontSize.md,
-    color: Colors.light.muted,
-  },
-  signupLink: {
-    fontSize: FontSize.md,
-    color: Colors.light.primary,
-    fontWeight: FontWeight.semibold,
-    marginLeft: Spacing.xs,
   },
 });
