@@ -474,12 +474,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Phase 0 - Dashboard CTAs Wired"
-    - "Phase 0 - Messages CTAs and Empty State" 
-    - "Phase 0 - New Screens Created"
-    - "Phase 0 - Toast Component for Error Handling"
+    - "Authentication Flow - Login Screen"
+    - "Authentication Flow - Registration Screen"
+    - "Authentication Context & State Management"
   stuck_tasks:
     - "AI Meal Plan Generation - budget exceeded"
+    - "Authentication Flow - Login Screen - TouchableOpacity onPress not working"
+    - "Authentication Flow - Registration Screen - TouchableOpacity onPress not working"
   test_all: false
   test_priority: "high_first"
 
