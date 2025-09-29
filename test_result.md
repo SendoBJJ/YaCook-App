@@ -198,6 +198,42 @@ backend:
           agent: "testing"
           comment: "Endpoint is implemented correctly and accepts query parameters properly. However, AI generation fails due to LLM API budget exceeded (Current cost: 0.0010923, Max budget: 0.001). This is a configuration/budget issue, not a code issue"
 
+  - task: "Posts API - Create and Retrieve Posts"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ All Posts API endpoints working correctly: POST /api/posts creates question and recipe posts successfully, GET /api/posts retrieves paginated feed with proper author information, GET /api/posts/{id} retrieves individual posts with view count increment. French error messages working properly."
+
+  - task: "Comments API - Create and Retrieve Comments"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Comments API endpoints working correctly: POST /api/posts/{post_id}/comments creates comments with proper author information, GET /api/posts/{post_id}/comments retrieves paginated comments. Fixed Pydantic model issues with ObjectId to string conversion. Comments properly linked to posts and increment post comment counts."
+
+  - task: "Shopping List API - Manage Shopping Items"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Shopping List API endpoints working perfectly: POST /api/shopping-list/items adds items with proper French section names (légumes, produits_laitiers), GET /api/shopping-list retrieves organized sections with completion percentage, PUT /api/shopping-list/items/{id} updates items (mark as checked). Fixed enum validation for French accented characters."
+
 frontend:
   - task: "Authentication Flow - Login Screen"
     implemented: true
