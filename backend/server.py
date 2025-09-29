@@ -28,6 +28,7 @@ from models.product import (
 # Import JWT utilities
 from jose import JWTError, jwt
 from dotenv import load_dotenv
+from bson import ObjectId
 import os
 
 # Load environment variables
