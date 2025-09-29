@@ -336,7 +336,7 @@ ${response.recipe.tips ? `\n**Conseils:** ${response.recipe.tips}` : ''}`,
           <Text style={styles.engagementText}>{post.views_count}</Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </SmartButton>
   );
 
   const renderAIPrompt = () => (
