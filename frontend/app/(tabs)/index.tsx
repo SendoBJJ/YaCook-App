@@ -124,17 +124,15 @@ export default function DashboardScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>Plan de repas IA</Text>
-            <TouchableOpacity 
+            <SmartButton 
               style={styles.generateButton}
               onPress={generateMealPlan}
               disabled={isGenerating}
+              loading={isGenerating}
+              accessibilityLabel="Générer un plan de repas"
             >
-              {isGenerating ? (
-                <ActivityIndicator size="small" color={Colors.light.background} />
-              ) : (
-                <Text style={styles.generateButtonText}>Générer</Text>
-              )}
-            </TouchableOpacity>
+              <Text style={styles.generateButtonText}>Générer</Text>
+            </SmartButton>
           </View>
           <Text style={styles.cardDescription}>
             Générez un plan de repas personnalisé avec l'IA
@@ -147,9 +145,12 @@ export default function DashboardScreen() {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>{mealPlan.plan_name}</Text>
-          <TouchableOpacity onPress={generateMealPlan}>
+          <SmartButton 
+            onPress={generateMealPlan}
+            accessibilityLabel="Actualiser le plan de repas"
+          >
             <Ionicons name="refresh" size={20} color={Colors.light.primary} />
-          </TouchableOpacity>
+          </SmartButton>
         </View>
         
         <View style={styles.mealPlanSummary}>
