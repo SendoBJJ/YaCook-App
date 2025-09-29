@@ -3,7 +3,22 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from bson import ObjectId
 from enum import Enum
-from models.user import PyObjectId
+
+class PyObjectId(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid ObjectId")
+        return str(v)
+
+    @classmethod
+    def __get_pydantic_json_schema__(cls, field_schema):
+        field_schema.update(type="string")
+        return field_schema
 
 class DifficultyLevel(str, Enum):
     FACILE = "facile"
