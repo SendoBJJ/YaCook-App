@@ -177,9 +177,12 @@ export default function MessagesScreen() {
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <SmartButton 
+              onPress={() => setSearchQuery('')}
+              accessibilityLabel="Effacer la recherche"
+            >
               <Ionicons name="close-circle" size={20} color={Colors.light.muted} />
-            </TouchableOpacity>
+            </SmartButton>
           )}
         </View>
       </View>
