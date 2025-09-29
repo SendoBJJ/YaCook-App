@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
@@ -20,6 +19,8 @@ import { Colors } from '../../src/constants/Colors';
 import { AppTexts } from '../../src/constants/Texts';
 import { Spacing, BorderRadius, FontSize, FontWeight, Shadow } from '../../src/constants/Layout';
 import { Post } from '../../src/types';
+import { SmartButton } from '../../src/components/SmartButton';
+import { SkeletonCard } from '../../src/components/SkeletonLoader';
 
 const POSTS_PER_PAGE = 20;
 
