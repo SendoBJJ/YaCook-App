@@ -387,7 +387,8 @@ class YaCookAPITester:
         
         # Test creating a comment
         comment_data = {
-            "content": "Excellente question! Pour un soufflé réussi, il faut bien battre les blancs en neige ferme et les incorporer délicatement à la préparation.",
+            "body": "Excellente question! Pour un soufflé réussi, il faut bien battre les blancs en neige ferme et les incorporer délicatement à la préparation.",
+            "post_id": post_id,
             "parent_id": None
         }
         
