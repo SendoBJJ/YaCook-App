@@ -127,7 +127,7 @@ export default function LoginScreen() {
               textStyle={styles.loginButtonText}
               accessibilityLabel="Se connecter"
             >
-              {AppTexts.auth.login}
+              {AppTexts.auth.signIn}
             </SmartButton>
 
             <Link href="/auth/register" style={styles.linkContainer}>
