@@ -136,7 +136,7 @@ export default function ShoppingListScreen() {
         section: newItemSection,
       };
 
-      await shoppingListApi.addShoppingItem(newItem);
+      await shoppingListApi.addItem(newItem);
       
       // Close modal and reset form
       setShowAddModal(false);
