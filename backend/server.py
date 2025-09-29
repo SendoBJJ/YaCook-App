@@ -644,10 +644,17 @@ async def get_post_comments(
             
             comment_response = CommentResponse(
                 id=str(comment["_id"]),
+                body=comment["body"],
+                post_id=str(comment["post_id"]),
+                parent_id=str(comment["parent_id"]) if comment.get("parent_id") else None,
                 author_id=str(comment["author_id"]),
                 author_name=author.get("display_name") or f"{author.get('first_name', '')} {author.get('last_name', '')}".strip(),
                 author_avatar=author.get("avatar_url"),
-                **{k: v for k, v in comment.items() if k not in ["_id", "author_id"]}
+                likes_count=comment["likes_count"],
+                replies_count=comment["replies_count"],
+                is_deleted=comment["is_deleted"],
+                created_at=comment["created_at"],
+                updated_at=comment["updated_at"]
             )
             comment_responses.append(comment_response)
         
