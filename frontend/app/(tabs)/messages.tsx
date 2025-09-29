@@ -132,6 +132,28 @@ export default function MessagesScreen() {
       <Text style={styles.emptyStateText}>
         Commencez à discuter avec d'autres cuisiniers en commentant leurs recettes !
       </Text>
+      
+      <View style={styles.emptyStateCTAs}>
+        <TouchableOpacity 
+          style={styles.emptyCTAButton}
+          onPress={handleNewMessage}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="add" size={20} color={Colors.light.background} />
+          <Text style={styles.emptyCTAButtonText}>Nouvelle conversation</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.emptyCTAButton, styles.secondaryCTAButton]}
+          onPress={() => router.push('/community')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="people" size={20} color={Colors.light.primary} />
+          <Text style={[styles.emptyCTAButtonText, styles.secondaryCTAButtonText]}>
+            Découvrir la communauté
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
