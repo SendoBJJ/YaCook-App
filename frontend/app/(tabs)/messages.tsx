@@ -135,25 +135,25 @@ export default function MessagesScreen() {
       </Text>
       
       <View style={styles.emptyStateCTAs}>
-        <TouchableOpacity 
+        <SmartButton 
           style={styles.emptyCTAButton}
           onPress={handleNewMessage}
-          activeOpacity={0.8}
+          accessibilityLabel="Créer une nouvelle conversation"
         >
           <Ionicons name="add" size={20} color={Colors.light.background} />
           <Text style={styles.emptyCTAButtonText}>Nouvelle conversation</Text>
-        </TouchableOpacity>
+        </SmartButton>
         
-        <TouchableOpacity 
+        <SmartButton 
           style={[styles.emptyCTAButton, styles.secondaryCTAButton]}
           onPress={() => router.push('/community')}
-          activeOpacity={0.8}
+          accessibilityLabel="Découvrir la communauté"
         >
           <Ionicons name="people" size={20} color={Colors.light.primary} />
           <Text style={[styles.emptyCTAButtonText, styles.secondaryCTAButtonText]}>
             Découvrir la communauté
           </Text>
-        </TouchableOpacity>
+        </SmartButton>
       </View>
     </View>
   );
