@@ -214,7 +214,7 @@ export default function RegisterScreen() {
             <View style={styles.signinContainer}>
               <Text style={styles.signinText}>{AppTexts.auth.alreadyHaveAccount}</Text>
               <Link href="/auth/login" asChild>
-                <TouchableOpacity>
+                <TouchableOpacity onClick={() => router.push('/auth/login')}>
                   <Text style={styles.signinLink}>{AppTexts.auth.signIn}</Text>
                 </TouchableOpacity>
               </Link>
