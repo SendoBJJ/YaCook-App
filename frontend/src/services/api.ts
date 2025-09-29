@@ -219,6 +219,13 @@ export const authApi = {
       }
       
       console.log('✅ All tokens and storage cleared');
+      
+      // Show French logout toast
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('authSuccess', {
+          detail: { message: 'Déconnexion réussie' }
+        }));
+      }
     }
   },
 
