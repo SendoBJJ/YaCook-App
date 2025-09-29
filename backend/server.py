@@ -421,6 +421,48 @@ async def generate_meal_plan(
             detail="Erreur lors de la génération du plan de repas"
         )
 
+# Cloudinary media upload endpoints
+@app.post("/api/media/signature", response_model=SignatureResponse)
+async def generate_upload_signature(
+    signature_request: SignatureRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate secure upload signature for Cloudinary EU region."""
+    try:
+        # Validate request parameters
+        validation_errors = cloudinary_service.validate_upload_params(signature_request)
+        if validation_errors:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"errors": validation_errors}
+            )
+        
+        # Add user context to signature request
+        if not signature_request.context:
+            signature_request.context = {}
+        
+        signature_request.context.update({
+            "user_id": str(current_user["_id"]),
+            "user_email": current_user.get("email", ""),
+            "upload_timestamp": str(int(time.time()))
+        })
+        
+        # Generate signature
+        signature_response = cloudinary_service.generate_upload_signature(signature_request)
+        
+        logger.info(f"Generated upload signature for user {current_user['email']} in folder {signature_request.folder}")
+        
+        return signature_response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating upload signature: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la génération de la signature d'upload"
+        )
+
 # User profile endpoints
 @app.get("/api/users/me", response_model=UserResponse)
 async def get_current_user_profile(current_user: dict = Depends(get_current_user)):
