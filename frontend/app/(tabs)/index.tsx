@@ -92,14 +92,18 @@ export default function DashboardScreen() {
     );
   };
 
+  const handleAddMealPress = () => {
+    router.push('/meals/add');
+  };
+
   const renderQuickActions = () => (
     <View style={styles.quickActions}>
-      <TouchableOpacity style={styles.actionButton}>
+      <TouchableOpacity style={styles.actionButton} onPress={handleAddMealPress} activeOpacity={0.8}>
         <Ionicons name="add-circle" size={24} color={Colors.light.primary} />
         <Text style={styles.actionText}>{AppTexts.dashboard.addMeal}</Text>
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.actionButton} onPress={handleShoppingListPress}>
+      <TouchableOpacity style={styles.actionButton} onPress={handleShoppingListPress} activeOpacity={0.8}>
         <Ionicons name="list" size={24} color={Colors.light.primary} />
         <Text style={styles.actionText}>{AppTexts.dashboard.groceryList}</Text>
       </TouchableOpacity>
