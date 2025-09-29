@@ -464,6 +464,419 @@ async def update_user_profile(
             detail="Erreur lors de la mise à jour du profil"
         )
 
+# Posts endpoints
+@app.get("/api/posts", response_model=PostList)
+async def get_posts(
+    page: int = 1,
+    per_page: int = 20,
+    post_type: Optional[PostType] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get posts feed."""
+    try:
+        db = database_service.get_database()
+        skip = (page - 1) * per_page
+        
+        # Build filter
+        filter_query = {"is_public": True}
+        if post_type:
+            filter_query["type"] = post_type.value
+        
+        # Get posts with pagination
+        posts_cursor = db.posts.find(filter_query).sort("created_at", -1).skip(skip).limit(per_page)
+        posts = await posts_cursor.to_list(length=per_page)
+        
+        # Get total count
+        total = await db.posts.count_documents(filter_query)
+        
+        # Transform posts
+        post_responses = []
+        for post in posts:
+            # Get author info
+            author = await db.users.find_one({"_id": post["author_id"]})
+            
+            post_response = PostResponse(
+                id=str(post["_id"]),
+                author_id=str(post["author_id"]),
+                author_name=author.get("display_name") or f"{author.get('first_name', '')} {author.get('last_name', '')}".strip(),
+                author_avatar=author.get("avatar_url"),
+                **{k: v for k, v in post.items() if k not in ["_id", "author_id"]}
+            )
+            post_responses.append(post_response)
+        
+        has_next = skip + per_page < total
+        has_prev = page > 1
+        
+        return PostList(
+            posts=post_responses,
+            total=total,
+            page=page,
+            per_page=per_page,
+            has_next=has_next,
+            has_prev=has_prev
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting posts: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la récupération des posts"
+        )
+
+@app.post("/api/posts", response_model=PostResponse)
+async def create_post(
+    post_data: PostCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create new post."""
+    try:
+        db = database_service.get_database()
+        user_id = current_user["_id"]
+        
+        # Create post document
+        post_dict = post_data.dict()
+        post_dict.update({
+            "author_id": user_id,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "likes_count": 0,
+            "saves_count": 0,
+            "comments_count": 0,
+            "views_count": 0
+        })
+        
+        # Insert post
+        result = await db.posts.insert_one(post_dict)
+        
+        # Get created post with author info
+        created_post = await db.posts.find_one({"_id": result.inserted_id})
+        author = await db.users.find_one({"_id": user_id})
+        
+        return PostResponse(
+            id=str(result.inserted_id),
+            author_id=str(user_id),
+            author_name=author.get("display_name") or f"{author.get('first_name', '')} {author.get('last_name', '')}".strip(),
+            author_avatar=author.get("avatar_url"),
+            **{k: v for k, v in created_post.items() if k not in ["_id", "author_id"]}
+        )
+        
+    except Exception as e:
+        logger.error(f"Error creating post: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la création du post"
+        )
+
+@app.get("/api/posts/{post_id}", response_model=PostResponse)
+async def get_post(
+    post_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get single post by ID."""
+    try:
+        db = database_service.get_database()
+        
+        # Get post
+        post = await db.posts.find_one({"_id": ObjectId(post_id)})
+        if not post:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Post non trouvé"
+            )
+        
+        # Increment view count
+        await db.posts.update_one(
+            {"_id": ObjectId(post_id)},
+            {"$inc": {"views_count": 1}}
+        )
+        
+        # Get author info
+        author = await db.users.find_one({"_id": post["author_id"]})
+        
+        return PostResponse(
+            id=str(post["_id"]),
+            author_id=str(post["author_id"]),
+            author_name=author.get("display_name") or f"{author.get('first_name', '')} {author.get('last_name', '')}".strip(),
+            author_avatar=author.get("avatar_url"),
+            **{k: v for k, v in post.items() if k not in ["_id", "author_id"]}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting post {post_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la récupération du post"
+        )
+
+# Comments endpoints
+@app.get("/api/posts/{post_id}/comments", response_model=CommentList)
+async def get_post_comments(
+    post_id: str,
+    page: int = 1,
+    per_page: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get comments for a post."""
+    try:
+        db = database_service.get_database()
+        skip = (page - 1) * per_page
+        
+        # Get comments for post
+        comments_cursor = db.comments.find({
+            "post_id": ObjectId(post_id),
+            "parent_id": None,  # Only top-level comments
+            "is_deleted": False
+        }).sort("created_at", -1).skip(skip).limit(per_page)
+        
+        comments = await comments_cursor.to_list(length=per_page)
+        total = await db.comments.count_documents({
+            "post_id": ObjectId(post_id),
+            "parent_id": None,
+            "is_deleted": False
+        })
+        
+        # Transform comments with author info
+        comment_responses = []
+        for comment in comments:
+            author = await db.users.find_one({"_id": comment["author_id"]})
+            
+            comment_response = CommentResponse(
+                id=str(comment["_id"]),
+                author_id=str(comment["author_id"]),
+                author_name=author.get("display_name") or f"{author.get('first_name', '')} {author.get('last_name', '')}".strip(),
+                author_avatar=author.get("avatar_url"),
+                **{k: v for k, v in comment.items() if k not in ["_id", "author_id"]}
+            )
+            comment_responses.append(comment_response)
+        
+        has_next = skip + per_page < total
+        has_prev = page > 1
+        
+        return CommentList(
+            comments=comment_responses,
+            total=total,
+            page=page,
+            per_page=per_page,
+            has_next=has_next,
+            has_prev=has_prev
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting comments for post {post_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la récupération des commentaires"
+        )
+
+@app.post("/api/posts/{post_id}/comments", response_model=CommentResponse)
+async def create_comment(
+    post_id: str,
+    comment_data: CommentCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create new comment."""
+    try:
+        db = database_service.get_database()
+        user_id = current_user["_id"]
+        
+        # Verify post exists
+        post = await db.posts.find_one({"_id": ObjectId(post_id)})
+        if not post:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Post non trouvé"
+            )
+        
+        # Create comment document
+        comment_dict = comment_data.dict()
+        comment_dict.update({
+            "post_id": ObjectId(post_id),
+            "author_id": user_id,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "likes_count": 0,
+            "replies_count": 0,
+            "is_deleted": False
+        })
+        
+        # Insert comment
+        result = await db.comments.insert_one(comment_dict)
+        
+        # Update post comment count
+        await db.posts.update_one(
+            {"_id": ObjectId(post_id)},
+            {"$inc": {"comments_count": 1}}
+        )
+        
+        # Get created comment with author info
+        created_comment = await db.comments.find_one({"_id": result.inserted_id})
+        author = await db.users.find_one({"_id": user_id})
+        
+        return CommentResponse(
+            id=str(result.inserted_id),
+            author_id=str(user_id),
+            author_name=author.get("display_name") or f"{author.get('first_name', '')} {author.get('last_name', '')}".strip(),
+            author_avatar=author.get("avatar_url"),
+            **{k: v for k, v in created_comment.items() if k not in ["_id", "author_id"]}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating comment: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la création du commentaire"
+        )
+
+# Shopping List endpoints
+@app.get("/api/shopping-list", response_model=ShoppingListResponse)
+async def get_shopping_list(current_user: dict = Depends(get_current_user)):
+    """Get user's shopping list."""
+    try:
+        db = database_service.get_database()
+        user_id = current_user["_id"]
+        
+        # Get shopping items
+        items_cursor = db.shopping_items.find({"user_id": user_id}).sort("created_at", -1)
+        items = await items_cursor.to_list(length=None)
+        
+        # Group by section
+        sections_dict = {}
+        total_items = len(items)
+        total_checked = 0
+        
+        for item in items:
+            section_name = item["section"] 
+            if section_name not in sections_dict:
+                sections_dict[section_name] = {
+                    "section": section_name,
+                    "section_name": section_name.replace('_', ' ').title(),
+                    "items": [],
+                    "total_items": 0,
+                    "checked_items": 0,
+                    "is_expanded": True
+                }
+            
+            item_response = ShoppingItemResponse(
+                id=str(item["_id"]),
+                user_id=str(item["user_id"]),
+                recipe_id=str(item["recipe_id"]) if item.get("recipe_id") else None,
+                **{k: v for k, v in item.items() if k not in ["_id", "user_id", "recipe_id"]}
+            )
+            
+            sections_dict[section_name]["items"].append(item_response)
+            sections_dict[section_name]["total_items"] += 1
+            
+            if item["is_checked"]:
+                sections_dict[section_name]["checked_items"] += 1
+                total_checked += 1
+        
+        # Convert to list
+        sections = list(sections_dict.values())
+        completion_percentage = (total_checked / total_items * 100) if total_items > 0 else 0
+        
+        return ShoppingListResponse(
+            sections=sections,
+            total_items=total_items,
+            total_checked=total_checked,
+            completion_percentage=completion_percentage,
+            last_updated=datetime.utcnow() if items else None
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting shopping list: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la récupération de la liste de courses"
+        )
+
+@app.post("/api/shopping-list/items", response_model=ShoppingItemResponse)
+async def add_shopping_item(
+    item_data: ShoppingItemCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Add item to shopping list."""
+    try:
+        db = database_service.get_database()
+        user_id = current_user["_id"]
+        
+        # Create item document
+        item_dict = item_data.dict()
+        item_dict.update({
+            "user_id": user_id,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        })
+        
+        # Insert item
+        result = await db.shopping_items.insert_one(item_dict)
+        
+        # Get created item
+        created_item = await db.shopping_items.find_one({"_id": result.inserted_id})
+        
+        return ShoppingItemResponse(
+            id=str(result.inserted_id),
+            user_id=str(user_id),
+            recipe_id=str(created_item["recipe_id"]) if created_item.get("recipe_id") else None,
+            **{k: v for k, v in created_item.items() if k not in ["_id", "user_id", "recipe_id"]}
+        )
+        
+    except Exception as e:
+        logger.error(f"Error adding shopping item: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de l'ajout de l'article"
+        )
+
+@app.put("/api/shopping-list/items/{item_id}", response_model=ShoppingItemResponse)
+async def update_shopping_item(
+    item_id: str,
+    item_update: ShoppingItemUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update shopping list item."""
+    try:
+        db = database_service.get_database()
+        user_id = current_user["_id"]
+        
+        # Prepare update data
+        update_data = {k: v for k, v in item_update.dict().items() if v is not None}
+        update_data["updated_at"] = datetime.utcnow()
+        
+        # Update item
+        result = await db.shopping_items.update_one(
+            {"_id": ObjectId(item_id), "user_id": user_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Article non trouvé"
+            )
+        
+        # Get updated item
+        updated_item = await db.shopping_items.find_one({"_id": ObjectId(item_id)})
+        
+        return ShoppingItemResponse(
+            id=str(item_id),
+            user_id=str(user_id),
+            recipe_id=str(updated_item["recipe_id"]) if updated_item.get("recipe_id") else None,
+            **{k: v for k, v in updated_item.items() if k not in ["_id", "user_id", "recipe_id"]}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating shopping item: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la mise à jour de l'article"
+        )
+
 if __name__ == "__main__":
     uvicorn.run(
         "server:app",
