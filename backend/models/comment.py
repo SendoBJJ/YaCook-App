@@ -30,8 +30,11 @@ class CommentCreate(BaseModel):
 class CommentUpdate(BaseModel):
     body: Optional[str] = None
 
-class CommentInDB(CommentBase):
+class CommentInDB(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    body: str = Field(..., min_length=1, max_length=1000, description="Contenu du commentaire")
+    post_id: PyObjectId = Field(..., description="ID du post")
+    parent_id: Optional[PyObjectId] = Field(None, description="ID du commentaire parent pour les réponses")
     author_id: PyObjectId = Field(..., description="ID de l'auteur")
     
     # Engagement metrics
@@ -50,8 +53,11 @@ class CommentInDB(CommentBase):
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
-class CommentResponse(CommentBase):
+class CommentResponse(BaseModel):
     id: str = Field(..., description="Comment ID")
+    body: str = Field(..., description="Contenu du commentaire")
+    post_id: str = Field(..., description="Post ID")
+    parent_id: Optional[str] = Field(None, description="Parent comment ID")
     author_id: str = Field(..., description="Author ID")
     author_name: Optional[str] = Field(None, description="Nom d'affichage de l'auteur")
     author_avatar: Optional[str] = Field(None, description="Avatar de l'auteur")
