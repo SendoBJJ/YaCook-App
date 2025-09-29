@@ -263,6 +263,23 @@ const styles = StyleSheet.create({
     color: Colors.light.muted,
     marginTop: 2,
   },
+  avatarButton: {
+    padding: 4,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.light.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Shadow.small,
+  },
+  avatarText: {
+    color: Colors.light.background,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+  },
   card: {
     backgroundColor: Colors.light.background,
     margin: Spacing.lg,
