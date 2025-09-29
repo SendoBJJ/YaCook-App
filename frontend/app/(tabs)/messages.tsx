@@ -213,9 +213,13 @@ export default function MessagesScreen() {
       </ScrollView>
 
       {/* New message button */}
-      <TouchableOpacity style={styles.newMessageButton} onPress={handleNewMessage} activeOpacity={0.8}>
+      <SmartButton 
+        style={styles.newMessageButton} 
+        onPress={handleNewMessage}
+        accessibilityLabel="Nouvelle conversation"
+      >
         <Ionicons name="add" size={24} color={Colors.light.background} />
-      </TouchableOpacity>
+      </SmartButton>
     </SafeAreaView>
   );
 }
