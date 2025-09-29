@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 # Pydantic models for Cloudinary operations
 class SignatureRequest(BaseModel):
     timestamp: Optional[int] = None
-    folder: str = Field(..., regex=r'^yacook/community/(recipe|question)$')
+    folder: str = Field(..., pattern=r'^yacook/community/(recipe|question)$')
     public_id: Optional[str] = None
-    resource_type: str = Field(default="image", regex=r'^(image|video)$')
+    resource_type: str = Field(default="image", pattern=r'^(image|video)$')
     tags: Optional[List[str]] = Field(default=[], max_items=10)
     context: Optional[Dict[str, str]] = None
 
