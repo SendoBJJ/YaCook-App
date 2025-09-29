@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test YaCook backend API endpoints including health check, user registration/login, product lookup, and AI recipe/meal plan generation"
+user_problem_statement: "Test YaCook mobile app frontend - a cooking-focused mobile app with French language support, authentication flow, tab navigation (Dashboard, Community, Scan, Messages), AI features, and mobile-responsive design"
 
 backend:
   - task: "Health Check Endpoint"
