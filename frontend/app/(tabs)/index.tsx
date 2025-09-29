@@ -177,6 +177,25 @@ export default function DashboardScreen() {
     </View>
   );
 
+  const renderUserAvatar = () => {
+    const initials = user?.first_name?.charAt(0)?.toUpperCase() || 'U';
+    
+    return (
+      <TouchableOpacity style={styles.avatarButton} onPress={handleProfilePress}>
+        {user?.avatar_url ? (
+          <View style={styles.avatar}>
+            {/* Would show actual image here */}
+            <Text style={styles.avatarText}>{initials}</Text>
+          </View>
+        ) : (
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{initials}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
