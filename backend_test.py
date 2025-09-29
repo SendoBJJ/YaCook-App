@@ -205,7 +205,7 @@ class YaCookAPITester:
             logger.error("❌ No access token available for AI meal plan generation")
             return False
         
-        meal_plan_request = {
+        meal_plan_params = {
             "days": 7,
             "daily_calories": 2000,
             "dietary_restrictions": []
@@ -214,8 +214,8 @@ class YaCookAPITester:
         try:
             async with self.session.post(
                 f"{self.base_url}/api/ai/generate-meal-plan",
-                json=meal_plan_request,
-                headers={**self.get_auth_headers(), "Content-Type": "application/json"}
+                params=meal_plan_params,
+                headers=self.get_auth_headers()
             ) as response:
                 
                 if response.status == 200:
