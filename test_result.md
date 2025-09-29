@@ -237,9 +237,9 @@ backend:
 frontend:
   - task: "Authentication Flow - Login Screen"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/app/auth/login.tsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -249,6 +249,9 @@ frontend:
         - working: true
           agent: "testing"
           comment: "✅ Login screen working perfectly. YaCook branding, French tagline 'Y'a quoi ? YaCook !', email/password inputs, form validation, social login buttons (Google/Apple), and navigation all functional. Mobile-responsive design confirmed."
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL BUG: Login form is NOT functional. TouchableOpacity button clicks do not trigger handleLogin function - no network requests made to /api/auth/login. Backend API confirmed working via manual fetch(). Issue: React Native Web compatibility problem with onPress handlers. Forms render correctly but authentication is completely broken."
 
   - task: "Authentication Flow - Registration Screen"
     implemented: true
