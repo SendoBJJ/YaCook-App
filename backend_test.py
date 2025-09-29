@@ -17,8 +17,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class YaCookAPITester:
-    def __init__(self, base_url: str = "https://meal-app-preview.preview.emergentagent.com"):
+    def __init__(self, base_url: str = "https://meal-app-preview.preview.emergentagent.com", internal_url: str = "http://localhost:8001"):
         self.base_url = base_url
+        self.internal_url = internal_url
         self.session: Optional[aiohttp.ClientSession] = None
         self.access_token: Optional[str] = None
         self.user_data: Optional[Dict[str, Any]] = None
