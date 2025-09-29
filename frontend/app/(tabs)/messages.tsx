@@ -353,6 +353,35 @@ const styles = StyleSheet.create({
     color: Colors.light.muted,
     textAlign: 'center',
     lineHeight: 22,
+    marginBottom: Spacing.xl,
+  },
+  emptyStateCTAs: {
+    width: '100%',
+    gap: Spacing.md,
+  },
+  emptyCTAButton: {
+    flexDirection: 'row',
+    backgroundColor: Colors.light.primary,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.medium,
+  },
+  secondaryCTAButton: {
+    backgroundColor: Colors.light.background,
+    borderWidth: 2,
+    borderColor: Colors.light.primary,
+  },
+  emptyCTAButtonText: {
+    color: Colors.light.background,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    marginLeft: Spacing.sm,
+  },
+  secondaryCTAButtonText: {
+    color: Colors.light.primary,
   },
   newMessageButton: {
     position: 'absolute',
