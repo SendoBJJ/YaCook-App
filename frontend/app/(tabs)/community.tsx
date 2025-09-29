@@ -193,16 +193,16 @@ ${response.recipe.tips ? `\n**Conseils:** ${response.recipe.tips}` : ''}`,
         { key: 'recipe', label: 'Recettes' },
         { key: 'question', label: 'Questions' },
       ].map((tab) => (
-        <TouchableOpacity
+        <SmartButton
           key={tab.key}
           style={[styles.tab, activeTab === tab.key && styles.activeTab]}
           onPress={() => setActiveTab(tab.key as any)}
-          activeOpacity={0.7}
+          accessibilityLabel={`Filtrer par ${tab.label}`}
         >
           <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
             {tab.label}
           </Text>
-        </TouchableOpacity>
+        </SmartButton>
       ))}
     </View>
   );
