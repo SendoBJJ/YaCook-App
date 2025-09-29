@@ -80,13 +80,14 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://localhost:3000", 
-        "exp://localhost:19000",
+        "http://localhost:19006", 
+        "https://localhost:3000",
         "https://meal-app-preview.preview.emergentagent.com",
-        "https://app.emergent.sh"
+        "https://app.emergent.sh",
+        "https://*.emergentagent.com"
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
 
