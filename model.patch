@@ -1,40 +1,25 @@
-diff --git a/backend/models/product.py b/backend/models/product.py
-index 67dbd44..36e1c2c 100644
---- a/backend/models/product.py
-+++ b/backend/models/product.py
-@@ -3,7 +3,22 @@ from typing import Optional, List, Dict, Any
- from datetime import datetime
- from bson import ObjectId
- from enum import Enum
--from models.user import PyObjectId
-+
-+class PyObjectId(str):
-+    @classmethod
-+    def __get_validators__(cls):
-+        yield cls.validate
-+
-+    @classmethod
-+    def validate(cls, v):
-+        if not ObjectId.is_valid(v):
-+            raise ValueError("Invalid ObjectId")
-+        return str(v)
-+
-+    @classmethod
-+    def __get_pydantic_json_schema__(cls, field_schema):
-+        field_schema.update(type="string")
-+        return field_schema
+diff --git a/backend/services/database_service.py b/backend/services/database_service.py
+index 7668766..3904267 100644
+--- a/backend/services/database_service.py
++++ b/backend/services/database_service.py
+@@ -112,7 +112,7 @@ class DatabaseService:
+     
+     def get_database(self) -> AsyncIOMotorDatabase:
+         """Get database instance."""
+-        if not self.database:
++        if self.database is None:
+             raise RuntimeError("Database not connected. Call connect() first.")
+         return self.database
  
- class NutriScore(str, Enum):
-     A = "a"
 diff --git a/model.patch b/model.patch
-index 992b0db..e69de29 100644
+index aff3895..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,28 +0,0 @@
--diff --git a/backend/models/recipe.py b/backend/models/recipe.py
--index 91e4945..5aa4c24 100644
----- a/backend/models/recipe.py
--+++ b/backend/models/recipe.py
+@@ -1,61 +0,0 @@
+-diff --git a/backend/models/product.py b/backend/models/product.py
+-index 67dbd44..36e1c2c 100644
+---- a/backend/models/product.py
+-+++ b/backend/models/product.py
 -@@ -3,7 +3,22 @@ from typing import Optional, List, Dict, Any
 - from datetime import datetime
 - from bson import ObjectId
@@ -57,5 +42,167 @@ index 992b0db..e69de29 100644
 -+        field_schema.update(type="string")
 -+        return field_schema
 - 
-- class DifficultyLevel(str, Enum):
--     FACILE = "facile"
+- class NutriScore(str, Enum):
+-     A = "a"
+-diff --git a/model.patch b/model.patch
+-index 992b0db..e69de29 100644
+---- a/model.patch
+-+++ b/model.patch
+-@@ -1,28 +0,0 @@
+--diff --git a/backend/models/recipe.py b/backend/models/recipe.py
+--index 91e4945..5aa4c24 100644
+----- a/backend/models/recipe.py
+--+++ b/backend/models/recipe.py
+--@@ -3,7 +3,22 @@ from typing import Optional, List, Dict, Any
+-- from datetime import datetime
+-- from bson import ObjectId
+-- from enum import Enum
+---from models.user import PyObjectId
+--+
+--+class PyObjectId(str):
+--+    @classmethod
+--+    def __get_validators__(cls):
+--+        yield cls.validate
+--+
+--+    @classmethod
+--+    def validate(cls, v):
+--+        if not ObjectId.is_valid(v):
+--+            raise ValueError("Invalid ObjectId")
+--+        return str(v)
+--+
+--+    @classmethod
+--+    def __get_pydantic_json_schema__(cls, field_schema):
+--+        field_schema.update(type="string")
+--+        return field_schema
+-- 
+-- class DifficultyLevel(str, Enum):
+--     FACILE = "facile"
+diff --git a/test_result.md b/test_result.md
+index 187cba4..40e3c4c 100644
+--- a/test_result.md
++++ b/test_result.md
+@@ -100,4 +100,121 @@
+ 
+ #====================================================================================================
+ # Testing Data - Main Agent and testing sub agent both should log testing data below this section
+-#====================================================================================================
+\ No newline at end of file
++#====================================================================================================
++
++user_problem_statement: "Test YaCook backend API endpoints including health check, user registration/login, product lookup, and AI recipe/meal plan generation"
++
++backend:
++  - task: "Health Check Endpoint"
++    implemented: true
++    working: true
++    file: "/app/backend/server.py"
++    stuck_count: 0
++    priority: "high"
++    needs_retesting: false
++    status_history:
++        - working: false
++          agent: "testing"
++          comment: "Initially failed with database boolean comparison error - Motor AsyncIOMotorDatabase objects cannot be used in boolean context"
++        - working: true
++          agent: "testing"
++          comment: "Fixed database_service.py line 115: changed 'if not self.database:' to 'if self.database is None:'. Health check now returns 200 with proper status response"
++
++  - task: "User Registration Endpoint"
++    implemented: true
++    working: true
++    file: "/app/backend/server.py"
++    stuck_count: 0
++    priority: "high"
++    needs_retesting: false
++    status_history:
++        - working: false
++          agent: "testing"
++          comment: "Failed with same database boolean comparison error as health check"
++        - working: true
++          agent: "testing"
++          comment: "Fixed after database service correction. Successfully creates users with email authentication, returns JWT tokens"
++
++  - task: "User Login Endpoint"
++    implemented: true
++    working: true
++    file: "/app/backend/server.py"
++    stuck_count: 0
++    priority: "high"
++    needs_retesting: false
++    status_history:
++        - working: false
++          agent: "testing"
++          comment: "Failed with same database boolean comparison error"
++        - working: true
++          agent: "testing"
++          comment: "Fixed after database service correction. Successfully authenticates users and returns JWT tokens"
++
++  - task: "Product Lookup by Barcode"
++    implemented: true
++    working: true
++    file: "/app/backend/server.py"
++    stuck_count: 0
++    priority: "medium"
++    needs_retesting: false
++    status_history:
++        - working: true
++          agent: "testing"
++          comment: "Working correctly. Successfully retrieves product data from OpenFoodFacts API for barcode 3017620425400. Handles caching and error cases properly"
++
++  - task: "User Profile Retrieval"
++    implemented: true
++    working: true
++    file: "/app/backend/server.py"
++    stuck_count: 0
++    priority: "medium"
++    needs_retesting: false
++    status_history:
++        - working: true
++          agent: "testing"
++          comment: "Working correctly. Successfully retrieves authenticated user profile data with proper JWT validation"
++
++  - task: "AI Recipe Generation"
++    implemented: true
++    working: true
++    file: "/app/backend/server.py"
++    stuck_count: 0
++    priority: "high"
++    needs_retesting: false
++    status_history:
++        - working: true
++          agent: "testing"
++          comment: "Working correctly. Successfully generates recipes using GPT-4o-mini with proper authentication and parameter handling"
++
++  - task: "AI Meal Plan Generation"
++    implemented: true
++    working: false
++    file: "/app/backend/server.py"
++    stuck_count: 1
++    priority: "high"
++    needs_retesting: false
++    status_history:
++        - working: false
++          agent: "testing"
++          comment: "Endpoint is implemented correctly and accepts query parameters properly. However, AI generation fails due to LLM API budget exceeded (Current cost: 0.0010923, Max budget: 0.001). This is a configuration/budget issue, not a code issue"
++
++frontend:
++  # Frontend testing not performed as per instructions
++
++metadata:
++  created_by: "testing_agent"
++  version: "1.0"
++  test_sequence: 1
++  run_ui: false
++
++test_plan:
++  current_focus:
++    - "AI Meal Plan Generation budget issue"
++  stuck_tasks:
++    - "AI Meal Plan Generation - budget exceeded"
++  test_all: false
++  test_priority: "high_first"
++
++agent_communication:
++    - agent: "testing"
++      message: "Backend testing completed. Fixed critical database boolean comparison bug in database_service.py. All core endpoints working except AI meal plan generation which fails due to LLM API budget limits. The backend architecture and implementation is solid."
+\ No newline at end of file
