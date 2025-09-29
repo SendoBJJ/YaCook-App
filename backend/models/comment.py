@@ -21,11 +21,11 @@ class PyObjectId(str):
 
 class CommentBase(BaseModel):
     body: str = Field(..., min_length=1, max_length=1000, description="Contenu du commentaire")
-    post_id: PyObjectId = Field(..., description="ID du post")
     parent_id: Optional[PyObjectId] = Field(None, description="ID du commentaire parent pour les réponses")
 
-class CommentCreate(CommentBase):
-    pass
+class CommentCreate(BaseModel):
+    body: str = Field(..., min_length=1, max_length=1000, description="Contenu du commentaire")
+    parent_id: Optional[PyObjectId] = Field(None, description="ID du commentaire parent pour les réponses")
 
 class CommentUpdate(BaseModel):
     body: Optional[str] = None
