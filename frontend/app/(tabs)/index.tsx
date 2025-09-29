@@ -72,15 +72,12 @@ export default function DashboardScreen() {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Déconnexion', style: 'destructive', onPress: logout },
-      ]
-    );
+  const handleProfilePress = () => {
+    router.push('/profile/settings');
+  };
+
+  const handleShoppingListPress = () => {
+    router.push('/shopping-list');
   };
 
   const renderCalorieRing = () => {
