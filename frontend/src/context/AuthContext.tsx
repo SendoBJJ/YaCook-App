@@ -2,6 +2,9 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, AuthResponse, LoginData, RegisterData } from '../types';
 import { authApi, tokenManager } from '../services/api';
 
+// Add API base URL logging
+console.log('🔗 YaCook API Base URL:', process.env.EXPO_PUBLIC_API_BASE_URL);
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
