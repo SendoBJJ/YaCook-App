@@ -183,13 +183,146 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
+// Post types
+export interface Post {
+  id: string;
+  type: 'question' | 'recipe';
+  title: string;
+  body: string;
+  tags: string[];
+  media: PostMedia[];
+  is_public: boolean;
+  author_id: string;
+  author_name?: string;
+  author_avatar?: string;
+  likes_count: number;
+  saves_count: number;
+  comments_count: number;
+  views_count: number;
+  created_at: string;
+  updated_at: string;
+  is_liked?: boolean;
+  is_saved?: boolean;
+  is_following_author?: boolean;
+}
+
+export interface PostMedia {
+  type: 'image' | 'video';
+  url: string;
+  thumbnail_url?: string;
+  caption?: string;
+  duration?: number;
+}
+
+export interface CreatePost {
+  type: 'question' | 'recipe';
+  title: string;
+  body: string;
+  tags?: string[];
+  media?: PostMedia[];
+  is_public?: boolean;
+}
+
+export interface PostList {
+  posts: Post[];
+  total: number;
+  page: number;
+  per_page: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+// Comment types
+export interface Comment {
+  id: string;
+  body: string;
+  post_id: string;
+  parent_id?: string;
+  author_id: string;
+  author_name?: string;
+  author_avatar?: string;
+  likes_count: number;
+  replies_count: number;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+  is_liked?: boolean;
+  replies?: Comment[];
+}
+
+export interface CreateComment {
+  body: string;
+  post_id: string;
+  parent_id?: string;
+}
+
+export interface CommentList {
+  comments: Comment[];
+  total: number;
+  page: number;
+  per_page: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+// Shopping List types
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  section: string;
+  quantity: number;
+  unit?: string;
+  notes?: string;
+  is_checked: boolean;
+  user_id: string;
+  recipe_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateShoppingItem {
+  name: string;
+  section: string;
+  quantity?: number;
+  unit?: string;
+  notes?: string;
+}
+
+export interface UpdateShoppingItem {
+  name?: string;
+  section?: string;
+  quantity?: number;
+  unit?: string;
+  notes?: string;
+  is_checked?: boolean;
+}
+
+export interface ShoppingSection {
+  section: string;
+  section_name: string;
+  items: ShoppingItem[];
+  total_items: number;
+  checked_items: number;
+  is_expanded: boolean;
+}
+
+export interface ShoppingList {
+  sections: ShoppingSection[];
+  total_items: number;
+  total_checked: number;
+  completion_percentage: number;
+  last_updated?: string;
+}
+
 // Navigation types
 export type RootStackParamList = {
   '(tabs)': undefined;
   'auth/login': undefined;
   'auth/register': undefined;
-  'recipe/[id]': { id: string };
+  'post/[id]': { id: string };
+  'community/composer': undefined;
   'profile/settings': undefined;
+  'shopping-list': undefined;
 };
 
 export type TabsParamList = {
