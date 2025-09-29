@@ -806,6 +806,9 @@ class YaCookAPITester:
         # Test 10: Shopping List API (requires auth)
         results["shopping_list_api"] = await self.test_shopping_list_api()
         
+        # Test 11: Cloudinary Signature API (requires auth)
+        results["cloudinary_signature_api"] = await self.test_cloudinary_signature_endpoint()
+        
         return results
 
 async def main():
