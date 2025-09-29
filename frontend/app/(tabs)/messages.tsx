@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { Colors } from '../../src/constants/Colors';
 import { AppTexts } from '../../src/constants/Texts';
 import { Spacing, BorderRadius, FontSize, FontWeight, Shadow } from '../../src/constants/Layout';
 import { SmartButton } from '../../src/components/SmartButton';
+import { SkeletonConversationItem } from '../../src/components/SkeletonLoader';
 
 interface Conversation {
   id: string;
