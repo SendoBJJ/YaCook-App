@@ -74,7 +74,7 @@ export default function NewThreadScreen() {
     }
   };
 
-  const renderUserItem = (user) => (
+  const renderUserItem = (user: MockUser) => (
     <TouchableOpacity
       key={user.id}
       style={[styles.userItem, selectedUser?.id === user.id && styles.selectedUserItem]}
