@@ -1,9 +1,17 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { AuthResponse, LoginData, RegisterData, User } from '../types';
+import { tokenStorage } from '../utils/tokenStorage';
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8001';
+// Clean and build API base URL to prevent /api/api issues
+const getApiBaseUrl = (): string => {
+  const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
+  return baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+console.log('🔗 API Base URL:', API_BASE_URL);
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'access_token';
@@ -12,18 +20,18 @@ const USER_DATA_KEY = 'user_data';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: `${API_URL}/api`,
+  baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Token management
+// Enhanced token manager using universal storage
 export const tokenManager = {
   async getAccessToken(): Promise<string | null> {
     try {
-      return await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+      return await tokenStorage.get(ACCESS_TOKEN_KEY);
     } catch (error) {
       console.error('Error getting access token:', error);
       return null;
@@ -32,7 +40,7 @@ export const tokenManager = {
 
   async getRefreshToken(): Promise<string | null> {
     try {
-      return await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+      return await tokenStorage.get(REFRESH_TOKEN_KEY);
     } catch (error) {
       console.error('Error getting refresh token:', error);
       return null;
@@ -41,8 +49,9 @@ export const tokenManager = {
 
   async setTokens(accessToken: string, refreshToken: string): Promise<void> {
     try {
-      await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken);
-      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
+      await tokenStorage.set(ACCESS_TOKEN_KEY, accessToken);
+      await tokenStorage.set(REFRESH_TOKEN_KEY, refreshToken);
+      console.log('✅ Tokens stored successfully');
     } catch (error) {
       console.error('Error setting tokens:', error);
       throw error;
@@ -51,9 +60,10 @@ export const tokenManager = {
 
   async clearTokens(): Promise<void> {
     try {
-      await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
-      await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
-      await SecureStore.deleteItemAsync(USER_DATA_KEY);
+      await tokenStorage.del(ACCESS_TOKEN_KEY);
+      await tokenStorage.del(REFRESH_TOKEN_KEY);
+      await tokenStorage.del(USER_DATA_KEY);
+      console.log('✅ Tokens cleared successfully');
     } catch (error) {
       console.error('Error clearing tokens:', error);
     }
@@ -61,7 +71,7 @@ export const tokenManager = {
 
   async getUserData(): Promise<User | null> {
     try {
-      const userData = await SecureStore.getItemAsync(USER_DATA_KEY);
+      const userData = await tokenStorage.get(USER_DATA_KEY);
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
       console.error('Error getting user data:', error);
@@ -71,7 +81,8 @@ export const tokenManager = {
 
   async setUserData(user: User): Promise<void> {
     try {
-      await SecureStore.setItemAsync(USER_DATA_KEY, JSON.stringify(user));
+      await tokenStorage.set(USER_DATA_KEY, JSON.stringify(user));
+      console.log('✅ User data stored successfully');
     } catch (error) {
       console.error('Error setting user data:', error);
       throw error;
@@ -86,18 +97,31 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Log request for debugging
+    console.log(`🌐 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor to handle token refresh
+// Response interceptor to handle token refresh and errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log successful responses
+    console.log(`✅ ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`);
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
+    
+    // Log error responses
+    console.error(`❌ ${error.response?.status || 'Network Error'} ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url}`);
+    console.error('Error details:', error.response?.data || error.message);
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -105,7 +129,7 @@ api.interceptors.response.use(
       try {
         const refreshToken = await tokenManager.getRefreshToken();
         if (refreshToken) {
-          const response = await axios.post(`${API_URL}/api/auth/refresh`, {
+          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
             refresh_token: refreshToken,
           });
 
@@ -117,6 +141,7 @@ api.interceptors.response.use(
           return api(originalRequest);
         }
       } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
         // Refresh failed, clear tokens and redirect to login
         await tokenManager.clearTokens();
         // You might want to trigger a logout event here
@@ -130,13 +155,27 @@ api.interceptors.response.use(
 // Auth API
 export const authApi = {
   async login(data: LoginData): Promise<AuthResponse> {
-    const response = await api.post('/auth/login', data);
-    return response.data;
+    try {
+      console.log('🔑 Attempting login for:', data.email);
+      const response = await api.post('/auth/login', data);
+      console.log('✅ Login successful');
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Login failed:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await api.post('/auth/register', data);
-    return response.data;
+    try {
+      console.log('📝 Attempting registration for:', data.email);
+      const response = await api.post('/auth/register', data);
+      console.log('✅ Registration successful');
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Registration failed:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
@@ -149,9 +188,10 @@ export const authApi = {
   async logout(): Promise<void> {
     try {
       await api.post('/auth/logout');
+      console.log('✅ Server logout successful');
     } catch (error) {
       // Continue with logout even if server request fails
-      console.warn('Logout request failed:', error);
+      console.warn('Server logout request failed:', error);
     } finally {
       await tokenManager.clearTokens();
     }
