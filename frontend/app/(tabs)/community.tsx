@@ -348,24 +348,16 @@ ${response.recipe.tips ? `\n**Conseils:** ${response.recipe.tips}` : ''}`,
       <Text style={styles.aiPromptDescription}>
         Laissez l'intelligence artificielle créer une recette personnalisée
       </Text>
-      <TouchableOpacity 
-        style={[styles.aiPromptButton, isGeneratingRecipe && styles.disabledButton]}
+      <SmartButton 
+        style={styles.aiPromptButton}
         onPress={generateAIRecipe}
         disabled={isGeneratingRecipe}
-        activeOpacity={0.8}
+        loading={isGeneratingRecipe}
+        textStyle={styles.aiPromptButtonText}
+        accessibilityLabel="Générer une recette avec l'IA"
       >
-        {isGeneratingRecipe ? (
-          <>
-            <ActivityIndicator size="small" color={Colors.light.background} />
-            <Text style={styles.aiPromptButtonText}>Génération en cours...</Text>
-          </>
-        ) : (
-          <>
-            <Ionicons name="add" size={20} color={Colors.light.background} />
-            <Text style={styles.aiPromptButtonText}>Générer une recette</Text>
-          </>
-        )}
-      </TouchableOpacity>
+        Générer une recette
+      </SmartButton>
     </Animated.View>
   );
 
