@@ -142,9 +142,21 @@ api.interceptors.response.use(
         }
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
-        // Refresh failed, clear tokens and redirect to login
+        // Refresh failed, clear tokens and redirect to login with French toast
         await tokenManager.clearTokens();
-        // You might want to trigger a logout event here
+        
+        // Show French error toast
+        if (typeof window !== 'undefined') {
+          // Create and dispatch custom event for auth error
+          window.dispatchEvent(new CustomEvent('authError', {
+            detail: { message: 'Session expirée. Veuillez vous reconnecter.' }
+          }));
+          
+          // Redirect to login
+          if (window.location.pathname !== '/auth/login') {
+            window.location.href = '/auth/login';
+          }
+        }
       }
     }
 
