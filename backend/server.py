@@ -24,6 +24,16 @@ from models.recipe import (
 from models.product import (
     ProductResponse, ProductNotFound, ProductSearch, ProductSearchResponse
 )
+from models.post import (
+    PostCreate, PostUpdate, PostResponse, PostList, PostType
+)
+from models.comment import (
+    CommentCreate, CommentUpdate, CommentResponse, CommentList
+)
+from models.shopping_list import (
+    ShoppingItemCreate, ShoppingItemUpdate, ShoppingItemResponse,
+    ShoppingListResponse, AddIngredientsToShoppingList
+)
 
 # Import JWT utilities
 from jose import JWTError, jwt
