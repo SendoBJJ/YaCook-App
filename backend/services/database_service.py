@@ -112,7 +112,7 @@ class DatabaseService:
     
     def get_database(self) -> AsyncIOMotorDatabase:
         """Get database instance."""
-        if not self.database:
+        if self.database is None:
             raise RuntimeError("Database not connected. Call connect() first.")
         return self.database
 
