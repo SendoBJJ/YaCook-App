@@ -602,6 +602,23 @@ class YaCookAPITester:
         # Test 7: AI meal plan generation (requires auth)
         results["ai_meal_plan_generation"] = await self.test_ai_meal_plan_generation()
         
+        # NEW TESTS - Posts, Comments, Shopping List APIs
+        logger.info("🆕 Testing new API endpoints...")
+        
+        # Test 8: Posts API (requires auth)
+        posts_result = await self.test_posts_api()
+        results["posts_api"] = posts_result["success"]
+        
+        # Test 9: Comments API (requires auth and post ID)
+        if posts_result["question_post_id"]:
+            results["comments_api"] = await self.test_comments_api(posts_result["question_post_id"])
+        else:
+            logger.error("❌ Cannot test Comments API - no post ID available")
+            results["comments_api"] = False
+        
+        # Test 10: Shopping List API (requires auth)
+        results["shopping_list_api"] = await self.test_shopping_list_api()
+        
         return results
 
 async def main():
