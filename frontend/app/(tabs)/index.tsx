@@ -194,7 +194,11 @@ export default function DashboardScreen() {
     const initials = user?.first_name?.charAt(0)?.toUpperCase() || 'U';
     
     return (
-      <TouchableOpacity style={styles.avatarButton} onPress={handleProfilePress}>
+      <SmartButton 
+        style={styles.avatarButton} 
+        onPress={handleProfilePress}
+        accessibilityLabel="Ouvrir le profil utilisateur"
+      >
         {user?.avatar_url ? (
           <View style={styles.avatar}>
             {/* Would show actual image here */}
@@ -205,7 +209,7 @@ export default function DashboardScreen() {
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
         )}
-      </TouchableOpacity>
+      </SmartButton>
     );
   };
 
