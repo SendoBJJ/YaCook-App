@@ -405,21 +405,21 @@ ${response.recipe.tips ? `\n**Conseils:** ${response.recipe.tips}` : ''}`,
 
       {/* Floating Action Buttons */}
       <View style={styles.fabContainer}>
-        <TouchableOpacity 
+        <SmartButton 
           style={[styles.fab, styles.secondaryFab]}
           onPress={() => handleCreatePost('question')}
-          activeOpacity={0.8}
+          accessibilityLabel="Poser une question"
         >
           <Ionicons name="help-circle" size={24} color={Colors.light.primary} />
-        </TouchableOpacity>
+        </SmartButton>
         
-        <TouchableOpacity 
+        <SmartButton 
           style={styles.fab}
           onPress={() => handleCreatePost('recipe')}
-          activeOpacity={0.8}
+          accessibilityLabel="Créer une recette"
         >
           <Ionicons name="add" size={28} color={Colors.light.background} />
-        </TouchableOpacity>
+        </SmartButton>
       </View>
     </SafeAreaView>
   );
