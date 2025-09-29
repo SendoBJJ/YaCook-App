@@ -274,10 +274,10 @@ ${response.recipe.tips ? `\n**Conseils:** ${response.recipe.tips}` : ''}`,
   );
 
   const renderPost = ({ item: post }: { item: Post }) => (
-    <TouchableOpacity 
+    <SmartButton 
       style={styles.postCard} 
       onPress={() => handlePostPress(post)}
-      activeOpacity={0.95}
+      accessibilityLabel={`Voir le post: ${post.title}`}
     >
       {/* Post Header */}
       <View style={styles.postHeader}>
