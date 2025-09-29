@@ -180,7 +180,7 @@ ${response.recipe.tips ? `\n**Conseils:** ${response.recipe.tips}` : ''}`,
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffHours < 1) return 'À l\'instant';
+    if (diffHours < 1) return "À l'instant";
     if (diffHours < 24) return `Il y a ${diffHours}h`;
     if (diffDays < 7) return `Il y a ${diffDays}j`;
     return postDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
