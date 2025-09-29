@@ -327,7 +327,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "AI Meal Plan Generation budget issue"
+    - "Authentication Flow - Login Screen"
+    - "Authentication Flow - Registration Screen"
+    - "Tab Navigation - Dashboard"
+    - "Tab Navigation - Community"
+    - "Authentication Context & State Management"
+    - "API Integration & Services"
   stuck_tasks:
     - "AI Meal Plan Generation - budget exceeded"
   test_all: false
