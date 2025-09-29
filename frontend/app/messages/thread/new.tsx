@@ -17,7 +17,14 @@ import { Colors } from '../../../src/constants/Colors';
 import { Spacing, BorderRadius, FontSize, FontWeight, Shadow } from '../../../src/constants/Layout';
 
 // Mock users - would come from API in real app
-const mockUsers = [
+interface MockUser {
+  id: string;
+  name: string;
+  avatar: string;
+  isOnline: boolean;
+}
+
+const mockUsers: MockUser[] = [
   { id: '1', name: 'Chef Marie', avatar: 'M', isOnline: true },
   { id: '2', name: 'Thomas L.', avatar: 'T', isOnline: false },
   { id: '3', name: 'Sophie M.', avatar: 'S', isOnline: true },
@@ -29,7 +36,7 @@ export default function NewThreadScreen() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [messageText, setMessageText] = useState('');
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<MockUser | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   const filteredUsers = mockUsers.filter(u => 
