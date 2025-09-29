@@ -1,21 +1,32 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "YaCook",
+    "slug": "yacook",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
-    "userInterfaceStyle": "automatic",
+    "scheme": "yacook",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "primaryColor": "#15A055",
+    "backgroundColor": "#FFFFFF",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yacook.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Cette app utilise la caméra pour scanner les codes-barres des produits alimentaires.",
+        "CFBundleLocalizations": ["fr", "en"]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000"
+        "backgroundColor": "#15A055"
       },
+      "package": "com.yacook.app",
+      "versionCode": 1,
+      "permissions": ["android.permission.CAMERA"],
       "edgeToEdgeEnabled": true
     },
     "web": {
@@ -25,18 +36,30 @@
     },
     "plugins": [
       "expo-router",
+      "expo-secure-store",
+      [
+        "expo-barcode-scanner",
+        {
+          "cameraPermission": "Permettre à YaCook d'utiliser la caméra pour scanner les codes-barres."
+        }
+      ],
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000"
+          "backgroundColor": "#FFFFFF"
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "yacook-mvp-2025"
+      }
     }
   }
 }
