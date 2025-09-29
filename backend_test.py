@@ -461,7 +461,7 @@ class YaCookAPITester:
                 "name": "Aubergines",
                 "quantity": "2",
                 "unit": "pièces",
-                "section": "legumes",
+                "section": "légumes",
                 "is_checked": False,
                 "notes": "Bien fermes et brillantes"
             },
@@ -469,7 +469,7 @@ class YaCookAPITester:
                 "name": "Gruyère râpé",
                 "quantity": "200",
                 "unit": "g",
-                "section": "fromage",
+                "section": "produits_laitiers",
                 "is_checked": False,
                 "notes": "Pour le soufflé"
             },
@@ -477,7 +477,7 @@ class YaCookAPITester:
                 "name": "Œufs",
                 "quantity": "6",
                 "unit": "pièces",
-                "section": "produits_frais",
+                "section": "produits_laitiers",
                 "is_checked": False,
                 "notes": "Extra frais"
             }
