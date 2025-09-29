@@ -98,12 +98,22 @@ export default function DashboardScreen() {
 
   const renderQuickActions = () => (
     <View style={styles.quickActions}>
-      <TouchableOpacity style={styles.actionButton} onPress={handleAddMealPress} activeOpacity={0.8}>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={handleAddMealPress} 
+        activeOpacity={0.7}
+        android_ripple={{ color: Colors.light.primary + '20' }}
+      >
         <Ionicons name="add-circle" size={24} color={Colors.light.primary} />
         <Text style={styles.actionText}>{AppTexts.dashboard.addMeal}</Text>
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.actionButton} onPress={handleShoppingListPress} activeOpacity={0.8}>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={handleShoppingListPress} 
+        activeOpacity={0.7}
+        android_ripple={{ color: Colors.light.primary + '20' }}
+      >
         <Ionicons name="list" size={24} color={Colors.light.primary} />
         <Text style={styles.actionText}>{AppTexts.dashboard.groceryList}</Text>
       </TouchableOpacity>
