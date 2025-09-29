@@ -135,9 +135,18 @@ export default function DashboardScreen() {
               <Text style={styles.generateButtonText}>Générer</Text>
             </SmartButton>
           </View>
-          <Text style={styles.cardDescription}>
-            Générez un plan de repas personnalisé avec l'IA
-          </Text>
+          {isGenerating ? (
+            <View style={styles.skeletonContainer}>
+              <SkeletonText lines={2} />
+              <SkeletonMealCard />
+              <SkeletonMealCard />
+              <SkeletonMealCard />
+            </View>
+          ) : (
+            <Text style={styles.cardDescription}>
+              Générez un plan de repas personnalisé avec l'IA
+            </Text>
+          )}
         </View>
       );
     }
