@@ -110,6 +110,7 @@ export default function LoginScreen() {
             <TouchableOpacity 
               style={[styles.loginButton, isLoading && styles.disabledButton]} 
               onPress={handleLogin}
+              onClick={handleLogin}
               disabled={isLoading}
             >
               {isLoading ? (
