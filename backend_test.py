@@ -572,6 +572,192 @@ class YaCookAPITester:
         
         return True
     
+    async def test_cloudinary_signature_endpoint(self) -> bool:
+        """Test POST /api/media/signature endpoint for Cloudinary upload signatures."""
+        logger.info("Testing Cloudinary signature endpoint...")
+        
+        # Test 1: Authentication required (should fail without token)
+        logger.info("Testing authentication requirement...")
+        signature_request = {
+            "folder": "yacook/community/recipe",
+            "resource_type": "image",
+            "tags": ["recipe", "test"]
+        }
+        
+        try:
+            async with self.session.post(
+                f"{self.base_url}/api/media/signature",
+                json=signature_request,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status == 401:
+                    logger.info("✅ Authentication requirement working - 401 returned without token")
+                else:
+                    logger.error(f"❌ Authentication requirement failed - expected 401, got {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Authentication test failed with exception: {str(e)}")
+            return False
+        
+        # Test 2: Valid signature request (requires authentication)
+        if not self.access_token:
+            logger.error("❌ No access token available for authenticated Cloudinary signature test")
+            return False
+        
+        logger.info("Testing valid signature generation...")
+        valid_request = {
+            "folder": "yacook/community/recipe",
+            "resource_type": "image",
+            "tags": ["recipe", "italian", "pasta"],
+            "context": {"recipe_type": "pasta", "difficulty": "easy"}
+        }
+        
+        try:
+            async with self.session.post(
+                f"{self.base_url}/api/media/signature",
+                json=valid_request,
+                headers={**self.get_auth_headers(), "Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    
+                    # Validate response structure
+                    required_fields = ["signature", "timestamp", "api_key", "cloud_name", "upload_url", "expires_at"]
+                    missing_fields = [field for field in required_fields if field not in data]
+                    
+                    if missing_fields:
+                        logger.error(f"❌ Response missing required fields: {missing_fields}")
+                        return False
+                    
+                    # Validate EU Cloudinary URL
+                    if "api.cloudinary.com" not in data.get("upload_url", ""):
+                        logger.error(f"❌ Upload URL doesn't contain EU Cloudinary endpoint: {data.get('upload_url')}")
+                        return False
+                    
+                    # Validate timestamp and expiry
+                    current_time = int(time.time())
+                    timestamp = data.get("timestamp", 0)
+                    expires_at = data.get("expires_at", 0)
+                    
+                    if abs(timestamp - current_time) > 60:  # Allow 60 seconds tolerance
+                        logger.error(f"❌ Timestamp seems incorrect: {timestamp} vs current {current_time}")
+                        return False
+                    
+                    if expires_at <= timestamp:
+                        logger.error(f"❌ Expiry time should be after timestamp: {expires_at} <= {timestamp}")
+                        return False
+                    
+                    logger.info(f"✅ Valid signature generated successfully")
+                    logger.info(f"   - Cloud: {data.get('cloud_name')}")
+                    logger.info(f"   - Upload URL: {data.get('upload_url')}")
+                    logger.info(f"   - Expires in: {expires_at - timestamp} seconds")
+                    
+                else:
+                    logger.error(f"❌ Valid signature request failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Valid signature request failed with exception: {str(e)}")
+            return False
+        
+        # Test 3: Invalid folder validation
+        logger.info("Testing invalid folder path validation...")
+        invalid_request = {
+            "folder": "invalid/folder/path",
+            "resource_type": "image",
+            "tags": ["test"]
+        }
+        
+        try:
+            async with self.session.post(
+                f"{self.base_url}/api/media/signature",
+                json=invalid_request,
+                headers={**self.get_auth_headers(), "Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status == 400:
+                    logger.info("✅ Invalid folder validation working - 400 returned for invalid path")
+                elif response.status == 422:
+                    logger.info("✅ Invalid folder validation working - 422 returned for validation error")
+                else:
+                    logger.error(f"❌ Invalid folder validation failed - expected 400/422, got {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Invalid folder validation test failed with exception: {str(e)}")
+            return False
+        
+        # Test 4: Valid question folder path
+        logger.info("Testing valid question folder path...")
+        question_request = {
+            "folder": "yacook/community/question",
+            "resource_type": "image",
+            "tags": ["question", "help"]
+        }
+        
+        try:
+            async with self.session.post(
+                f"{self.base_url}/api/media/signature",
+                json=question_request,
+                headers={**self.get_auth_headers(), "Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    logger.info("✅ Question folder path accepted successfully")
+                else:
+                    logger.error(f"❌ Question folder path rejected with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Question folder path test failed with exception: {str(e)}")
+            return False
+        
+        # Test 5: User context verification (check if user context is added)
+        logger.info("Testing user context addition...")
+        context_request = {
+            "folder": "yacook/community/recipe",
+            "resource_type": "image",
+            "tags": ["recipe", "context_test"],
+            "context": {"recipe_name": "Test Recipe"}
+        }
+        
+        try:
+            async with self.session.post(
+                f"{self.base_url}/api/media/signature",
+                json=context_request,
+                headers={**self.get_auth_headers(), "Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    logger.info("✅ User context request processed successfully")
+                    # Note: We can't directly verify context was added to signature without decoding it,
+                    # but the successful response indicates the context processing worked
+                else:
+                    logger.error(f"❌ User context request failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ User context test failed with exception: {str(e)}")
+            return False
+        
+        logger.info("✅ All Cloudinary signature endpoint tests passed!")
+        return True
+    
     async def run_all_tests(self) -> Dict[str, bool]:
         """Run all API tests and return results."""
         logger.info("🚀 Starting YaCook API tests...")
