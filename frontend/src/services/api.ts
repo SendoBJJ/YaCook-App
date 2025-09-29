@@ -257,7 +257,7 @@ export const healthApi = {
 // Posts API
 export const postsApi = {
   async getPosts(page = 1, per_page = 20, post_type?: string) {
-    const params = { page, per_page };
+    const params: { page: number; per_page: number; post_type?: string } = { page, per_page };
     if (post_type) params.post_type = post_type;
     const response = await api.get('/posts', { params });
     return response.data;
