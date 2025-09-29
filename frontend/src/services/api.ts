@@ -254,4 +254,94 @@ export const healthApi = {
   },
 };
 
+// Posts API
+export const postsApi = {
+  async getPosts(page = 1, per_page = 20, post_type?: string) {
+    const params = { page, per_page };
+    if (post_type) params.post_type = post_type;
+    const response = await api.get('/posts', { params });
+    return response.data;
+  },
+
+  async createPost(postData: {
+    type: 'question' | 'recipe';
+    title: string;
+    body: string;
+    tags?: string[];
+    media?: any[];
+    is_public?: boolean;
+  }) {
+    const response = await api.post('/posts', postData);
+    return response.data;
+  },
+
+  async getPost(postId: string) {
+    const response = await api.get(`/posts/${postId}`);
+    return response.data;
+  },
+};
+
+// Comments API
+export const commentsApi = {
+  async getComments(postId: string, page = 1, per_page = 20) {
+    const response = await api.get(`/posts/${postId}/comments`, {
+      params: { page, per_page }
+    });
+    return response.data;
+  },
+
+  async createComment(postId: string, body: string, parentId?: string) {
+    const response = await api.post(`/posts/${postId}/comments`, {
+      body,
+      post_id: postId,
+      parent_id: parentId
+    });
+    return response.data;
+  },
+};
+
+// Shopping List API
+export const shoppingListApi = {
+  async getShoppingList() {
+    const response = await api.get('/shopping-list');
+    return response.data;
+  },
+
+  async addItem(item: {
+    name: string;
+    section: string;
+    quantity?: number;
+    unit?: string;
+    notes?: string;
+  }) {
+    const response = await api.post('/shopping-list/items', item);
+    return response.data;
+  },
+
+  async updateItem(itemId: string, updates: {
+    name?: string;
+    section?: string;
+    quantity?: number;
+    unit?: string;
+    notes?: string;
+    is_checked?: boolean;
+  }) {
+    const response = await api.put(`/shopping-list/items/${itemId}`, updates);
+    return response.data;
+  },
+
+  async deleteItem(itemId: string) {
+    const response = await api.delete(`/shopping-list/items/${itemId}`);
+    return response.data;
+  },
+
+  async addRecipeIngredients(recipeId: string, ingredients: any[]) {
+    const response = await api.post('/shopping-list/add-ingredients', {
+      recipe_id: recipeId,
+      ingredients
+    });
+    return response.data;
+  },
+};
+
 export default api;
