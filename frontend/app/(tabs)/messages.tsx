@@ -85,11 +85,11 @@ export default function MessagesScreen() {
   };
 
   const renderConversationItem = (conversation: Conversation) => (
-    <TouchableOpacity 
+    <SmartButton 
       key={conversation.id} 
       style={styles.conversationItem}
       onPress={() => handleConversationPress(conversation.id)}
-      activeOpacity={0.8}
+      accessibilityLabel={`Conversation avec ${conversation.participantName}`}
     >
       <View style={styles.avatarContainer}>
         <View style={styles.avatar}>
@@ -123,7 +123,7 @@ export default function MessagesScreen() {
           {conversation.lastMessage}
         </Text>
       </View>
-    </TouchableOpacity>
+    </SmartButton>
   );
 
   const renderEmptyState = () => (
