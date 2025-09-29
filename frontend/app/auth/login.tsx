@@ -33,10 +33,32 @@ export default function LoginScreen() {
 
     try {
       setIsLoading(true);
+      
+      // Log the attempt for debugging
+      console.log('🔐 Login attempt to:', process.env.EXPO_PUBLIC_API_BASE_URL + '/auth/login');
+      
       await login({ email: email.trim(), password });
       router.replace('/(tabs)');
     } catch (error: any) {
-      Alert.alert('Erreur de connexion', error.message);
+      console.error('❌ Login error:', {
+        message: error.message,
+        status: error.response?.status,
+        url: process.env.EXPO_PUBLIC_API_BASE_URL + '/auth/login',
+        timestamp: new Date().toISOString()
+      });
+      
+      // Enhanced French error messages
+      let errorMessage = 'Connexion impossible — réessayez plus tard';
+      
+      if (error.response?.status === 401) {
+        errorMessage = 'Email ou mot de passe incorrect';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Erreur du serveur — réessayez dans quelques minutes';
+      } else if (!error.response) {
+        errorMessage = 'Problème de connexion — vérifiez votre internet';
+      }
+      
+      Alert.alert('Erreur de connexion', errorMessage);
     } finally {
       setIsLoading(false);
     }
