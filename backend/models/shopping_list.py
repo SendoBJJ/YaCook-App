@@ -90,4 +90,4 @@ class ShoppingListResponse(BaseModel):
 
 class AddIngredientsToShoppingList(BaseModel):
     recipe_id: str = Field(..., description="ID de la recette")
-    ingredients: List[Dict[str, any]] = Field(..., description="Ingrédients à ajouter")
+    ingredients: List[Dict[str, Any]] = Field(..., description="Ingrédients à ajouter")
