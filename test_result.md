@@ -408,7 +408,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All critical web login fixes completed and verified"
+    - "New YaCook API endpoints successfully tested and working"
   stuck_tasks:
     - "AI Meal Plan Generation - budget exceeded"
   test_all: false
@@ -423,3 +423,5 @@ agent_communication:
       message: "Frontend testing completed. MAJOR SUCCESS: Fixed critical navigation error by removing conflicting React Navigation packages. Authentication screens (login/register) working perfectly with French UI, form validation, and mobile design. SecureStore issue prevents web testing of authenticated features but this is expected for mobile-first apps. Core frontend functionality confirmed working."
     - agent: "testing"
       message: "🎉 COMPREHENSIVE WEB LOGIN FIXES VERIFIED! All critical issues resolved: ✅ SecureStore fallback to localStorage working (0 errors) ✅ API base URL correct (no /api/api duplication) ✅ CORS configuration working (0 errors) ✅ Token storage & persistence working ✅ Error handling with French messages ✅ Login/registration forms functional ✅ All tab navigation now accessible. The web version now works seamlessly with proper cross-platform compatibility. Authentication flow completely functional on web browsers."
+    - agent: "testing"
+      message: "🆕 NEW ENDPOINTS TESTING COMPLETE! Successfully tested all new YaCook API endpoints: ✅ Posts API (GET /api/posts, POST /api/posts, GET /api/posts/{id}) - Creates question/recipe posts, retrieves paginated feeds, handles individual post views ✅ Comments API (GET/POST /api/posts/{id}/comments) - Creates comments with proper author info, retrieves paginated comments ✅ Shopping List API (GET /api/shopping-list, POST/PUT /api/shopping-list/items) - Manages items by French sections, tracks completion percentage. Fixed Pydantic model issues and French enum validation. All endpoints return proper French error messages and handle authentication correctly."
