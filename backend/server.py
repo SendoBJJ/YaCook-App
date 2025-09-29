@@ -96,7 +96,12 @@ app.add_middleware(
         "https://localhost:3000",
         "https://meal-app-preview.preview.emergentagent.com",
         "https://app.emergent.sh",
-        "https://*.emergentagent.com"
+        "https://*.emergentagent.com",
+        "https://yacook-api-stable.loca.lt",
+        "https://*.loca.lt",
+        "https://*.ngrok.io",
+        "https://*.trycloudflare.com",
+        "https://*.preview.emergentagent.com"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
