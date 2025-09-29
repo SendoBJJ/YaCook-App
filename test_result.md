@@ -234,6 +234,18 @@ backend:
           agent: "testing"
           comment: "✅ Shopping List API endpoints working perfectly: POST /api/shopping-list/items adds items with proper French section names (légumes, produits_laitiers), GET /api/shopping-list retrieves organized sections with completion percentage, PUT /api/shopping-list/items/{id} updates items (mark as checked). Fixed enum validation for French accented characters."
 
+  - task: "Cloudinary Media Upload Signature Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ NEW ENDPOINT TESTED: POST /api/media/signature working perfectly. All test scenarios passed: ✅ Authentication requirement (403 without token) ✅ Valid signature generation with proper response structure (signature, timestamp, api_key, cloud_name, upload_url, expires_at) ✅ EU Cloudinary URL configuration correct (api.cloudinary.com) ✅ Folder path validation working (only allows yacook/community/recipe and yacook/community/question) ✅ Invalid folder paths properly rejected (422 validation error) ✅ User context addition working correctly ✅ Timestamp and expiry validation working (1 hour validity). Endpoint properly secured with JWT authentication and generates valid Cloudinary upload signatures for EU region."
+
 frontend:
   - task: "Authentication Flow - Login Screen"
     implemented: true
