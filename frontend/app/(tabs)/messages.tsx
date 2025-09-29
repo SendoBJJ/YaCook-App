@@ -208,7 +208,13 @@ export default function MessagesScreen() {
         }
         contentContainerStyle={styles.scrollContent}
       >
-        {filteredConversations.length > 0 ? (
+        {isLoading ? (
+          <View style={styles.conversationsList}>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <SkeletonConversationItem key={index} />
+            ))}
+          </View>
+        ) : filteredConversations.length > 0 ? (
           <View style={styles.conversationsList}>
             {filteredConversations.map(renderConversationItem)}
           </View>
