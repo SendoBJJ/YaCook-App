@@ -1,22 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator,
+  Image,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { postsApi } from '../../src/services/api';
+import { uploadImageToCloudinary } from '../../src/services/cloudinaryService';
 import { Colors } from '../../src/constants/Colors';
 import { Spacing, BorderRadius, FontSize, FontWeight, Shadow } from '../../src/constants/Layout';
+import { SmartButton } from '../../src/components/SmartButton';
+import { Toast } from '../../src/components/Toast';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 interface PostType {
   type: 'recipe' | 'question';
