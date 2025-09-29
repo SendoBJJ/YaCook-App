@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
@@ -17,6 +16,7 @@ import { aiApi } from '../../src/services/api';
 import { Colors } from '../../src/constants/Colors';
 import { AppTexts } from '../../src/constants/Texts';
 import { Spacing, BorderRadius, FontSize, FontWeight, Shadow } from '../../src/constants/Layout';
+import { SmartButton } from '../../src/components/SmartButton';
 
 interface MealPlan {
   plan_name: string;
