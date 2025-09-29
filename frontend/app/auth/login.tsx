@@ -26,18 +26,23 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
+    console.log('🔐 Login button clicked!', { email: email.trim(), passwordLength: password.length });
+    
     if (!email.trim() || !password.trim()) {
+      console.log('❌ Validation failed: empty fields');
       Alert.alert('Erreur', 'Veuillez remplir tous les champs');
       return;
     }
 
     try {
       setIsLoading(true);
+      console.log('🚀 Starting login process...');
       
       // Log the attempt for debugging
       console.log('🔐 Login attempt to:', process.env.EXPO_PUBLIC_API_BASE_URL + '/auth/login');
       
       await login({ email: email.trim(), password });
+      console.log('✅ Login successful, redirecting...');
       router.replace('/(tabs)');
     } catch (error: any) {
       console.error('❌ Login error:', {
@@ -60,6 +65,7 @@ export default function LoginScreen() {
       
       Alert.alert('Erreur de connexion', errorMessage);
     } finally {
+      console.log('🏁 Login process finished');
       setIsLoading(false);
     }
   };
