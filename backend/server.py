@@ -100,6 +100,7 @@ app.add_middleware(
         "https://*.emergentagent.com",
         "https://*.preview-nt.com",
         "https://yacook-api-stable.loca.lt",
+        "https://yacook-api-v2.loca.lt",
         "https://*.loca.lt",
         "https://*.ngrok.io",
         "https://*.trycloudflare.com",
