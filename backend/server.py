@@ -95,7 +95,7 @@ app.add_middleware(
         "http://localhost:19006", 
         "https://localhost:3000",
         "https://meal-app-preview.preview.emergentagent.com",
-        "https://yacook-phase0.preview-nt.com",
+        "https://yacook-phase0.preview.emergentagent.com",
         "https://app.emergent.sh",
         "https://*.emergentagent.com",
         "https://*.preview-nt.com",
