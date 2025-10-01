@@ -124,6 +124,12 @@ export default function CommunityScreen() {
     setSearchResults([]);
     setShowSearchResults(false);
   };
+  const handleCreatePost = (type: 'recipe' | 'question') => {
+    router.push({
+      pathname: '/community/composer',
+      params: { type }
+    });
+  };
 
   const handlePostPress = (post: Post) => {
     router.push({
