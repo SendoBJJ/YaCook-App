@@ -6,7 +6,11 @@ import { tokenStorage } from '../utils/tokenStorage';
 
 // Clean and build API base URL to prevent /api/api issues
 const getApiBaseUrl = (): string => {
-  const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8001/api';
+  // Try multiple ways to get the environment variable for better compatibility
+  const baseUrl = Constants.expoConfig?.extra?.apiBaseUrl ||
+                  Constants.manifest?.extra?.apiBaseUrl ||
+                  process.env.EXPO_PUBLIC_API_BASE_URL ||
+                  'https://yacook-api.loca.lt/api';
   return baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
 };
 
