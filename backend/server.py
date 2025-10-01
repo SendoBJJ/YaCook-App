@@ -14,6 +14,7 @@ from services.auth_service import auth_service
 from services.openfoodfacts_service import openfoodfacts_service
 from services.ai_service import ai_service
 from services.cloudinary_service import cloudinary_service, SignatureRequest, SignatureResponse
+from services.notification_service import notification_service
 
 # Import models
 from models.user import (
