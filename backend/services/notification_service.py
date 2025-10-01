@@ -16,7 +16,13 @@ logger = logging.getLogger(__name__)
 
 class NotificationService:
     def __init__(self):
-        self.db = database_service.get_database()
+        self.db = None
+        
+    def get_database(self):
+        """Get database connection (lazy initialization)."""
+        if self.db is None:
+            self.db = database_service.get_database()
+        return self.db
         
     async def create_notification(
         self, 
