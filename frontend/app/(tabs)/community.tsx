@@ -410,6 +410,12 @@ ${response.recipe.tips ? `\n**Conseils:** ${response.recipe.tips}` : ''}`,
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header with title and notification bell */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Communauté</Text>
+        <NotificationBell size={24} color={Colors.light.text} />
+      </View>
+      
       {renderTabBar()}
       
       {/* Search Input */}
