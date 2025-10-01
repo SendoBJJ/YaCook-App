@@ -97,7 +97,7 @@ app.add_middleware(
         "https://yacook-phase0.preview.emergentagent.com",  # Add back for compatibility
         "https://app.emergent.sh",
         "https://*.emergentagent.com",
-        "https://yacook-stable-api.loca.lt",  # Allow API endpoint itself
+        "https://*.preview.emergentagent.com",  # Allow all preview subdomains
     ],
     allow_credentials=True,
     allow_methods=["*"],
