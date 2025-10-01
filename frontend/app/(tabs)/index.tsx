@@ -104,7 +104,7 @@ export default function DashboardScreen() {
   };
 
   const handleProfilePress = () => {
-    router.push('/profile/settings');
+    router.push('/profile/me'); // Use a special route for own profile
   };
 
   const handleShoppingListPress = () => {
