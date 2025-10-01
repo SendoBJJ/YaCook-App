@@ -92,23 +92,13 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "http://localhost:19006", 
-        "https://localhost:3000",
+        "http://localhost:19006",
         "https://meal-app-preview.preview.emergentagent.com",
-        "https://yacook-phase0.preview.emergentagent.com",
         "https://app.emergent.sh",
         "https://*.emergentagent.com",
-        "https://*.preview-nt.com",
-        "https://yacook-api-stable.loca.lt",
-        "https://yacook-api-v2.loca.lt",
-        "https://yacook-stable-api.loca.lt",
-        "https://*.loca.lt",
-        "https://*.ngrok.io",
-        "https://*.trycloudflare.com",
-        "https://*.preview.emergentagent.com"
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
