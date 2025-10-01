@@ -22,6 +22,7 @@ import { Spacing, BorderRadius, FontSize, FontWeight, Shadow } from '../../src/c
 import { Post } from '../../src/types';
 import { SmartButton } from '../../src/components/SmartButton';
 import { SkeletonCard } from '../../src/components/SkeletonLoader';
+import { NotificationBell } from '../../src/components/NotificationBell';
 
 const POSTS_PER_PAGE = 20;
 
