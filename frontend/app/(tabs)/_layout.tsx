@@ -50,7 +50,7 @@ export default function TabLayout() {
         options={{
           title: AppTexts.tabs.community,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
+            <CommunityTabIcon color={color} size={size} />
           ),
           headerTitle: AppTexts.community.title,
         }}
