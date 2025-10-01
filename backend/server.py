@@ -37,6 +37,10 @@ from models.shopping_list import (
     ShoppingItemCreate, ShoppingItemUpdate, ShoppingItemResponse,
     ShoppingListResponse, AddIngredientsToShoppingList
 )
+from models.notification import (
+    NotificationCreate, NotificationResponse, NotificationList,
+    NotificationUpdate, NotificationMarkAllRead
+)
 
 # Import JWT utilities
 from jose import JWTError, jwt
