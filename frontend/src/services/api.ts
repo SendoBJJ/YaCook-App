@@ -448,4 +448,48 @@ export const postsApi = {
   },
 };
 
+// Notifications API
+export const notificationsApi = {
+  async getNotifications(page = 1, per_page = 20, unread_only = false) {
+    const response = await api.get('/notifications', {
+      params: { page, per_page, unread_only }
+    });
+    return response.data;
+  },
+
+  async getUnreadCount() {
+    const response = await api.get('/notifications/unread-count');
+    return response.data;
+  },
+
+  async markAsRead(notificationId: string) {
+    const response = await api.put(`/notifications/${notificationId}/read`);
+    return response.data;
+  },
+
+  async markAllAsRead() {
+    const response = await api.put('/notifications/mark-all-read');
+    return response.data;
+  },
+
+  async getFilteredNotifications(section: 'all' | 'mentions' | 'comments', page = 1, per_page = 20, unread_only = false) {
+    let type_filter = undefined;
+    if (section === 'mentions') {
+      type_filter = 'mention';
+    } else if (section === 'comments') {
+      type_filter = 'comment';
+    }
+
+    const response = await api.get('/notifications', {
+      params: { 
+        page, 
+        per_page, 
+        unread_only,
+        ...(type_filter && { type: type_filter })
+      }
+    });
+    return response.data;
+  },
+};
+
 export default api;
