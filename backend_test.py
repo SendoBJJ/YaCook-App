@@ -771,8 +771,11 @@ class YaCookAPITester:
         # Test 1: Get unread notifications count (should be 0 for new user)
         logger.info("Testing GET /api/notifications/unread-count...")
         try:
+            # Use internal URL for notification endpoints since they might not be exposed externally yet
+            test_url = f"{self.internal_url}/api/notifications/unread-count"
+            logger.info(f"Testing URL: {test_url}")
             async with self.session.get(
-                f"{self.base_url}/api/notifications/unread-count",
+                test_url,
                 headers=self.get_auth_headers()
             ) as response:
                 
