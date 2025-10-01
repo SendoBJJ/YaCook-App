@@ -286,33 +286,6 @@ export const healthApi = {
   },
 };
 
-// Posts API
-export const postsApi = {
-  async getPosts(page = 1, per_page = 20, post_type?: string) {
-    const params: { page: number; per_page: number; post_type?: string } = { page, per_page };
-    if (post_type) params.post_type = post_type;
-    const response = await api.get('/posts', { params });
-    return response.data;
-  },
-
-  async createPost(postData: {
-    type: 'question' | 'recipe';
-    title: string;
-    body: string;
-    tags?: string[];
-    media?: any[];
-    is_public?: boolean;
-  }) {
-    const response = await api.post('/posts', postData);
-    return response.data;
-  },
-
-  async getPost(postId: string) {
-    const response = await api.get(`/posts/${postId}`);
-    return response.data;
-  },
-};
-
 // Shopping List API
 export const shoppingListApi = {
   async getShoppingList() {
