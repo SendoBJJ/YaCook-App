@@ -376,4 +376,122 @@ export const shoppingListApi = {
   },
 };
 
+export const commentsApi = {
+  async getComments(postId: string, page = 1, per_page = 20) {
+    const response = await api.get(`/posts/${postId}/comments`, {
+      params: { page, per_page }
+    });
+    return response.data;
+  },
+
+  async createComment(postId: string, commentData: { content: string; parent_id?: string }) {
+    const response = await api.post(`/posts/${postId}/comments`, commentData);
+    return response.data;
+  },
+
+  async toggleLike(commentId: string) {
+    const response = await api.post(`/comments/${commentId}/like`);
+    return response.data;
+  },
+
+  async getReplies(commentId: string, page = 1, per_page = 10) {
+    const response = await api.get(`/comments/${commentId}/replies`, {
+      params: { page, per_page }
+    });
+    return response.data;
+  },
+};
+
+export const usersApi = {
+  async getProfile(userId: string) {
+    const response = await api.get(`/users/${userId}`);
+    return response.data;
+  },
+
+  async updateProfile(profileData: any) {
+    const response = await api.put('/users/me', profileData);
+    return response.data;
+  },
+
+  async toggleFollow(userId: string) {
+    const response = await api.post(`/users/${userId}/follow`);
+    return response.data;
+  },
+
+  async getFollowers(userId: string, page = 1) {
+    const response = await api.get(`/users/${userId}/followers`, {
+      params: { page }
+    });
+    return response.data;
+  },
+
+  async getFollowing(userId: string, page = 1) {
+    const response = await api.get(`/users/${userId}/following`, {
+      params: { page }
+    });
+    return response.data;
+  },
+};
+
+// Enhanced postsApi with additional methods
+export const postsApi = {
+  async getPosts(page = 1, per_page = 10, type?: string) {
+    const response = await api.get('/posts', {
+      params: { page, per_page, type }
+    });
+    return response.data;
+  },
+
+  async getPost(postId: string) {
+    const response = await api.get(`/posts/${postId}`);
+    return response.data;
+  },
+
+  async createPost(postData: any) {
+    const response = await api.post('/posts', postData);
+    return response.data;
+  },
+
+  async updatePost(postId: string, postData: any) {
+    const response = await api.put(`/posts/${postId}`, postData);
+    return response.data;
+  },
+
+  async deletePost(postId: string) {
+    const response = await api.delete(`/posts/${postId}`);
+    return response.data;
+  },
+
+  async toggleLike(postId: string) {
+    const response = await api.post(`/posts/${postId}/like`);
+    return response.data;
+  },
+
+  async toggleSave(postId: string) {
+    const response = await api.post(`/posts/${postId}/save`);
+    return response.data;
+  },
+
+  async getUserPosts(userId: string, page = 1, per_page = 20) {
+    const response = await api.get(`/users/${userId}/posts`, {
+      params: { page, per_page }
+    });
+    return response.data;
+  },
+
+  async getSavedPosts(page = 1, per_page = 20) {
+    const response = await api.get('/users/me/saved-posts', {
+      params: { page, per_page }
+    });
+    return response.data;
+  },
+
+  async searchPosts(query: string, filters?: any) {
+    const response = await api.get('/posts/search', {
+      params: { q: query, ...filters }
+    });
+    return response.data;
+  },
+};
+
 export default api;
