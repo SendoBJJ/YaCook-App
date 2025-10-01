@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../src/constants/Colors';
 import { AppTexts } from '../../src/constants/Texts';
+import { CommunityTabIcon } from '../../src/components/CommunityTabIcon';
 
 export default function TabLayout() {
   return (
