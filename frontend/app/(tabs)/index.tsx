@@ -314,6 +314,14 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     paddingTop: 0,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  notificationBell: {
+    marginRight: 8,
+  },
   greeting: {
     fontSize: FontSize.xl,
     fontWeight: FontWeight.bold,
