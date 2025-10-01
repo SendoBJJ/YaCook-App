@@ -103,6 +103,7 @@ app.add_middleware(
         "https://app.emergent.sh",
         "https://*.emergentagent.com",
         "https://*.preview.emergentagent.com",  # Allow all preview subdomains
+        "https://yacook-api.loca.lt",  # New tunnel URL
     ],
     allow_credentials=True,
     allow_methods=["*"],
