@@ -387,7 +387,7 @@ function getTimeAgo(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'À l\'instant';
+  if (diffMins < 1) return 'À l\\\'instant';
   if (diffMins < 60) return `${diffMins}min`;
   if (diffHours < 24) return `${diffHours}h`;
   if (diffDays < 7) return `${diffDays}j`;
@@ -591,7 +591,7 @@ function getTimeAgo(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'À l\'instant';
+  if (diffMins < 1) return 'À l\\\'instant';
   if (diffMins < 60) return `${diffMins}min`;
   if (diffHours < 24) return `${diffHours}h`;
   if (diffDays < 7) return `${diffDays}j`;
