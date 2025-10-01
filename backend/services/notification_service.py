@@ -51,7 +51,8 @@ class NotificationService:
             }
             
             # Insert into database
-            result = await self.db.notifications.insert_one(notification_doc)
+            db = self.get_database()
+            result = await db.notifications.insert_one(notification_doc)
             
             if result.inserted_id:
                 logger.info(f"Created notification {notification_doc['id']} for user {notification_data.to_user_id}")
