@@ -182,7 +182,8 @@ class NotificationService:
     async def get_unread_count(self, user_id: str) -> int:
         """Get the count of unread notifications for a user."""
         try:
-            count = await self.db.notifications.count_documents({
+            db = self.get_database()
+            count = await db.notifications.count_documents({
                 "to_user_id": user_id,
                 "read_at": None
             })
