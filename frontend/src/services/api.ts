@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
 import { AuthResponse, LoginData, RegisterData, User } from '../types';
+import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
 import { tokenStorage } from '../utils/tokenStorage';
 
 // Clean and build API base URL to prevent /api/api issues
