@@ -122,6 +122,17 @@ export const SkeletonMealCard: React.FC = () => (
   </View>
 );
 
+export const SkeletonNotificationItem: React.FC = () => (
+  <View style={styles.notificationContainer}>
+    <SkeletonLoader width={40} height={40} borderRadius={20} />
+    <View style={styles.notificationContent}>
+      <SkeletonLoader width="80%" height={16} />
+      <SkeletonLoader width="50%" height={12} style={{ marginTop: Spacing.xs }} />
+    </View>
+    <SkeletonLoader width={8} height={8} borderRadius={4} />
+  </View>
+);
+
 const styles = StyleSheet.create({
   skeleton: {
     backgroundColor: Colors.light.border,
