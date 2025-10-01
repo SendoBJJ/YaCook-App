@@ -270,7 +270,10 @@ export default function DashboardScreen() {
             </Text>
             <Text style={styles.subGreeting}>Prêt à cuisiner aujourd'hui ?</Text>
           </View>
-          {renderUserAvatar()}
+          <View style={styles.headerActions}>
+            <NotificationBell size={24} color={Colors.text} style={styles.notificationBell} />
+            {renderUserAvatar()}
+          </View>
         </View>
 
         {/* Calorie progress ring */}
