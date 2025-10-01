@@ -381,8 +381,8 @@ export default function PostDetailScreen() {
 
       <SmartButton
         style={styles.actionButton}
-        onPress={() => {/* Navigate to comments */}}
-        accessibilityLabel="Commentaires"
+        onPress={() => router.push(`/comments/${post.id}?postTitle=${encodeURIComponent(post.title)}`)}
+        accessibilityLabel="Voir les commentaires"
       >
         <Ionicons name="chatbubble-outline" size={24} color={Colors.light.muted} />
         <Text style={styles.actionText}>{post.comments_count}</Text>
