@@ -810,6 +810,9 @@ class YaCookAPITester:
         # Test 11: Cloudinary Signature API (requires auth)
         results["cloudinary_signature_api"] = await self.test_cloudinary_signature_endpoint()
         
+        # Test 12: Notification System API (requires auth)
+        results["notification_system_api"] = await self.test_notification_system()
+        
         return results
 
 async def main():
