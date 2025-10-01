@@ -411,8 +411,57 @@ ${response.recipe.tips ? `\n**Conseils:** ${response.recipe.tips}` : ''}`,
     <SafeAreaView style={styles.container}>
       {renderTabBar()}
       
+      {/* Search Input */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search" size={20} color={Colors.light.muted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={`Rechercher ${activeTab === 'recipe' ? 'des recettes' : activeTab === 'question' ? 'des questions' : 'dans la communauté'}...`}
+            placeholderTextColor={Colors.light.muted}
+            value={searchQuery}
+            onChangeText={handleSearch}
+            returnKeyType="search"
+            onSubmitEditing={() => handleSearch(searchQuery)}
+          />
+          {searchQuery.length > 0 && (
+            <SmartButton
+              style={styles.clearSearchButton}
+              onPress={clearSearch}
+              accessibilityLabel="Effacer la recherche"
+            >
+              <Ionicons name="close-circle" size={20} color={Colors.light.muted} />
+            </SmartButton>
+          )}
+        </View>
+        
+        {isSearching && (
+          <View style={styles.searchLoader}>
+            <ActivityIndicator size="small" color={Colors.light.primary} />
+          </View>
+        )}
+      </View>
+      
       {loading ? (
         renderSkeleton()
+      ) : showSearchResults ? (
+        /* Search Results */
+        <FlatList
+          data={searchResults}
+          renderItem={renderPost}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.feedContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyState}>
+              <Ionicons name="search" size={80} color={Colors.light.muted} />
+              <Text style={styles.emptyStateTitle}>Aucun résultat</Text>
+              <Text style={styles.emptyStateText}>
+                Aucun résultat trouvé pour "{searchQuery}"
+              </Text>
+            </View>
+          )}
+        />
       ) : posts.length === 0 ? (
         <ScrollView
           refreshControl={
