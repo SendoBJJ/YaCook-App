@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { notificationsApi } from '../src/services/api';
 import { Colors } from '../src/constants/Colors';
 import { AppTexts } from '../src/constants/Texts';
-import { SkeletonLoader } from '../src/components/SkeletonLoader';
+import { SkeletonNotificationItem } from '../src/components/SkeletonLoader';
 import { SmartButton } from '../src/components/SmartButton';
 import { Notification, NotificationSection } from '../src/types/notification';
 import { useToast } from '../src/components/Toast';
