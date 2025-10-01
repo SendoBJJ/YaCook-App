@@ -160,7 +160,8 @@ class NotificationService:
     async def mark_all_notifications_read(self, user_id: str) -> int:
         """Mark all notifications as read for a user."""
         try:
-            result = await self.db.notifications.update_many(
+            db = self.get_database()
+            result = await db.notifications.update_many(
                 {
                     "to_user_id": user_id,
                     "read_at": None
