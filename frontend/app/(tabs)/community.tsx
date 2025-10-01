@@ -35,6 +35,10 @@ export default function CommunityScreen() {
   const [activeTab, setActiveTab] = useState<'all' | 'recipe' | 'question'>('all');
   const [isGeneratingRecipe, setIsGeneratingRecipe] = useState(false);
   const [animatedValue] = useState(new Animated.Value(1));
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Post[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   // Load initial posts
   useEffect(() => {
