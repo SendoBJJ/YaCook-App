@@ -107,7 +107,7 @@ async def test_fresh_notification():
                     logger.warning("⚠️ No new notification detected")
         
         # Get the fresh notification
-        async with session.get(f"{base_url}/api/notifications", params={"unread_only": True}, headers=headers) as response:
+        async with session.get(f"{base_url}/api/notifications", params={"unread_only": "true"}, headers=headers) as response:
             if response.status != 200:
                 logger.error("Failed to get fresh notifications")
                 return False
