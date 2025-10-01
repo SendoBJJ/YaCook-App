@@ -313,25 +313,6 @@ export const postsApi = {
   },
 };
 
-// Comments API
-export const commentsApi = {
-  async getComments(postId: string, page = 1, per_page = 20) {
-    const response = await api.get(`/posts/${postId}/comments`, {
-      params: { page, per_page }
-    });
-    return response.data;
-  },
-
-  async createComment(postId: string, body: string, parentId?: string) {
-    const response = await api.post(`/posts/${postId}/comments`, {
-      body,
-      post_id: postId,
-      parent_id: parentId
-    });
-    return response.data;
-  },
-};
-
 // Shopping List API
 export const shoppingListApi = {
   async getShoppingList() {
