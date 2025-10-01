@@ -840,7 +840,7 @@ class YaCookAPITester:
         logger.info("Testing authentication requirement for notification endpoints...")
         try:
             async with self.session.get(
-                f"{self.base_url}/api/notifications/unread-count"
+                f"{self.internal_url}/api/notifications/unread-count"
             ) as response:
                 
                 if response.status in [401, 403]:
