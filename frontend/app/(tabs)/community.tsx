@@ -92,11 +92,37 @@ export default function CommunityScreen() {
     }
   };
 
-  const handleCreatePost = (type: 'recipe' | 'question') => {
-    router.push({
-      pathname: '/community/composer',
-      params: { type }
-    });
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    
+    if (!query.trim()) {
+      setShowSearchResults(false);
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      setShowSearchResults(true);
+      
+      const response = await postsApi.searchPosts(query.trim(), {
+        type: activeTab === 'all' ? undefined : activeTab
+      });
+      
+      if (response.success) {
+        setSearchResults(response.posts);
+      }
+    } catch (error) {
+      console.error('Error searching posts:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setShowSearchResults(false);
   };
 
   const handlePostPress = (post: Post) => {
