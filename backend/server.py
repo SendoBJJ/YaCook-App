@@ -941,6 +941,103 @@ async def update_shopping_item(
             detail="Erreur lors de la mise à jour de l'article"
         )
 
+# ============================================================================
+# NOTIFICATION ENDPOINTS
+# ============================================================================
+
+@app.get("/api/notifications", response_model=NotificationList)
+async def get_user_notifications(
+    page: int = 1,
+    per_page: int = 20,
+    unread_only: bool = False,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get notifications for the authenticated user."""
+    try:
+        user_id = current_user["id"]
+        return await notification_service.get_user_notifications(
+            user_id=user_id,
+            page=page,
+            per_page=per_page,
+            unread_only=unread_only
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting notifications: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la récupération des notifications"
+        )
+
+@app.put("/api/notifications/{notification_id}/read")
+async def mark_notification_read(
+    notification_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Mark a specific notification as read."""
+    try:
+        user_id = current_user["id"]
+        success = await notification_service.mark_notification_read(
+            notification_id=notification_id,
+            user_id=user_id
+        )
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Notification non trouvée"
+            )
+            
+        return {"message": "Notification marquée comme lue"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error marking notification read: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la mise à jour de la notification"
+        )
+
+@app.put("/api/notifications/mark-all-read")
+async def mark_all_notifications_read(
+    current_user: dict = Depends(get_current_user)
+):
+    """Mark all notifications as read for the authenticated user."""
+    try:
+        user_id = current_user["id"]
+        updated_count = await notification_service.mark_all_notifications_read(user_id)
+        
+        return {
+            "message": f"{updated_count} notifications marquées comme lues",
+            "updated_count": updated_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error marking all notifications read: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la mise à jour des notifications"
+        )
+
+@app.get("/api/notifications/unread-count")
+async def get_unread_notifications_count(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get the count of unread notifications for the authenticated user."""
+    try:
+        user_id = current_user["id"]
+        unread_count = await notification_service.get_unread_count(user_id)
+        
+        return {"unread_count": unread_count}
+        
+    except Exception as e:
+        logger.error(f"Error getting unread count: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la récupération du nombre de notifications"
+        )
+
 if __name__ == "__main__":
     uvicorn.run(
         "server:app",
