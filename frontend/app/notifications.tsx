@@ -274,7 +274,9 @@ export default function NotificationsScreen() {
 
   const renderSkeletonLoader = () => (
     <View style={styles.container}>
-      <SkeletonLoader type="notificationItem" count={6} />
+      {Array.from({ length: 6 }).map((_, index) => (
+        <SkeletonNotificationItem key={index} />
+      ))}
     </View>
   );
 
