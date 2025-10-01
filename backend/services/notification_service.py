@@ -137,7 +137,8 @@ class NotificationService:
     ) -> bool:
         """Mark a specific notification as read."""
         try:
-            result = await self.db.notifications.update_one(
+            db = self.get_database()
+            result = await db.notifications.update_one(
                 {
                     "id": notification_id,
                     "to_user_id": user_id,
