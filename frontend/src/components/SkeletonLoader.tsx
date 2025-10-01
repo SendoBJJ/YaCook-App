@@ -180,4 +180,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: Spacing.md,
   },
+  notificationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  notificationContent: {
+    flex: 1,
+    marginLeft: Spacing.md,
+    marginRight: Spacing.md,
+  },
 });
