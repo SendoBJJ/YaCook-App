@@ -81,17 +81,20 @@ class NotificationService:
             # Calculate skip
             skip = (page - 1) * per_page
             
+            # Get database connection
+            db = self.get_database()
+            
             # Get total count
-            total_count = await self.db.notifications.count_documents(filter_dict)
+            total_count = await db.notifications.count_documents(filter_dict)
             
             # Get unread count
-            unread_count = await self.db.notifications.count_documents({
+            unread_count = await db.notifications.count_documents({
                 "to_user_id": user_id,
                 "read_at": None
             })
             
             # Get notifications
-            cursor = self.db.notifications.find(filter_dict).sort("created_at", -1).skip(skip).limit(per_page)
+            cursor = db.notifications.find(filter_dict).sort("created_at", -1).skip(skip).limit(per_page)
             notifications = await cursor.to_list(length=per_page)
             
             # Convert to response models
