@@ -803,7 +803,7 @@ class YaCookAPITester:
         logger.info("Testing GET /api/notifications...")
         try:
             async with self.session.get(
-                f"{self.base_url}/api/notifications",
+                f"{self.internal_url}/api/notifications",
                 params={"page": 1, "per_page": 20},
                 headers=self.get_auth_headers()
             ) as response:
