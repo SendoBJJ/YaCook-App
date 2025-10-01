@@ -771,6 +771,24 @@ async def create_comment(
         created_comment = await db.comments.find_one({"_id": result.inserted_id})
         author = await db.users.find_one({"_id": user_id})
         
+        # Create notification for post author (if not commenting on own post)
+        post_author_id = str(post["author_id"])
+        comment_author_id = str(user_id)
+        comment_author_name = author.get("display_name") or f"{author.get('first_name', '')} {author.get('last_name', '')}".strip()
+        post_title = post.get("title", "")[:50] + "..." if len(post.get("title", "")) > 50 else post.get("title", "")
+        
+        # Create notification in background (don't wait for it)
+        try:
+            await notification_service.create_comment_notification(
+                post_id=post_id,
+                post_author_id=post_author_id,
+                comment_author_id=comment_author_id,
+                comment_author_name=comment_author_name,
+                post_title=post_title
+            )
+        except Exception as notification_error:
+            logger.warning(f"Failed to create comment notification: {notification_error}")
+        
         return CommentResponse(
             id=str(result.inserted_id),
             body=created_comment["body"],
