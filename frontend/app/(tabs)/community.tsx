@@ -825,6 +825,37 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: Spacing.md,
   },
+  searchContainer: {
+    backgroundColor: Colors.light.background,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.background,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: FontSize.md,
+    color: Colors.light.text,
+    marginLeft: Spacing.sm,
+    minHeight: 20,
+  },
+  clearSearchButton: {
+    padding: Spacing.xs,
+  },
+  searchLoader: {
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
   fab: {
     width: 56,
     height: 56,
