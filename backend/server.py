@@ -94,8 +94,10 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:19006",
         "https://meal-app-preview.preview.emergentagent.com",
+        "https://yacook-phase0.preview.emergentagent.com",  # Add back for compatibility
         "https://app.emergent.sh",
         "https://*.emergentagent.com",
+        "https://yacook-stable-api.loca.lt",  # Allow API endpoint itself
     ],
     allow_credentials=True,
     allow_methods=["*"],
