@@ -18,6 +18,7 @@ import { AppTexts } from '../../src/constants/Texts';
 import { Spacing, BorderRadius, FontSize, FontWeight, Shadow } from '../../src/constants/Layout';
 import { SmartButton } from '../../src/components/SmartButton';
 import { SkeletonMealCard, SkeletonText } from '../../src/components/SkeletonLoader';
+import { NotificationBell } from '../../src/components/NotificationBell';
 
 interface MealPlan {
   plan_name: string;
