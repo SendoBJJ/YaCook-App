@@ -972,7 +972,7 @@ async def get_user_notifications(
 ):
     """Get notifications for the authenticated user."""
     try:
-        user_id = current_user["id"]
+        user_id = str(current_user["_id"])
         return await notification_service.get_user_notifications(
             user_id=user_id,
             page=page,
@@ -994,7 +994,7 @@ async def mark_notification_read(
 ):
     """Mark a specific notification as read."""
     try:
-        user_id = current_user["id"]
+        user_id = str(current_user["_id"])
         success = await notification_service.mark_notification_read(
             notification_id=notification_id,
             user_id=user_id
@@ -1023,7 +1023,7 @@ async def mark_all_notifications_read(
 ):
     """Mark all notifications as read for the authenticated user."""
     try:
-        user_id = current_user["id"]
+        user_id = str(current_user["_id"])
         updated_count = await notification_service.mark_all_notifications_read(user_id)
         
         return {
@@ -1044,7 +1044,7 @@ async def get_unread_notifications_count(
 ):
     """Get the count of unread notifications for the authenticated user."""
     try:
-        user_id = current_user["id"]
+        user_id = str(current_user["_id"])
         unread_count = await notification_service.get_unread_count(user_id)
         
         return {"unread_count": unread_count}
