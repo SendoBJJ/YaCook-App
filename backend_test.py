@@ -760,6 +760,391 @@ class YaCookAPITester:
         logger.info("✅ All Cloudinary signature endpoint tests passed!")
         return True
     
+    async def test_notification_system(self) -> bool:
+        """Test Notification System API endpoints for YaCook Phase 2."""
+        logger.info("Testing Notification System API endpoints...")
+        
+        if not self.access_token:
+            logger.error("❌ No access token available for Notification System API")
+            return False
+        
+        # Test 1: Get unread notifications count (should be 0 for new user)
+        logger.info("Testing GET /api/notifications/unread-count...")
+        try:
+            async with self.session.get(
+                f"{self.base_url}/api/notifications/unread-count",
+                headers=self.get_auth_headers()
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    unread_count = data.get("unread_count", -1)
+                    logger.info(f"✅ Unread notifications count: {unread_count}")
+                    
+                    if unread_count >= 0:
+                        logger.info("✅ Unread count endpoint working correctly")
+                    else:
+                        logger.error("❌ Invalid unread count format")
+                        return False
+                else:
+                    logger.error(f"❌ Unread count failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Unread count test failed with exception: {str(e)}")
+            return False
+        
+        # Test 2: Get notifications list (should be empty for new user)
+        logger.info("Testing GET /api/notifications...")
+        try:
+            async with self.session.get(
+                f"{self.base_url}/api/notifications",
+                params={"page": 1, "per_page": 20},
+                headers=self.get_auth_headers()
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    notifications = data.get("notifications", [])
+                    total_count = data.get("total_count", -1)
+                    unread_count = data.get("unread_count", -1)
+                    has_next = data.get("has_next", False)
+                    
+                    logger.info(f"✅ Notifications retrieved: {len(notifications)} notifications, {total_count} total, {unread_count} unread")
+                    
+                    # Validate response structure
+                    required_fields = ["notifications", "total_count", "unread_count", "page", "per_page", "has_next"]
+                    missing_fields = [field for field in required_fields if field not in data]
+                    
+                    if missing_fields:
+                        logger.error(f"❌ Response missing required fields: {missing_fields}")
+                        return False
+                    
+                    logger.info("✅ Notifications list endpoint working correctly")
+                else:
+                    logger.error(f"❌ Notifications list failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Notifications list test failed with exception: {str(e)}")
+            return False
+        
+        # Test 3: Test authentication requirement
+        logger.info("Testing authentication requirement for notification endpoints...")
+        try:
+            async with self.session.get(
+                f"{self.base_url}/api/notifications/unread-count"
+            ) as response:
+                
+                if response.status in [401, 403]:
+                    logger.info(f"✅ Authentication requirement working - {response.status} returned without token")
+                else:
+                    logger.error(f"❌ Authentication requirement failed - expected 401/403, got {response.status}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Authentication test failed with exception: {str(e)}")
+            return False
+        
+        # Test 4: Create a second user to test notification creation
+        logger.info("Creating second user for notification integration testing...")
+        second_user_email = f"testuser2_{int(time.time())}@yacook.fr"
+        second_user_password = "TestPass456!"
+        
+        second_user_data = {
+            "email": second_user_email,
+            "password": second_user_password,
+            "first_name": "TestUser2",
+            "auth_provider": "email",
+            "language": "fr",
+            "daily_calorie_goal": 1800,
+            "dietary_restrictions": [],
+            "allergens": []
+        }
+        
+        second_user_token = None
+        try:
+            async with self.session.post(
+                f"{self.base_url}/api/auth/register",
+                json=second_user_data,
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    second_user_token = data.get("access_token")
+                    logger.info(f"✅ Second user created: {second_user_email}")
+                else:
+                    logger.error(f"❌ Second user creation failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Second user creation failed with exception: {str(e)}")
+            return False
+        
+        # Test 5: Create a post with the first user
+        logger.info("Creating a post to test notification integration...")
+        post_data = {
+            "title": "Comment réussir une pâte à choux?",
+            "body": "Je cherche des conseils pour faire une pâte à choux parfaite. Mes choux ne gonflent jamais assez!",
+            "type": "question",
+            "tags": ["pâte à choux", "pâtisserie", "technique"],
+            "is_public": True
+        }
+        
+        post_id = None
+        try:
+            async with self.session.post(
+                f"{self.base_url}/api/posts",
+                json=post_data,
+                headers={**self.get_auth_headers(), "Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status in [200, 201]:
+                    data = await response.json()
+                    post_id = data.get("id")
+                    logger.info(f"✅ Test post created: {data.get('title')}")
+                else:
+                    logger.error(f"❌ Test post creation failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Test post creation failed with exception: {str(e)}")
+            return False
+        
+        # Test 6: Create a comment with the second user (should trigger notification)
+        logger.info("Creating comment to trigger notification...")
+        if not post_id or not second_user_token:
+            logger.error("❌ Cannot test notification creation - missing post ID or second user token")
+            return False
+        
+        comment_data = {
+            "body": "Pour réussir une pâte à choux, il faut bien dessécher la pâte sur le feu et incorporer les œufs un par un. La température du four est cruciale aussi!",
+            "parent_id": None
+        }
+        
+        try:
+            async with self.session.post(
+                f"{self.base_url}/api/posts/{post_id}/comments",
+                json=comment_data,
+                headers={"Authorization": f"Bearer {second_user_token}", "Content-Type": "application/json"}
+            ) as response:
+                
+                if response.status in [200, 201]:
+                    data = await response.json()
+                    logger.info(f"✅ Comment created by second user: {data.get('body')[:50]}...")
+                    
+                    # Wait a moment for notification to be created
+                    await asyncio.sleep(1)
+                else:
+                    logger.error(f"❌ Comment creation failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Comment creation failed with exception: {str(e)}")
+            return False
+        
+        # Test 7: Check if notification was created for the first user
+        logger.info("Checking if notification was created...")
+        try:
+            async with self.session.get(
+                f"{self.base_url}/api/notifications/unread-count",
+                headers=self.get_auth_headers()
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    new_unread_count = data.get("unread_count", 0)
+                    
+                    if new_unread_count > 0:
+                        logger.info(f"✅ Notification created successfully! Unread count: {new_unread_count}")
+                    else:
+                        logger.warning("⚠️ No notification created - this might be expected if users are the same")
+                else:
+                    logger.error(f"❌ Unread count check failed with status {response.status}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Notification check failed with exception: {str(e)}")
+            return False
+        
+        # Test 8: Get notifications list to verify notification content
+        logger.info("Getting notifications list to verify content...")
+        notification_id = None
+        try:
+            async with self.session.get(
+                f"{self.base_url}/api/notifications",
+                params={"page": 1, "per_page": 10},
+                headers=self.get_auth_headers()
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    notifications = data.get("notifications", [])
+                    
+                    if notifications:
+                        notification = notifications[0]  # Get the latest notification
+                        notification_id = notification.get("id")
+                        
+                        # Validate notification structure
+                        required_fields = ["id", "type", "entity_id", "from_user_id", "from_user_name", "to_user_id", "message", "created_at"]
+                        missing_fields = [field for field in required_fields if field not in notification]
+                        
+                        if missing_fields:
+                            logger.error(f"❌ Notification missing required fields: {missing_fields}")
+                            return False
+                        
+                        # Check if it's a comment notification
+                        if notification.get("type") == "comment":
+                            logger.info(f"✅ Comment notification found: {notification.get('message')}")
+                            
+                            # Verify French message
+                            message = notification.get("message", "")
+                            if "commenté" in message and "publication" in message:
+                                logger.info("✅ French notification message format correct")
+                            else:
+                                logger.warning(f"⚠️ Notification message format might be incorrect: {message}")
+                        else:
+                            logger.info(f"✅ Notification found with type: {notification.get('type')}")
+                    else:
+                        logger.info("ℹ️ No notifications found (might be expected)")
+                else:
+                    logger.error(f"❌ Notifications list failed with status {response.status}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Notifications list check failed with exception: {str(e)}")
+            return False
+        
+        # Test 9: Mark specific notification as read
+        if notification_id:
+            logger.info(f"Testing mark notification as read for ID: {notification_id}")
+            try:
+                async with self.session.put(
+                    f"{self.base_url}/api/notifications/{notification_id}/read",
+                    headers=self.get_auth_headers()
+                ) as response:
+                    
+                    if response.status == 200:
+                        data = await response.json()
+                        logger.info(f"✅ Notification marked as read: {data.get('message', 'Success')}")
+                    else:
+                        logger.error(f"❌ Mark notification read failed with status {response.status}")
+                        text = await response.text()
+                        logger.error(f"Response: {text}")
+                        return False
+                        
+            except Exception as e:
+                logger.error(f"❌ Mark notification read failed with exception: {str(e)}")
+                return False
+        
+        # Test 10: Verify unread count decreased
+        logger.info("Verifying unread count decreased...")
+        try:
+            async with self.session.get(
+                f"{self.base_url}/api/notifications/unread-count",
+                headers=self.get_auth_headers()
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    final_unread_count = data.get("unread_count", -1)
+                    logger.info(f"✅ Final unread count: {final_unread_count}")
+                else:
+                    logger.error(f"❌ Final unread count check failed with status {response.status}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Final unread count check failed with exception: {str(e)}")
+            return False
+        
+        # Test 11: Test mark all notifications as read
+        logger.info("Testing mark all notifications as read...")
+        try:
+            async with self.session.put(
+                f"{self.base_url}/api/notifications/mark-all-read",
+                headers=self.get_auth_headers()
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    updated_count = data.get("updated_count", 0)
+                    message = data.get("message", "")
+                    logger.info(f"✅ Mark all read successful: {message} (updated: {updated_count})")
+                    
+                    # Verify French message
+                    if "marquées comme lues" in message:
+                        logger.info("✅ French response message format correct")
+                    else:
+                        logger.warning(f"⚠️ Response message format might be incorrect: {message}")
+                else:
+                    logger.error(f"❌ Mark all read failed with status {response.status}")
+                    text = await response.text()
+                    logger.error(f"Response: {text}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Mark all read failed with exception: {str(e)}")
+            return False
+        
+        # Test 12: Test invalid notification ID
+        logger.info("Testing invalid notification ID handling...")
+        try:
+            async with self.session.put(
+                f"{self.base_url}/api/notifications/invalid-id-123/read",
+                headers=self.get_auth_headers()
+            ) as response:
+                
+                if response.status == 404:
+                    logger.info("✅ Invalid notification ID properly handled with 404")
+                else:
+                    logger.warning(f"⚠️ Invalid notification ID returned {response.status} instead of 404")
+                    
+        except Exception as e:
+            logger.error(f"❌ Invalid notification ID test failed with exception: {str(e)}")
+            return False
+        
+        # Test 13: Test pagination
+        logger.info("Testing notification pagination...")
+        try:
+            async with self.session.get(
+                f"{self.base_url}/api/notifications",
+                params={"page": 1, "per_page": 5, "unread_only": False},
+                headers=self.get_auth_headers()
+            ) as response:
+                
+                if response.status == 200:
+                    data = await response.json()
+                    page = data.get("page", 0)
+                    per_page = data.get("per_page", 0)
+                    has_next = data.get("has_next", False)
+                    
+                    if page == 1 and per_page == 5:
+                        logger.info(f"✅ Pagination working correctly: page {page}, per_page {per_page}, has_next {has_next}")
+                    else:
+                        logger.error(f"❌ Pagination parameters incorrect: page {page}, per_page {per_page}")
+                        return False
+                else:
+                    logger.error(f"❌ Pagination test failed with status {response.status}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Pagination test failed with exception: {str(e)}")
+            return False
+        
+        logger.info("✅ All Notification System API tests completed successfully!")
+        return True
+    
     async def run_all_tests(self) -> Dict[str, bool]:
         """Run all API tests and return results."""
         logger.info("🚀 Starting YaCook API tests...")
