@@ -50,13 +50,28 @@ const ProfileMenuItem: React.FC<ProfileMenuItemProps> = ({
 );
 
 export default function ProfileScreen() {
-  const { user, logout, loading } = useAuth();
-  const router = useRouter();
-
-  // Add runtime assert in dev
+  // Add debug logging first
   if (__DEV__) {
     // eslint-disable-next-line no-console
-    console.log('Auth hook ok:', typeof useAuth);
+    console.log('ProfileScreen: Starting render...');
+    // eslint-disable-next-line no-console
+    console.log('useAuth type:', typeof useAuth);
+    // eslint-disable-next-line no-console
+    console.log('useRouter type:', typeof useRouter);
+  }
+
+  const { user, logout, loading } = useAuth();
+  
+  // Safe router usage with try-catch
+  let router;
+  try {
+    router = useRouter();
+  } catch (error) {
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.error('useRouter error:', error);
+    }
+    return <Text>Navigation error</Text>;
   }
 
   if (loading) return null; // or a proper loader
