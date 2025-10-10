@@ -226,20 +226,33 @@ async def health_check():
 
 # Whoami endpoint for debugging routing issues
 @app.get("/api/whoami")
-async def whoami():
+async def whoami(response: Response):
     """Identify which backend instance is responding."""
     import socket
     import os
     
-    return {
-        "message": "YaCook API Instance",
+    instance_id = os.getenv("INSTANCE_ID", socket.gethostname())
+    db = database_service.get_database()
+    
+    # Log the request
+    logger.info(f"Whoami request - instanceId: {instance_id}")
+    
+    # Add response header
+    response.headers["X-YaCook-Instance"] = instance_id
+    
+    whoami_data = {
+        "service": "backend",
+        "instanceId": instance_id,
+        "build": os.getenv("BUILD_SHA", "dev-build"),
+        "db": db.name,
+        "time": datetime.utcnow().isoformat(),
         "hostname": socket.gethostname(),
         "pid": os.getpid(),
         "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat(),
-        "environment": os.getenv("ENVIRONMENT", "unknown"),
-        "instance_id": os.getenv("INSTANCE_ID", socket.gethostname())
+        "environment": os.getenv("ENVIRONMENT", "unknown")
     }
+    
+    return whoami_data
 
 # Authentication endpoints
 @app.post("/api/auth/register", response_model=Token)
