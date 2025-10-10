@@ -90,8 +90,11 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
   const login = async (rawEmail: any, rawPassword: any) => {
     try {
-      const email = (rawEmail ?? '').toString().trim().toLowerCase();
-      const password = (rawPassword ?? '').toString().trim();
+      const payload = normalizeAuthPayload(
+        (rawEmail ?? '').toString(), 
+        (rawPassword ?? '').toString()
+      );
+      const { email, password } = payload;
 
       if (!email || !password) {
         throw new Error("Veuillez saisir un email et un mot de passe.");
