@@ -40,10 +40,12 @@ export default function EditProfileScreen() {
     );
   }
   
-  const [firstName, setFirstName] = useState(user?.first_name || '');
-  const [lastName, setLastName] = useState(user?.last_name || '');
+  // Parse name from simplified user structure
+  const nameParts = user?.name?.split(' ') || [];
+  const [firstName, setFirstName] = useState(nameParts[0] || '');
+  const [lastName, setLastName] = useState(nameParts.slice(1).join(' ') || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [bio, setBio] = useState(user?.bio || '');
+  const [bio, setBio] = useState(''); // Bio not available in simplified structure
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
