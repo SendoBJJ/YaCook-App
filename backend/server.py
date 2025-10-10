@@ -226,9 +226,14 @@ async def register(user_data: UserCreate, background_tasks: BackgroundTasks):
     try:
         db = database_service.get_database()
         
+        # Email normalization and logging
+        email_normalized = user_data.email.strip().lower()
+        logger.info(f"Register attempt - emailNormalized: '{email_normalized[:10]}...', DB: {db.name}, collection: users")
+        
         # Check if user already exists
-        existing_user = await db.users.find_one({"email": user_data.email.lower()})
+        existing_user = await db.users.find_one({"email": email_normalized})
         if existing_user:
+            logger.info(f"Register failed - user already exists: {email_normalized[:10]}...")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Un utilisateur avec cet email existe déjà"
@@ -238,11 +243,12 @@ async def register(user_data: UserCreate, background_tasks: BackgroundTasks):
         password_hash = None
         if user_data.auth_provider == AuthProvider.EMAIL and user_data.password:
             password_hash = auth_service.hash_password(user_data.password)
+            logger.info(f"Register - password hashed using: {auth_service.get_hash_algorithm()}")
         
         # Create user document
         user_dict = user_data.dict(exclude={"password"})
         user_dict.update({
-            "email": user_data.email.lower(),
+            "email": email_normalized,
             "password_hash": password_hash,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
@@ -252,6 +258,12 @@ async def register(user_data: UserCreate, background_tasks: BackgroundTasks):
         
         # Insert user
         result = await db.users.insert_one(user_dict)
+        logger.info(f"Register - user inserted with ID: {result.inserted_id}")
+        
+        # Verify user was created by reading it back
+        readback_user = await db.users.find_one({"email": email_normalized})
+        user_found_after_insert = readback_user is not None
+        logger.info(f"Register verification - user found after insert: {user_found_after_insert}, DB: {db.name}, collection: users")
         user_id = str(result.inserted_id)
         
         # Create tokens
