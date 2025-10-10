@@ -49,15 +49,26 @@ const ProfileMenuItem: React.FC<ProfileMenuItemProps> = ({
 );
 
 export default function ProfileScreen() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, loading } = useAuth();
   const router = useRouter();
 
-  // Show loading state while auth is initializing
-  if (isLoading) {
+  if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
           <Text style={styles.headerTitle}>Chargement...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!user) {
+    // Either redirect to login or show empty state
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={styles.headerTitle}>Non connecté</Text>
+          <Text style={styles.userEmail}>Veuillez vous reconnecter.</Text>
         </View>
       </SafeAreaView>
     );
