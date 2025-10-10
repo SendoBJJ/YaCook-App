@@ -20,10 +20,15 @@ import { SmartButton } from '../../src/components/SmartButton';
 
 export default function LoginScreen() {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Cross-platform safe setters (handles RN onChangeText and web onChange)
+  const toStr = (v: any) => typeof v === 'string' ? v : (v?.target?.value ?? '');
+  const handleEmailChange = (v: any) => setEmail(toStr(v));
+  const handlePasswordChange = (v: any) => setPassword(toStr(v));
 
   const handleLogin = async () => {
     console.log('🔐 Login button clicked!', { email: email.trim(), passwordLength: password.length });
