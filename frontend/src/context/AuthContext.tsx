@@ -11,73 +11,75 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<{ id: string; name?: string; email: string } | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const isAuthenticated = !!user;
-
-  // Initialize auth state on app start
+  // Initialize auth state
   useEffect(() => {
     initializeAuth();
   }, []);
 
   const initializeAuth = async () => {
     try {
-      setIsLoading(true);
-
-      // Check if we have stored tokens
-      const accessToken = await tokenManager.getAccessToken();
+      setLoading(true);
+      
+      // Check if user data exists in storage
       const storedUser = await tokenManager.getUserData();
-
-      if (accessToken && storedUser) {
-        // Try to refresh user data from server
+      if (storedUser) {
+        // Transform to our simplified user type
+        setUser({
+          id: storedUser.id,
+          name: storedUser.first_name && storedUser.last_name 
+            ? `${storedUser.first_name} ${storedUser.last_name}` 
+            : storedUser.first_name || storedUser.display_name,
+          email: storedUser.email
+        });
+        
+        // Try to refresh user data if we have a token
         try {
           const currentUser = await authApi.getCurrentUser();
-          setUser(currentUser);
+          setUser({
+            id: currentUser.id,
+            name: currentUser.first_name && currentUser.last_name 
+              ? `${currentUser.first_name} ${currentUser.last_name}` 
+              : currentUser.first_name || currentUser.display_name,
+            email: currentUser.email
+          });
           await tokenManager.setUserData(currentUser);
         } catch (error) {
-          // If server request fails, use stored user data
-          console.warn('Failed to refresh user data from server:', error);
-          setUser(storedUser);
+          // If refresh fails, clear stored data
+          console.warn('Failed to refresh user data on init:', error);
+          await tokenManager.clearTokens();
+          setUser(null);
         }
       }
     } catch (error) {
       console.error('Failed to initialize auth:', error);
-      // Clear potentially corrupted data
-      await tokenManager.clearTokens();
+      setUser(null);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const login = async (data: LoginData) => {
+  const login = async (email: string, password: string) => {
     try {
-      const response: AuthResponse = await authApi.login(data);
+      const response = await authApi.login({ email, password });
 
       // Store tokens and user data
       await tokenManager.setTokens(response.access_token, response.refresh_token);
       await tokenManager.setUserData(response.user);
 
-      setUser(response.user);
+      // Set simplified user state
+      setUser({
+        id: response.user.id,
+        name: response.user.first_name && response.user.last_name 
+          ? `${response.user.first_name} ${response.user.last_name}` 
+          : response.user.first_name || response.user.display_name,
+        email: response.user.email
+      });
     } catch (error: any) {
       console.error('Login error:', error);
       const message = error.response?.data?.detail || 'Erreur de connexion';
-      throw new Error(message);
-    }
-  };
-
-  const register = async (data: RegisterData) => {
-    try {
-      const response: AuthResponse = await authApi.register(data);
-
-      // Store tokens and user data
-      await tokenManager.setTokens(response.access_token, response.refresh_token);
-      await tokenManager.setUserData(response.user);
-
-      setUser(response.user);
-    } catch (error: any) {
-      console.error('Registration error:', error);
-      const message = error.response?.data?.detail || 'Erreur d\'inscription';
       throw new Error(message);
     }
   };
@@ -94,34 +96,11 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     }
   };
 
-  const updateUser = async (userData: Partial<User>) => {
-    if (!user) return;
-
-    const updatedUser = { ...user, ...userData };
-    setUser(updatedUser);
-    await tokenManager.setUserData(updatedUser);
-  };
-
-  const refreshUser = async () => {
-    try {
-      const currentUser = await authApi.getCurrentUser();
-      setUser(currentUser);
-      await tokenManager.setUserData(currentUser);
-    } catch (error) {
-      console.error('Failed to refresh user data:', error);
-      throw error;
-    }
-  };
-
-  const value: AuthContextType = {
+  const value: AuthContextValue = {
     user,
-    isLoading,
-    isAuthenticated,
+    loading,
     login,
-    register,
     logout,
-    updateUser,
-    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
