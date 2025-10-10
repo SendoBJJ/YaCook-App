@@ -1,0 +1,27 @@
+diff --git a/frontend/src/services/api.ts b/frontend/src/services/api.ts
+index a0b1143..ddcb7c9 100644
+--- a/frontend/src/services/api.ts
++++ b/frontend/src/services/api.ts
+@@ -1,12 +1,9 @@
+-import axios from 'axios';
+ import { tokenStorage } from '../utils/tokenStorage';
+ import { AuthResponse, LoginData, RegisterData, User } from '../types';
+ import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
+-import { apiBase } from '../utils/apiBase';
+ import httpClient from '../api/client';
+ 
+-// Log API base URL at startup
+-console.log('API Base URL:', apiBase());
++// Using centralized HTTP client
+ 
+ // Token storage keys
+ const ACCESS_TOKEN_KEY = 'access_token';
+@@ -118,7 +115,7 @@ api.interceptors.response.use(
+       try {
+         const refreshToken = await tokenManager.getRefreshToken();
+         if (refreshToken) {
+-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
++          const response = await api.post('/auth/refresh', {
+             refresh_token: refreshToken,
+           });
+ 
