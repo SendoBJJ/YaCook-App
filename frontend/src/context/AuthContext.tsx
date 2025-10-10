@@ -121,13 +121,19 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       
       // Provide French error messages based on error type
       let message = 'Erreur de connexion. Réessayez.';
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail;
       
-      if (error.response?.status === 401 || error.response?.status === 422) {
-        message = 'Identifiants invalides.';
+      if (status === 401) {
+        message = 'Email ou mot de passe incorrect.';
+      } else if (status === 404) {
+        message = 'Service indisponible. Réessayez plus tard.';
+      } else if (status === 422) {
+        message = 'Données invalides. Vérifiez votre email et mot de passe.';
       } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         message = 'Erreur de connexion. Réessayez.';
-      } else if (error.response?.data?.detail) {
-        message = error.response.data.detail;
+      } else if (detail) {
+        message = detail;
       }
       
       throw new Error(message);
