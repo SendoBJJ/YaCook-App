@@ -325,7 +325,7 @@ async def login(request: Request):
         
         # Verify password
         if not user.get("password_hash") or not auth_service.verify_password(
-            user_credentials.password, 
+            password, 
             user["password_hash"]
         ):
             raise HTTPException(
