@@ -120,17 +120,17 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware - configured at the very top
+# CORS middleware - configured for Platform Router & Production
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:19006",
         "http://localhost:3000",
+        "http://127.0.0.1:3000", 
+        "http://localhost:19006",
+        "http://127.0.0.1:19006",
         "https://app.yacook.app",
-        "https://chef-companion-9.preview.emergentagent.com",
-        "https://app.emergent.sh",
     ],
-    allow_origin_regex=r"https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$",
+    allow_origin_regex=r"https:\/\/.*\.preview\.emergentagent\.com$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
