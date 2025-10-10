@@ -99,7 +99,8 @@ export default function LoginScreen() {
                 placeholder={AppTexts.auth.email}
                 placeholderTextColor={Colors.light.muted}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={handleEmailChange}   // RN
+                onChange={handleEmailChange}       // web
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
