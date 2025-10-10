@@ -114,7 +114,8 @@ export default function LoginScreen() {
                 placeholder={AppTexts.auth.password}
                 placeholderTextColor={Colors.light.muted}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={handlePasswordChange}   // RN
+                onChange={handlePasswordChange}       // web
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
               />
