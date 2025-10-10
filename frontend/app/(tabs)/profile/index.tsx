@@ -52,26 +52,18 @@ export default function ProfileScreen() {
   const { user, logout, loading } = useAuth();
   const router = useRouter();
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-          <Text style={styles.headerTitle}>Chargement...</Text>
-        </View>
-      </SafeAreaView>
-    );
+  // Add runtime assert in dev
+  if (__DEV__) {
+    // eslint-disable-next-line no-console
+    console.log('Auth hook ok:', typeof useAuth);
   }
 
+  if (loading) return null; // or a proper loader
+
   if (!user) {
-    // Either redirect to login or show empty state
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-          <Text style={styles.headerTitle}>Non connecté</Text>
-          <Text style={styles.userEmail}>Veuillez vous reconnecter.</Text>
-        </View>
-      </SafeAreaView>
-    );
+    // either redirect to login, or render a signed-out state
+    // router.replace('/(auth)/login');
+    return null;
   }
 
   const handleEditProfile = () => {
