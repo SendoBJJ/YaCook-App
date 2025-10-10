@@ -1104,7 +1104,7 @@ async def get_conversations(
 ):
     """Get user's conversations list."""
     try:
-        user_id = current_user["user_id"]
+        user_id = current_user["sub"]
         
         # Get conversations from messages collection
         pipeline = [
@@ -1199,7 +1199,7 @@ async def get_conversation_messages(
 ):
     """Get messages in a conversation."""
     try:
-        user_id = current_user["user_id"]
+        user_id = current_user["sub"]
         
         # Validate participant exists
         participant = await database_service.database["users"].find_one({"_id": ObjectId(participant_id)})
@@ -1293,7 +1293,7 @@ async def send_message(
 ):
     """Send a message to a user."""
     try:
-        user_id = current_user["user_id"]
+        user_id = current_user["sub"]
         
         # Validate participant exists
         participant = await database_service.database["users"].find_one({"_id": ObjectId(participant_id)})
