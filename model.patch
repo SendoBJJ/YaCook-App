@@ -1,27 +1,110 @@
-diff --git a/frontend/src/services/api.ts b/frontend/src/services/api.ts
-index a0b1143..ddcb7c9 100644
---- a/frontend/src/services/api.ts
-+++ b/frontend/src/services/api.ts
-@@ -1,12 +1,9 @@
--import axios from 'axios';
- import { tokenStorage } from '../utils/tokenStorage';
- import { AuthResponse, LoginData, RegisterData, User } from '../types';
- import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
--import { apiBase } from '../utils/apiBase';
- import httpClient from '../api/client';
+diff --git a/frontend/src/utils/tokenStorage.ts b/frontend/src/utils/tokenStorage.ts
+index 7a46078..66c7a8a 100644
+--- a/frontend/src/utils/tokenStorage.ts
++++ b/frontend/src/utils/tokenStorage.ts
+@@ -1,22 +1,9 @@
+-import * as SecureStore from "expo-secure-store";
+-import { Platform } from "react-native";
+-
+-async function secureAvailable(): Promise<boolean> {
+-  try {
+-    return Platform.OS !== "web" && (await SecureStore.isAvailableAsync());
+-  } catch {
+-    return false;
+-  }
+-}
++import { saveToken, loadToken } from './webSafeStorage';
  
--// Log API base URL at startup
--console.log('API Base URL:', apiBase());
-+// Using centralized HTTP client
+ export const tokenStorage = {
+   async get(key: string): Promise<string | null> {
+     try {
+-      if (await secureAvailable()) {
+-        return await SecureStore.getItemAsync(key);
+-      }
+-      // Web fallback to localStorage
+-      return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
++      return await loadToken(key);
+     } catch (error) {
+       console.warn(`Failed to get ${key} from storage:`, error);
+       return null;
+@@ -25,43 +12,17 @@ export const tokenStorage = {
  
- // Token storage keys
- const ACCESS_TOKEN_KEY = 'access_token';
-@@ -118,7 +115,7 @@ api.interceptors.response.use(
-       try {
-         const refreshToken = await tokenManager.getRefreshToken();
-         if (refreshToken) {
--          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-+          const response = await api.post('/auth/refresh', {
-             refresh_token: refreshToken,
-           });
+   async set(key: string, value: string): Promise<void> {
+     try {
+-      if (await secureAvailable()) {
+-        await SecureStore.setItemAsync(key, value);
+-        return;
+-      }
+-      // Web fallback to localStorage
+-      if (typeof localStorage !== "undefined") {
+-        localStorage.setItem(key, value);
+-      }
++      await saveToken(key, value);
+     } catch (error) {
+       console.warn(`Failed to set ${key} in storage:`, error);
+-      throw error;
+     }
+   },
  
+-  async del(key: string): Promise<void> {
++  async remove(key: string): Promise<void> {
+     try {
+-      if (await secureAvailable()) {
+-        await SecureStore.deleteItemAsync(key);
+-        return;
+-      }
+-      // Web fallback to localStorage
+-      if (typeof localStorage !== "undefined") {
+-        localStorage.removeItem(key);
+-      }
++      await saveToken(key, null);
+     } catch (error) {
+-      console.warn(`Failed to delete ${key} from storage:`, error);
+-      throw error;
++      console.warn(`Failed to remove ${key} from storage:`, error);
+     }
+   },
+-
+-  async clear(): Promise<void> {
+-    try {
+-      const keys = ['access_token', 'refresh_token', 'user_data'];
+-      await Promise.all(keys.map(key => this.del(key)));
+-    } catch (error) {
+-      console.warn('Failed to clear storage:', error);
+-      throw error;
+-    }
+-  }
+ };
+\ No newline at end of file
+diff --git a/model.patch b/model.patch
+index d3d0cce..e69de29 100644
+--- a/model.patch
++++ b/model.patch
+@@ -1,27 +0,0 @@
+-diff --git a/frontend/src/services/api.ts b/frontend/src/services/api.ts
+-index a0b1143..ddcb7c9 100644
+---- a/frontend/src/services/api.ts
+-+++ b/frontend/src/services/api.ts
+-@@ -1,12 +1,9 @@
+--import axios from 'axios';
+- import { tokenStorage } from '../utils/tokenStorage';
+- import { AuthResponse, LoginData, RegisterData, User } from '../types';
+- import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
+--import { apiBase } from '../utils/apiBase';
+- import httpClient from '../api/client';
+- 
+--// Log API base URL at startup
+--console.log('API Base URL:', apiBase());
+-+// Using centralized HTTP client
+- 
+- // Token storage keys
+- const ACCESS_TOKEN_KEY = 'access_token';
+-@@ -118,7 +115,7 @@ api.interceptors.response.use(
+-       try {
+-         const refreshToken = await tokenManager.getRefreshToken();
+-         if (refreshToken) {
+--          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+-+          const response = await api.post('/auth/refresh', {
+-             refresh_token: refreshToken,
+-           });
+- 
