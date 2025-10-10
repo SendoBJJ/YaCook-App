@@ -89,6 +89,7 @@ async def lifespan(app: FastAPI):
         allowed_origins = [
             "http://localhost:19006",
             "http://localhost:3000", 
+            "https://app.yacook.app",
             "https://meal-app-preview.preview.emergentagent.com",
             "https://app.emergent.sh"
         ]
