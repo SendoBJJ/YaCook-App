@@ -128,7 +128,6 @@ app.add_middleware(
         "http://localhost:3000",
         "https://meal-app-preview.preview.emergentagent.com",
         "https://app.emergent.sh",
-        "https://05b2f58c2f23e54c9250cf4ecec929e7.serveo.net",
     ],
     allow_origin_regex=r"https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$",
     allow_credentials=True,
