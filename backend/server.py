@@ -103,11 +103,11 @@ async def lifespan(app: FastAPI):
             "https://app.emergent.sh"
         ]
         logger.info(f"🌐 CORS allowed origins: {allowed_origins}")
-        logger.info(f"🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
+        logger.info("🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
         
         # Log API base path
-        logger.info(f"🚀 API base path: /api")
-        logger.info(f"✅ OPTIONS handler registered for all routes")
+        logger.info("🚀 API base path: /api")
+        logger.info("✅ OPTIONS handler registered for all routes")
         
         logger.info("YaCook API started successfully")
         logger.info("=" * 50)
