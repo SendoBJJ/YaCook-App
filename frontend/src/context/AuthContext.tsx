@@ -105,7 +105,18 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       });
     } catch (error: any) {
       console.error('Login error:', error);
-      const message = error.response?.data?.detail || 'Erreur de connexion';
+      
+      // Provide French error messages based on error type
+      let message = 'Erreur de connexion. Réessayez.';
+      
+      if (error.response?.status === 401 || error.response?.status === 422) {
+        message = 'Identifiants invalides.';
+      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        message = 'Erreur de connexion. Réessayez.';
+      } else if (error.response?.data?.detail) {
+        message = error.response.data.detail;
+      }
+      
       throw new Error(message);
     }
   };
