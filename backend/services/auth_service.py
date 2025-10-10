@@ -74,6 +74,14 @@ class AuthService:
         except Exception as e:
             logger.warning(f"Hash check failed: {str(e)}")
             return False
+    
+    def get_hash_algorithm(self) -> str:
+        """Get the hash algorithm identifier.
+        
+        Returns:
+            String identifier for the hashing algorithm
+        """
+        return f"argon2id(time={self.ph.time_cost},memory={self.ph.memory_cost},parallelism={self.ph.parallelism})"
 
 # Global auth service instance
 auth_service = AuthService()
