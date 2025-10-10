@@ -50,8 +50,19 @@ const ProfileMenuItem: React.FC<ProfileMenuItemProps> = ({
 );
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const router = useRouter();
+
+  // Show loading state while auth is initializing
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={styles.headerTitle}>Chargement...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const handleEditProfile = () => {
     router.push('/profile/edit-profile');
