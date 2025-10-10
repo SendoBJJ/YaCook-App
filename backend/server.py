@@ -317,7 +317,9 @@ async def login(request: Request):
         email = (data.get("email") or data.get("username") or "").strip()
         password = (data.get("password") or "").strip()
         
-        logger.info(f"Parsed login credentials - email: '{email[:10]}...', password: {'***' if password else 'empty'}")
+        # Email normalization and logging
+        email_normalized = email.lower()
+        logger.info(f"Login attempt - emailNormalized: '{email_normalized[:10]}...', password: {'***' if password else 'empty'}")
         
         if not email or not password:
             raise HTTPException(
@@ -326,9 +328,12 @@ async def login(request: Request):
             )
         
         db = database_service.get_database()
+        logger.info(f"Login - searching in DB: {db.name}, collection: users")
         
         # Find user by email
-        user = await db.users.find_one({"email": email.lower()})
+        user = await db.users.find_one({"email": email_normalized})
+        user_found = user is not None
+        logger.info(f"Login - user found: {user_found} for email: {email_normalized[:10]}...")
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
