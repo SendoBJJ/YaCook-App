@@ -6,7 +6,7 @@ type User = { id: string; email: string; name?: string };
 type AuthContextValue = {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: any, password: any) => Promise<void>;
   logout: () => Promise<void>;
 };
 
