@@ -27,27 +27,8 @@ interface Conversation {
   isOnline: boolean;
 }
 
-// Mock conversations data
-const mockConversations: Conversation[] = [
-  {
-    id: '1',
-    participantName: 'Chef Marie',
-    lastMessage: 'Merci pour la recette de gratin ! Elle était délicieuse 😋',
-    lastMessageTime: '14:30',
-    unreadCount: 2,
-    isOnline: true,
-  },
-  {
-    id: '2',
-    participantName: 'Thomas L.',
-    lastMessage: 'As-tu essayé les pancakes aux myrtilles ?',
-    lastMessageTime: '12:45',
-    unreadCount: 0,
-    isOnline: false,
-  },
-  {
-    id: '3',
-    participantName: 'Sophie M.',
+// Empty conversations - real API will be used
+const mockConversations: Conversation[] = [];
     lastMessage: 'J\'ai adapté ta recette de salade de quinoa, elle est parfaite pour l\'hiver !',
     lastMessageTime: 'Hier',
     unreadCount: 1,
