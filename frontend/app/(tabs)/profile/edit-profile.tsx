@@ -16,8 +16,19 @@ import { Spacing, BorderRadius, FontSize, FontWeight } from '../../../src/consta
 import { SmartButton } from '../../../src/components/SmartButton';
 
 export default function EditProfileScreen() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
+
+  // Show loading state while auth is initializing
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={styles.inputLabel}>Chargement...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
   
   const [firstName, setFirstName] = useState(user?.first_name || '');
   const [lastName, setLastName] = useState(user?.last_name || '');
