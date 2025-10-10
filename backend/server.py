@@ -92,22 +92,20 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware
+# CORS middleware - configured at the very top
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
         "http://localhost:19006",
+        "http://localhost:3000",
         "https://meal-app-preview.preview.emergentagent.com",
-        "https://yacook-phase0.preview.emergentagent.com",  # Add back for compatibility
-        "https://app.emergent.sh",
-        "https://*.emergentagent.com",
-        "https://*.preview.emergentagent.com",  # Allow all preview subdomains
-        "https://yacook-api.loca.lt",  # New tunnel URL
     ],
+    allow_origin_regex=r"https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Total-Count"],
+    max_age=600,
 )
 
 # JWT Helper Functions
