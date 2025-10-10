@@ -17,32 +17,20 @@ import { Spacing, BorderRadius, FontSize, FontWeight, Shadow } from '../../src/c
 import { SmartButton } from '../../src/components/SmartButton';
 import { SkeletonConversationItem } from '../../src/components/SkeletonLoader';
 
-interface Conversation {
+// Types
+type Conversation = {
   id: string;
-  participantName: string;
-  participantAvatar?: string;
+  name: string;
+  avatar?: string | null;
   lastMessage: string;
-  lastMessageTime: string;
+  lastMessageTime: string; // e.g., "Hier"
   unreadCount: number;
   isOnline: boolean;
-}
+};
 
-// Empty conversations - real API will be used
+// For now, keep an EMPTY list so the screen renders a real empty state.
+// (No fake data)
 const mockConversations: Conversation[] = [];
-    lastMessage: 'J\'ai adapté ta recette de salade de quinoa, elle est parfaite pour l\'hiver !',
-    lastMessageTime: 'Hier',
-    unreadCount: 1,
-    isOnline: true,
-  },
-  {
-    id: '4',
-    participantName: 'Paul D.',
-    lastMessage: 'Peux-tu me donner des conseils pour réussir la pâte à crêpes ?',
-    lastMessageTime: 'Lundi',
-    unreadCount: 0,
-    isOnline: false,
-  },
-];
 
 export default function MessagesScreen() {
   const { user } = useAuth();
