@@ -1,19 +1,14 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
+import { tokenStorage } from '../utils/tokenStorage';
 import { AuthResponse, LoginData, RegisterData, User } from '../types';
 import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
-import { tokenStorage } from '../utils/tokenStorage';
-
-// Clean and build API base URL to prevent /api/api issues
-const getApiBaseUrl = (): string => {
-  // Use the working tunnel URL directly
-  const baseUrl = 'https://05b2f58c2f23e54c9250cf4ecec929e7.serveo.net/api';
-  return baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
-};
+import { getApiBaseUrl } from '../lib/apiBase';
 
 const API_BASE_URL = getApiBaseUrl();
 
-console.log('🔗 API Base URL:', API_BASE_URL);
+// Log API base URL at startup
+console.log('API Base URL:', API_BASE_URL);
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'access_token';
