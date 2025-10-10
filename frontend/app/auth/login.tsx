@@ -37,7 +37,7 @@ export default function LoginScreen() {
     
     if (!email.trim() || !password.trim()) {
       console.log('❌ Validation failed: empty fields');
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      showToast('Veuillez remplir tous les champs', 'error');
       return;
     }
 
