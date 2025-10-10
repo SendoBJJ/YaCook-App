@@ -181,6 +181,7 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ToastComponent />
     </SafeAreaView>
   );
 }
