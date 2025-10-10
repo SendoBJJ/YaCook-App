@@ -17,6 +17,7 @@ import { Colors } from '../../src/constants/Colors';
 import { AppTexts } from '../../src/constants/Texts';
 import { Spacing, BorderRadius, FontSize, FontWeight } from '../../src/constants/Layout';
 import { SmartButton } from '../../src/components/SmartButton';
+import { useToast } from '../../src/components/Toast';
 
 export default function LoginScreen() {
   const { login } = useAuth();
