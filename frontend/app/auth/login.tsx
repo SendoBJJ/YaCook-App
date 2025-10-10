@@ -70,7 +70,7 @@ export default function LoginScreen() {
         errorMessage = 'Problème de connexion — vérifiez votre internet';
       }
       
-      Alert.alert('Erreur de connexion', errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       console.log('🏁 Login process finished');
       setIsLoading(false);
