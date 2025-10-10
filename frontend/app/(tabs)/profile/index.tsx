@@ -15,6 +15,7 @@ import { useAuth } from '@/src/context/AuthContext';
 import { Colors } from '@/src/constants/Colors';
 import { Spacing, BorderRadius, FontSize, FontWeight } from '@/src/constants/Layout';
 import { AppTexts } from '@/src/constants/Texts';
+import { SmartButton } from '@/src/components/SmartButton';
 
 interface ProfileMenuItemProps {
   icon: keyof typeof Ionicons.glyphMap;
