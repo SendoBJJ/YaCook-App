@@ -375,6 +375,33 @@ const styles = StyleSheet.create({
     color: Colors.light.muted,
     marginTop: 2,
   },
+  foodPreferencesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  foodPreferencePill: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    backgroundColor: Colors.light.background,
+  },
+  foodPreferencePillActive: {
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
+  },
+  foodPreferenceText: {
+    fontSize: FontSize.sm,
+    color: Colors.light.text,
+    textTransform: 'capitalize',
+  },
+  foodPreferenceTextActive: {
+    color: Colors.light.background,
+  },
   bottomSpacing: {
     height: 60,
   },
