@@ -1,28 +1,20 @@
 import axios from 'axios';
-import Constants from 'expo-constants';
 import { tokenStorage } from '../utils/tokenStorage';
 import { AuthResponse, LoginData, RegisterData, User } from '../types';
 import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
-import { getApiBaseUrl } from '../lib/apiBase';
-
-const API_BASE_URL = getApiBaseUrl();
+import { apiBase } from '../utils/apiBase';
+import httpClient from '../utils/http';
 
 // Log API base URL at startup
-console.log('API Base URL:', API_BASE_URL);
+console.log('API Base URL:', apiBase());
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const USER_DATA_KEY = 'user_data';
 
-// Create axios instance
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Use centralized HTTP client
+const api = httpClient;
 
 // Enhanced token manager using universal storage
 export const tokenManager = {
