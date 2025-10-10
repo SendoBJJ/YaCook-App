@@ -205,6 +205,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.card,
     color: Colors.light.muted,
   },
+  bioInput: {
+    height: 80,
+    paddingTop: Spacing.md,
+  },
   inputNote: {
     fontSize: FontSize.xs,
     color: Colors.light.muted,
