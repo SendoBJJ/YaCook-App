@@ -20,7 +20,7 @@ export default function EditProfileScreen() {
   const router = useRouter();
 
   // Show loading state while auth is initializing
-  if (loading) {
+  if (authLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
