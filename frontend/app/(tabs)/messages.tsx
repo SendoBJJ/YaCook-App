@@ -71,12 +71,12 @@ export default function MessagesScreen() {
       key={conversation.id} 
       style={styles.conversationItem}
       onPress={() => handleConversationPress(conversation.id)}
-      accessibilityLabel={`Conversation avec ${conversation.participantName}`}
+      accessibilityLabel={`Conversation avec ${conversation.name}`}
     >
       <View style={styles.avatarContainer}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
-            {conversation.participantName.charAt(0).toUpperCase()}
+            {conversation.name.charAt(0).toUpperCase()}
           </Text>
         </View>
         {conversation.isOnline && <View style={styles.onlineIndicator} />}
@@ -84,7 +84,7 @@ export default function MessagesScreen() {
       
       <View style={styles.conversationContent}>
         <View style={styles.conversationHeader}>
-          <Text style={styles.participantName}>{conversation.participantName}</Text>
+          <Text style={styles.participantName}>{conversation.name}</Text>
           <View style={styles.conversationMeta}>
             <Text style={styles.messageTime}>{conversation.lastMessageTime}</Text>
             {conversation.unreadCount > 0 && (
