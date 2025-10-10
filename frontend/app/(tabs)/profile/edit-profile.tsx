@@ -54,7 +54,7 @@ export default function EditProfileScreen() {
       return;
     }
 
-    setLoading(true);
+    setIsSaving(true);
     try {
       // TODO: Implement profile update API call
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
@@ -63,7 +63,7 @@ export default function EditProfileScreen() {
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de mettre à jour le profil');
     } finally {
-      setLoading(false);
+      setIsSaving(false);
     }
   };
 
