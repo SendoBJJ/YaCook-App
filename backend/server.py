@@ -405,6 +405,8 @@ async def login(request: Request, response: Response):
             )
         
         # Add instance header for debugging
+        import socket
+        import os
         instance_id = os.getenv("INSTANCE_ID", socket.gethostname())
         response.headers["X-YaCook-Instance"] = instance_id
         
