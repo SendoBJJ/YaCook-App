@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authApi, tokenManager, healthApi } from '../services/api';
-import { apiBase } from '../utils/apiBase';
+import { resolveApiBase } from '../utils/apiBase';
 
 type User = { id: string; email: string; name?: string };
 type AuthContextValue = {
