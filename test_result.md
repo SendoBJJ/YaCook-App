@@ -636,10 +636,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Profile Tab Backend Integration Complete - Ready for Frontend Testing"
+    - "Profile Tab Implementation Testing Complete - Platform Router Issue Blocking End-to-End Testing"
   stuck_tasks:
     - "AI Meal Plan Generation - server error (500 status) - UI safeguards implemented"
-    - "Platform Router Integration - Kubernetes ingress not routing /api/* requests from preview domain"
+    - "Platform Router Integration - CRITICAL: Kubernetes ingress not routing /api/* requests from preview domain to backend:8001"
     - "Bio Field Enhancement - Optional backend improvement for Edit Profile screen"
   test_all: false
   test_priority: "high_first"
