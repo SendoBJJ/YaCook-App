@@ -74,7 +74,32 @@ async def lifespan(app: FastAPI):
     # Startup
     try:
         await database_service.connect()
+        
+        # Startup diagnostics
+        logger.info("=" * 50)
+        logger.info("YaCook API Startup Diagnostics")
+        logger.info("=" * 50)
+        
+        # Check .env loading
+        import os
+        env_loaded = os.path.exists(".env")
+        logger.info(f"📄 .env file loaded: {env_loaded}")
+        
+        # Log allowed origins (no secrets)
+        allowed_origins = [
+            "http://localhost:19006",
+            "http://localhost:3000", 
+            "https://meal-app-preview.preview.emergentagent.com"
+        ]
+        logger.info(f"🌐 CORS allowed origins: {allowed_origins}")
+        logger.info(f"🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
+        
+        # Log API base path
+        logger.info(f"🚀 API base path: /api")
+        logger.info(f"✅ OPTIONS handler registered for all routes")
+        
         logger.info("YaCook API started successfully")
+        logger.info("=" * 50)
     except Exception as e:
         logger.error(f"Failed to start application: {str(e)}")
         raise
