@@ -16,7 +16,7 @@ import { Spacing, BorderRadius, FontSize, FontWeight } from '../../../src/consta
 import { SmartButton } from '../../../src/components/SmartButton';
 
 export default function EditProfileScreen() {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const router = useRouter();
   
   const [firstName, setFirstName] = useState(user?.first_name || '');
