@@ -7,12 +7,24 @@ const client = axios.create({
   withCredentials: false, // no cookies in this app
 });
 
-client.interceptors.request.use((config) => {
+client.interceptors.request.use(async (config) => {
   if (typeof window !== 'undefined') {
     // Debug log to verify routing
     // eslint-disable-next-line no-console
     console.log('API Base URL:', client.defaults.baseURL);
   }
+  
+  // Add Authorization header if token exists
+  try {
+    const { tokenStorage } = await import('../utils/tokenStorage');
+    const token = await tokenStorage.get('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    console.warn('Failed to get token for request:', error);
+  }
+  
   return config;
 });
 
