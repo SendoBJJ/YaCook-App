@@ -1,6 +1,8 @@
-export function apiBase() {
-  if (typeof window !== 'undefined') return '/api'; // preview web
-  // native/local fallback:
-  const base = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8001';
-  return base.replace(/\/+$/, '') + '/api';
+export function resolveApiBase(): string {
+  if (typeof window !== 'undefined') {
+    // In preview/web, always use the platform router
+    return '/api';
+  }
+  // Native builds (EAS, device) can use env
+  return process.env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, '') || '/api';
 }
