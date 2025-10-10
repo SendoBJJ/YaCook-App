@@ -125,6 +125,7 @@ app.add_middleware(
         "http://localhost:19006",
         "http://localhost:3000",
         "https://meal-app-preview.preview.emergentagent.com",
+        "https://yacook-fix.loca.lt",
     ],
     allow_origin_regex=r"https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$",
     allow_credentials=True,
