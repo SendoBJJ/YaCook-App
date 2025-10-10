@@ -7,7 +7,7 @@ import { tokenStorage } from '../utils/tokenStorage';
 // Clean and build API base URL to prevent /api/api issues
 const getApiBaseUrl = (): string => {
   // Use the working tunnel URL directly
-  const baseUrl = 'https://66acb8504e8aa88f0305c92bebe6ffe7.serveo.net/api';
+  const baseUrl = 'https://05b2f58c2f23e54c9250cf4ecec929e7.serveo.net/api';
   return baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
 };
 
