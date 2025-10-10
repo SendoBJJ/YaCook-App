@@ -1153,6 +1153,65 @@ async def get_unread_notifications_count(
             detail="Erreur lors de la récupération du nombre de notifications"
         )
 
+# Dev-only seed endpoint for testing auth
+@app.post("/api/dev/seed-user")
+async def seed_test_user():
+    """Create a test user for auth debugging (preview environment only)."""
+    
+    # Only allow in preview/development
+    environment = os.getenv("ENVIRONMENT", "production")
+    if environment not in ["preview", "development", "dev"]:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Endpoint not available in production"
+        )
+    
+    try:
+        db = database_service.get_database()
+        
+        test_email = "test@example.com"
+        test_password = "testpassword123"
+        
+        # Check if user already exists
+        existing_user = await db.users.find_one({"email": test_email})
+        if existing_user:
+            logger.info(f"Seed user already exists: {test_email}")
+            return {"message": "Test user already exists", "email": test_email}
+        
+        # Create test user
+        password_hash = auth_service.hash_password(test_password)
+        
+        user_doc = {
+            "email": test_email,
+            "password_hash": password_hash,
+            "first_name": "Test",
+            "last_name": "User",
+            "auth_provider": "email",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "is_active": True,
+            "email_verified": False
+        }
+        
+        result = await db.users.insert_one(user_doc)
+        
+        logger.info(f"Seed user created - email: {test_email}, hash_algorithm: {auth_service.get_hash_algorithm()}")
+        
+        return {
+            "message": "Test user created successfully",
+            "email": test_email,
+            "password": test_password,
+            "user_id": str(result.inserted_id),
+            "hash_algorithm": auth_service.get_hash_algorithm()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating seed user: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la création de l'utilisateur test"
+        )
+
 # Messages/Chat endpoints
 @app.get("/api/conversations", response_model=ConversationList)
 async def get_conversations(
