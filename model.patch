@@ -1,180 +1,195 @@
 diff --git a/backend/server.py b/backend/server.py
-index 2518906..696082b 100644
+index 45a8866..cb85093 100644
 --- a/backend/server.py
 +++ b/backend/server.py
-@@ -103,11 +103,11 @@ async def lifespan(app: FastAPI):
-             "https://app.emergent.sh"
-         ]
-         logger.info(f"🌐 CORS allowed origins: {allowed_origins}")
--        logger.info(f"🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
-+        logger.info("🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
-         
-         # Log API base path
--        logger.info(f"🚀 API base path: /api")
--        logger.info(f"✅ OPTIONS handler registered for all routes")
-+        logger.info("🚀 API base path: /api")
-+        logger.info("✅ OPTIONS handler registered for all routes")
-         
-         logger.info("YaCook API started successfully")
-         logger.info("=" * 50)
-@@ -224,6 +224,23 @@ async def health_check():
-             detail=f"Service unhealthy: {str(e)}"
-         )
- 
-+# Whoami endpoint for debugging routing issues
-+@app.get("/api/whoami")
-+async def whoami():
-+    """Identify which backend instance is responding."""
-+    import socket
-+    import os
-+    
-+    return {
-+        "message": "YaCook API Instance",
-+        "hostname": socket.gethostname(),
-+        "pid": os.getpid(),
-+        "version": "1.0.0",
-+        "timestamp": datetime.utcnow().isoformat(),
-+        "environment": os.getenv("ENVIRONMENT", "unknown"),
-+        "instance_id": os.getenv("INSTANCE_ID", socket.gethostname())
-+    }
-+
- # Authentication endpoints
- @app.post("/api/auth/register", response_model=Token)
- async def register(user_data: UserCreate, background_tasks: BackgroundTasks):
+@@ -1,4 +1,4 @@
+-from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks, Request
++from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks, Request, Response
+ from fastapi.responses import Response
+ from fastapi.middleware.cors import CORSMiddleware
+ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 diff --git a/model.patch b/model.patch
-index 098a00f..e69de29 100644
+index dcea799..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,132 +0,0 @@
+@@ -1,180 +0,0 @@
 -diff --git a/backend/server.py b/backend/server.py
--index 91ec152..aa27196 100644
+-index 2518906..696082b 100644
 ---- a/backend/server.py
 -+++ b/backend/server.py
--@@ -87,7 +87,12 @@ async def lifespan(app: FastAPI):
--         # Check .env loading
--         import os
--         env_loaded = os.path.exists(".env")
--+        # Database connection info (sanitized)
--+        db = database_service.get_database()
--+        mongo_host = os.getenv("MONGO_URL", "").replace("mongodb://", "").split("/")[0] if os.getenv("MONGO_URL") else "unknown"
--+        
--         logger.info(f"📄 .env file loaded: {env_loaded}")
--+        logger.info(f"🗄️ Database: {db.name} on host: {mongo_host[:20]}***")
+-@@ -103,11 +103,11 @@ async def lifespan(app: FastAPI):
+-             "https://app.emergent.sh"
+-         ]
+-         logger.info(f"🌐 CORS allowed origins: {allowed_origins}")
+--        logger.info(f"🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
+-+        logger.info("🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
 -         
--         # Log allowed origins (no secrets)
--         allowed_origins = [
+-         # Log API base path
+--        logger.info(f"🚀 API base path: /api")
+--        logger.info(f"✅ OPTIONS handler registered for all routes")
+-+        logger.info("🚀 API base path: /api")
+-+        logger.info("✅ OPTIONS handler registered for all routes")
+-         
+-         logger.info("YaCook API started successfully")
+-         logger.info("=" * 50)
+-@@ -224,6 +224,23 @@ async def health_check():
+-             detail=f"Service unhealthy: {str(e)}"
+-         )
+- 
+-+# Whoami endpoint for debugging routing issues
+-+@app.get("/api/whoami")
+-+async def whoami():
+-+    """Identify which backend instance is responding."""
+-+    import socket
+-+    import os
+-+    
+-+    return {
+-+        "message": "YaCook API Instance",
+-+        "hostname": socket.gethostname(),
+-+        "pid": os.getpid(),
+-+        "version": "1.0.0",
+-+        "timestamp": datetime.utcnow().isoformat(),
+-+        "environment": os.getenv("ENVIRONMENT", "unknown"),
+-+        "instance_id": os.getenv("INSTANCE_ID", socket.gethostname())
+-+    }
+-+
+- # Authentication endpoints
+- @app.post("/api/auth/register", response_model=Token)
+- async def register(user_data: UserCreate, background_tasks: BackgroundTasks):
 -diff --git a/model.patch b/model.patch
--index 12c1d01..e69de29 100644
+-index 098a00f..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,110 +0,0 @@
---diff --git a/frontend/src/utils/tokenStorage.ts b/frontend/src/utils/tokenStorage.ts
---index 7a46078..66c7a8a 100644
------ a/frontend/src/utils/tokenStorage.ts
---+++ b/frontend/src/utils/tokenStorage.ts
---@@ -1,22 +1,9 @@
----import * as SecureStore from "expo-secure-store";
----import { Platform } from "react-native";
----
----async function secureAvailable(): Promise<boolean> {
----  try {
----    return Platform.OS !== "web" && (await SecureStore.isAvailableAsync());
----  } catch {
----    return false;
----  }
----}
---+import { saveToken, loadToken } from './webSafeStorage';
--- 
--- export const tokenStorage = {
---   async get(key: string): Promise<string | null> {
---     try {
----      if (await secureAvailable()) {
----        return await SecureStore.getItemAsync(key);
----      }
----      // Web fallback to localStorage
----      return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
---+      return await loadToken(key);
---     } catch (error) {
---       console.warn(`Failed to get ${key} from storage:`, error);
---       return null;
---@@ -25,43 +12,17 @@ export const tokenStorage = {
--- 
---   async set(key: string, value: string): Promise<void> {
---     try {
----      if (await secureAvailable()) {
----        await SecureStore.setItemAsync(key, value);
----        return;
----      }
----      // Web fallback to localStorage
----      if (typeof localStorage !== "undefined") {
----        localStorage.setItem(key, value);
----      }
---+      await saveToken(key, value);
---     } catch (error) {
---       console.warn(`Failed to set ${key} in storage:`, error);
----      throw error;
---     }
---   },
--- 
----  async del(key: string): Promise<void> {
---+  async remove(key: string): Promise<void> {
---     try {
----      if (await secureAvailable()) {
----        await SecureStore.deleteItemAsync(key);
----        return;
----      }
----      // Web fallback to localStorage
----      if (typeof localStorage !== "undefined") {
----        localStorage.removeItem(key);
----      }
---+      await saveToken(key, null);
---     } catch (error) {
----      console.warn(`Failed to delete ${key} from storage:`, error);
----      throw error;
---+      console.warn(`Failed to remove ${key} from storage:`, error);
---     }
---   },
----
----  async clear(): Promise<void> {
----    try {
----      const keys = ['access_token', 'refresh_token', 'user_data'];
----      await Promise.all(keys.map(key => this.del(key)));
----    } catch (error) {
----      console.warn('Failed to clear storage:', error);
----      throw error;
----    }
----  }
--- };
---\ No newline at end of file
+-@@ -1,132 +0,0 @@
+--diff --git a/backend/server.py b/backend/server.py
+--index 91ec152..aa27196 100644
+----- a/backend/server.py
+--+++ b/backend/server.py
+--@@ -87,7 +87,12 @@ async def lifespan(app: FastAPI):
+--         # Check .env loading
+--         import os
+--         env_loaded = os.path.exists(".env")
+--+        # Database connection info (sanitized)
+--+        db = database_service.get_database()
+--+        mongo_host = os.getenv("MONGO_URL", "").replace("mongodb://", "").split("/")[0] if os.getenv("MONGO_URL") else "unknown"
+--+        
+--         logger.info(f"📄 .env file loaded: {env_loaded}")
+--+        logger.info(f"🗄️ Database: {db.name} on host: {mongo_host[:20]}***")
+--         
+--         # Log allowed origins (no secrets)
+--         allowed_origins = [
 --diff --git a/model.patch b/model.patch
---index d3d0cce..e69de29 100644
+--index 12c1d01..e69de29 100644
 ----- a/model.patch
 --+++ b/model.patch
---@@ -1,27 +0,0 @@
----diff --git a/frontend/src/services/api.ts b/frontend/src/services/api.ts
----index a0b1143..ddcb7c9 100644
------- a/frontend/src/services/api.ts
----+++ b/frontend/src/services/api.ts
----@@ -1,12 +1,9 @@
-----import axios from 'axios';
---- import { tokenStorage } from '../utils/tokenStorage';
---- import { AuthResponse, LoginData, RegisterData, User } from '../types';
---- import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
-----import { apiBase } from '../utils/apiBase';
---- import httpClient from '../api/client';
+--@@ -1,110 +0,0 @@
+---diff --git a/frontend/src/utils/tokenStorage.ts b/frontend/src/utils/tokenStorage.ts
+---index 7a46078..66c7a8a 100644
+------ a/frontend/src/utils/tokenStorage.ts
+---+++ b/frontend/src/utils/tokenStorage.ts
+---@@ -1,22 +1,9 @@
+----import * as SecureStore from "expo-secure-store";
+----import { Platform } from "react-native";
+----
+----async function secureAvailable(): Promise<boolean> {
+----  try {
+----    return Platform.OS !== "web" && (await SecureStore.isAvailableAsync());
+----  } catch {
+----    return false;
+----  }
+----}
+---+import { saveToken, loadToken } from './webSafeStorage';
 --- 
-----// Log API base URL at startup
-----console.log('API Base URL:', apiBase());
----+// Using centralized HTTP client
+--- export const tokenStorage = {
+---   async get(key: string): Promise<string | null> {
+---     try {
+----      if (await secureAvailable()) {
+----        return await SecureStore.getItemAsync(key);
+----      }
+----      // Web fallback to localStorage
+----      return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
+---+      return await loadToken(key);
+---     } catch (error) {
+---       console.warn(`Failed to get ${key} from storage:`, error);
+---       return null;
+---@@ -25,43 +12,17 @@ export const tokenStorage = {
 --- 
---- // Token storage keys
---- const ACCESS_TOKEN_KEY = 'access_token';
----@@ -118,7 +115,7 @@ api.interceptors.response.use(
----       try {
----         const refreshToken = await tokenManager.getRefreshToken();
----         if (refreshToken) {
-----          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
----+          const response = await api.post('/auth/refresh', {
----             refresh_token: refreshToken,
----           });
+---   async set(key: string, value: string): Promise<void> {
+---     try {
+----      if (await secureAvailable()) {
+----        await SecureStore.setItemAsync(key, value);
+----        return;
+----      }
+----      // Web fallback to localStorage
+----      if (typeof localStorage !== "undefined") {
+----        localStorage.setItem(key, value);
+----      }
+---+      await saveToken(key, value);
+---     } catch (error) {
+---       console.warn(`Failed to set ${key} in storage:`, error);
+----      throw error;
+---     }
+---   },
 --- 
+----  async del(key: string): Promise<void> {
+---+  async remove(key: string): Promise<void> {
+---     try {
+----      if (await secureAvailable()) {
+----        await SecureStore.deleteItemAsync(key);
+----        return;
+----      }
+----      // Web fallback to localStorage
+----      if (typeof localStorage !== "undefined") {
+----        localStorage.removeItem(key);
+----      }
+---+      await saveToken(key, null);
+---     } catch (error) {
+----      console.warn(`Failed to delete ${key} from storage:`, error);
+----      throw error;
+---+      console.warn(`Failed to remove ${key} from storage:`, error);
+---     }
+---   },
+----
+----  async clear(): Promise<void> {
+----    try {
+----      const keys = ['access_token', 'refresh_token', 'user_data'];
+----      await Promise.all(keys.map(key => this.del(key)));
+----    } catch (error) {
+----      console.warn('Failed to clear storage:', error);
+----      throw error;
+----    }
+----  }
+--- };
+---\ No newline at end of file
+---diff --git a/model.patch b/model.patch
+---index d3d0cce..e69de29 100644
+------ a/model.patch
+---+++ b/model.patch
+---@@ -1,27 +0,0 @@
+----diff --git a/frontend/src/services/api.ts b/frontend/src/services/api.ts
+----index a0b1143..ddcb7c9 100644
+------- a/frontend/src/services/api.ts
+----+++ b/frontend/src/services/api.ts
+----@@ -1,12 +1,9 @@
+-----import axios from 'axios';
+---- import { tokenStorage } from '../utils/tokenStorage';
+---- import { AuthResponse, LoginData, RegisterData, User } from '../types';
+---- import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
+-----import { apiBase } from '../utils/apiBase';
+---- import httpClient from '../api/client';
+---- 
+-----// Log API base URL at startup
+-----console.log('API Base URL:', apiBase());
+----+// Using centralized HTTP client
+---- 
+---- // Token storage keys
+---- const ACCESS_TOKEN_KEY = 'access_token';
+----@@ -118,7 +115,7 @@ api.interceptors.response.use(
+----       try {
+----         const refreshToken = await tokenManager.getRefreshToken();
+----         if (refreshToken) {
+-----          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+----+          const response = await api.post('/auth/refresh', {
+----             refresh_token: refreshToken,
+----           });
+---- 
