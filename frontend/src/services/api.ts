@@ -6,9 +6,11 @@ import { tokenStorage } from '../utils/tokenStorage';
 
 // Clean and build API base URL to prevent /api/api issues
 const getApiBaseUrl = (): string => {
-  // Use the tunnel URL directly for now
-  const baseUrl = 'https://yacook-api.loca.lt/api';
-  return baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
+  // Get from environment variable or fall back to tunnel URL
+  const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL || Constants.expoConfig?.extra?.apiBaseUrl;
+  const baseUrl = envUrl || 'https://yacook-api.loca.lt/api';
+  // Normalize slashes to avoid /api/api or //api
+  return baseUrl.replace(/\/+$/, '').replace(/\/api$/, '') + '/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
