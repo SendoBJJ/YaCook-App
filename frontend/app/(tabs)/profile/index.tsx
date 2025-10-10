@@ -142,7 +142,7 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{getUserDisplayName()}</Text>
-            <Text style={styles.userEmail}>{user?.email || 'email@exemple.com'}</Text>
+            <Text style={styles.userEmail}>{user.email}</Text>
           </View>
         </View>
 
