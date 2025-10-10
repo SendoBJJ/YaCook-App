@@ -12,55 +12,63 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [user, setUser] = useState<{ id: string; name?: string; email: string } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize auth state
+  // TODO: hydrate user from token / storage
   useEffect(() => {
-    initializeAuth();
-  }, []);
-
-  const initializeAuth = async () => {
-    try {
-      setLoading(true);
-      
-      // Check if user data exists in storage
-      const storedUser = await tokenManager.getUserData();
-      if (storedUser) {
-        // Transform to our simplified user type
-        setUser({
-          id: storedUser.id,
-          name: storedUser.first_name && storedUser.last_name 
-            ? `${storedUser.first_name} ${storedUser.last_name}` 
-            : storedUser.first_name || storedUser.display_name,
-          email: storedUser.email
-        });
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
         
-        // Try to refresh user data if we have a token
-        try {
-          const currentUser = await authApi.getCurrentUser();
+        // Check if user data exists in storage
+        const storedUser = await tokenManager.getUserData();
+        if (storedUser && mounted) {
+          // Transform to our simplified user type
           setUser({
-            id: currentUser.id,
-            name: currentUser.first_name && currentUser.last_name 
-              ? `${currentUser.first_name} ${currentUser.last_name}` 
-              : currentUser.first_name || currentUser.display_name,
-            email: currentUser.email
+            id: storedUser.id,
+            name: storedUser.first_name && storedUser.last_name 
+              ? `${storedUser.first_name} ${storedUser.last_name}` 
+              : storedUser.first_name || storedUser.display_name,
+            email: storedUser.email
           });
-          await tokenManager.setUserData(currentUser);
-        } catch (error) {
-          // If refresh fails, clear stored data
-          console.warn('Failed to refresh user data on init:', error);
-          await tokenManager.clearTokens();
+          
+          // Try to refresh user data if we have a token
+          try {
+            const currentUser = await authApi.getCurrentUser();
+            if (mounted) {
+              setUser({
+                id: currentUser.id,
+                name: currentUser.first_name && currentUser.last_name 
+                  ? `${currentUser.first_name} ${currentUser.last_name}` 
+                  : currentUser.first_name || currentUser.display_name,
+                email: currentUser.email
+              });
+              await tokenManager.setUserData(currentUser);
+            }
+          } catch (error) {
+            // If refresh fails, clear stored data
+            console.warn('Failed to refresh user data on init:', error);
+            if (mounted) {
+              await tokenManager.clearTokens();
+              setUser(null);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialize auth:', error);
+        if (mounted) {
           setUser(null);
         }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-    } catch (error) {
-      console.error('Failed to initialize auth:', error);
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
@@ -97,14 +105,11 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     }
   };
 
-  const value: AuthContextValue = {
-    user,
-    loading,
-    login,
-    logout,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = (): AuthContextValue => {
