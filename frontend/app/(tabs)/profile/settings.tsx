@@ -204,10 +204,55 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Units & Preferences */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Préférences</Text>
+          <View style={styles.settingsContainer}>
+            <SettingsItem
+              icon="calculator-outline"
+              title="Unités"
+              subtitle={`Système ${units}`}
+              onPress={handleUnitsChange}
+            />
+          </View>
+        </View>
+
+        {/* Food Preferences */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Préférences alimentaires</Text>
+          <View style={styles.settingsContainer}>
+            <View style={styles.foodPreferencesContainer}>
+              {Object.entries(foodPreferences).map(([key, value]) => (
+                <TouchableOpacity
+                  key={key}
+                  style={[
+                    styles.foodPreferencePill,
+                    value && styles.foodPreferencePillActive
+                  ]}
+                  onPress={() => toggleFoodPreference(key)}
+                >
+                  <Text style={[
+                    styles.foodPreferenceText,
+                    value && styles.foodPreferenceTextActive
+                  ]}>
+                    {key.replace('_', ' ')}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+
         {/* Privacy & Security */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Confidentialité et sécurité</Text>
           <View style={styles.settingsContainer}>
+            <SettingsItem
+              icon="key-outline"
+              title="Changer le mot de passe"
+              subtitle="Modifier votre mot de passe"
+              onPress={handleChangePassword}
+            />
             <SettingsItem
               icon="shield-outline"
               title="Confidentialité"
