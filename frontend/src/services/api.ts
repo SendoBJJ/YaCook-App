@@ -3,7 +3,7 @@ import { tokenStorage } from '../utils/tokenStorage';
 import { AuthResponse, LoginData, RegisterData, User } from '../types';
 import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
 import { apiBase } from '../utils/apiBase';
-import httpClient from '../utils/http';
+import httpClient from '../api/client';
 
 // Log API base URL at startup
 console.log('API Base URL:', apiBase());
