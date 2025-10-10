@@ -340,11 +340,31 @@ async def login(request: Request):
                 detail="Email ou mot de passe incorrect"
             )
         
+        if not user_found:
+            logger.info(f"Login failed - user not found: {email_normalized[:10]}...")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email ou mot de passe incorrect"
+            )
+        
         # Verify password
-        if not user.get("password_hash") or not auth_service.verify_password(
-            password, 
-            user["password_hash"]
-        ):
+        password_hash = user.get("password_hash")
+        if not password_hash:
+            logger.info(f"Login failed - no password hash stored for: {email_normalized[:10]}...")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email ou mot de passe incorrect"
+            )
+        
+        # Log hashing algorithm and verify password
+        hash_algorithm = auth_service.get_hash_algorithm()
+        logger.info(f"Login - verifying password using: {hash_algorithm}")
+        
+        password_verify_result = auth_service.verify_password(password, password_hash)
+        logger.info(f"Login - password verify result: {password_verify_result} for email: {email_normalized[:10]}...")
+        
+        if not password_verify_result:
+            logger.info(f"Login failed - password verification failed for: {email_normalized[:10]}...")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Email ou mot de passe incorrect"
