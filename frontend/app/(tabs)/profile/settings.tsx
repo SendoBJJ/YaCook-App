@@ -71,6 +71,20 @@ export default function SettingsScreen() {
   const [inAppNotifications, setInAppNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  
+  // Units settings
+  const [units, setUnits] = useState('métrique');
+  
+  // Food preferences
+  const [foodPreferences, setFoodPreferences] = useState({
+    végétarien: false,
+    végan: false,
+    halal: false,
+    casher: false,
+    sans_lactose: false,
+    sans_gluten: false,
+    sans_noix: false,
+  });
 
   const handleNotificationSetting = (type: string, value: boolean) => {
     switch (type) {
