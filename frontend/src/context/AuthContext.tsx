@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
         setLoading(true);
         
         // Log API Base URL at startup
-        console.log('API Base URL:', apiBase());
+        console.log('API Base URL:', resolveApiBase());
         
         // Background ping to /api/health
         try {
