@@ -75,6 +75,16 @@ export default function TabLayout() {
           headerTitle: AppTexts.messages.title,
         }}
       />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: AppTexts.tabs.profile,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-circle-outline" size={size} color={color} />
+          ),
+          headerShown: false, // We handle the header in the profile screen
+        }}
+      />
     </Tabs>
   );
 }
