@@ -46,7 +46,7 @@ export default function LoginScreen() {
       // Log the attempt for debugging
       console.log('🔐 Login attempt to:', process.env.EXPO_PUBLIC_API_BASE_URL + '/auth/login');
       
-      await login({ email: email.trim(), password });
+      await login(email, password);
       console.log('✅ Login successful, redirecting...');
       router.replace('/(tabs)');
     } catch (error: any) {
