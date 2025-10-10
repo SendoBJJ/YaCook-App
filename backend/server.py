@@ -91,7 +91,7 @@ async def lifespan(app: FastAPI):
             "http://localhost:3000",
             "https://meal-app-preview.preview.emergentagent.com",
             "https://app.emergent.sh",
-            "https://66acb8504e8aa88f0305c92bebe6ffe7.serveo.net"
+            "https://05b2f58c2f23e54c9250cf4ecec929e7.serveo.net"
         ]
         logger.info(f"🌐 CORS allowed origins: {allowed_origins}")
         logger.info(f"🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
