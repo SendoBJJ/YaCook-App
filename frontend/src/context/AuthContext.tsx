@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { authApi, tokenManager } from '../services/api';
+import { authApi, tokenManager, healthApi } from '../services/api';
+import { apiBase } from '../utils/apiBase';
 
 type User = { id: string; email: string; name?: string };
 type AuthContextValue = {
@@ -15,12 +16,28 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // TODO: hydrate user from token / storage
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         setLoading(true);
+        
+        // Log API Base URL at startup
+        console.log('API Base URL:', apiBase());
+        
+        // Background ping to /api/health
+        try {
+          await healthApi.check();
+          console.log('✅ Health check passed');
+        } catch (error) {
+          console.error('❌ Health check failed - Serveur indisponible');
+          // Show non-blocking banner (TODO: implement banner UI)
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('healthCheckFailed', {
+              detail: { message: 'Serveur indisponible' }
+            }));
+          }
+        }
         
         // Check if user data exists in storage
         const storedUser = await tokenManager.getUserData();
