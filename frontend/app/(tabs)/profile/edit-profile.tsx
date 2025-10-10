@@ -16,7 +16,7 @@ import { Spacing, BorderRadius, FontSize, FontWeight } from '../../../src/consta
 import { SmartButton } from '../../../src/components/SmartButton';
 
 export default function EditProfileScreen() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   // Show loading state while auth is initializing
