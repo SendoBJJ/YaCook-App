@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../../src/context/AuthContext';
+import { useAuth } from '@/src/context/AuthContext';
 import { Colors } from '../../../src/constants/Colors';
 import { Spacing, BorderRadius, FontSize, FontWeight } from '../../../src/constants/Layout';
 import { SmartButton } from '../../../src/components/SmartButton';
