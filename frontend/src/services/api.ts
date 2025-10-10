@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { tokenStorage } from '../utils/tokenStorage';
 import { AuthResponse, LoginData, RegisterData, User } from '../types';
 import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
