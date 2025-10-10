@@ -89,6 +89,20 @@ export default function EditProfileScreen() {
           </View>
 
           <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Bio (optionnel)</Text>
+            <TextInput
+              style={[styles.textInput, styles.bioInput]}
+              value={bio}
+              onChangeText={setBio}
+              placeholder="Parlez-nous de vous..."
+              placeholderTextColor={Colors.light.muted}
+              multiline={true}
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
               style={[styles.textInput, styles.disabledInput]}
