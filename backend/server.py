@@ -404,6 +404,10 @@ async def login(request: Request, response: Response):
                 detail="Email ou mot de passe incorrect"
             )
         
+        # Add instance header for debugging
+        instance_id = os.getenv("INSTANCE_ID", socket.gethostname())
+        response.headers["X-YaCook-Instance"] = instance_id
+        
         # Check if user is active
         if not user.get("is_active", True):
             raise HTTPException(
