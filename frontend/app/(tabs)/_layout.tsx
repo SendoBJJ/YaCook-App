@@ -70,7 +70,7 @@ export default function TabLayout() {
         options={{
           title: AppTexts.tabs.messages,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubbles" size={size} color={color} />
+            <Ionicons name="mail" size={size} color={color} />
           ),
           headerTitle: AppTexts.messages.title,
         }}
@@ -80,7 +80,7 @@ export default function TabLayout() {
         options={{
           title: AppTexts.tabs.profile,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle-outline" size={size} color={color} />
+            <Ionicons name="person-circle" size={size} color={color} />
           ),
           headerShown: false, // We handle the header in the profile screen
         }}
