@@ -103,19 +103,19 @@ export default function ProfileScreen() {
 
   const getUserInitials = () => {
     if (!user) return 'U';
-    const firstName = user.first_name || '';
-    const lastName = user.last_name || '';
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U';
+    if (user.name) {
+      const nameParts = user.name.split(' ');
+      if (nameParts.length >= 2) {
+        return `${nameParts[0].charAt(0)}${nameParts[1].charAt(0)}`.toUpperCase();
+      }
+      return user.name.charAt(0).toUpperCase();
+    }
+    return user.email.charAt(0).toUpperCase();
   };
 
   const getUserDisplayName = () => {
     if (!user) return 'Utilisateur';
-    const firstName = user.first_name || '';
-    const lastName = user.last_name || '';
-    if (firstName && lastName) {
-      return `${firstName} ${lastName}`;
-    }
-    return user.email?.split('@')[0] || 'Utilisateur';
+    return user.name || user.email.split('@')[0] || 'Utilisateur';
   };
 
   return (
