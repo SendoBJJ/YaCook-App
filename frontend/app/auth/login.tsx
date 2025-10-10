@@ -21,6 +21,7 @@ import { useToast } from '../../src/components/Toast';
 
 export default function LoginScreen() {
   const { login } = useAuth();
+  const { showToast, ToastComponent } = useToast();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
