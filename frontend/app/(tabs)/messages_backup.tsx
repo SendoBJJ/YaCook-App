@@ -6,7 +6,6 @@ import {
   StyleSheet,
   RefreshControl,
   TextInput,
-  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,52 +32,29 @@ type Conversation = {
 // (No fake data)
 const mockConversations: Conversation[] = [];
 
-// Feature flag for real API (disabled for now)
-const USE_REAL_API = false;
-
 export default function MessagesScreen() {
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Simulate initial loading
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
-      try {
-        if (USE_REAL_API) {
-          // TODO: Call real API when ready
-          // const response = await messagesApi.listConversations();
-          // setConversations(response);
-        } else {
-          // Use empty array for true empty state
-          setConversations(mockConversations);
-        }
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (error) {
-        console.error('Error loading conversations:', error);
-        // Show French toast on error
-        // TODO: Add toast notification
-      } finally {
-        setIsLoading(false);
-      }
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setIsLoading(false);
     };
     loadData();
   }, []);
 
-  const onRefresh = React.useCallback(async () => {
+  const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    try {
-      // TODO: Refresh conversations from API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    } catch (error) {
-      console.error('Error refreshing conversations:', error);
-    } finally {
+    setTimeout(() => {
       setRefreshing(false);
-    }
+    }, 2000);
   }, []);
 
   const filteredConversations = conversations.filter(conv =>
@@ -90,14 +66,9 @@ export default function MessagesScreen() {
     router.push(`/messages/thread/${conversationId}`);
   };
 
-  const handleNewMessage = () => {
-    // TODO: Navigate to compose message screen
-    router.push('/messages/compose');
-  };
-
   const renderConversationItem = (conversation: Conversation) => (
-    <TouchableOpacity
-      key={conversation.id}
+    <SmartButton 
+      key={conversation.id} 
       style={styles.conversationItem}
       onPress={() => handleConversationPress(conversation.id)}
       accessibilityLabel={`Conversation avec ${conversation.name}`}
@@ -128,85 +99,115 @@ export default function MessagesScreen() {
           style={[
             styles.lastMessage, 
             conversation.unreadCount > 0 && styles.unreadMessage
-          ]}
+          ]} 
           numberOfLines={2}
         >
           {conversation.lastMessage}
         </Text>
       </View>
-    </TouchableOpacity>
+    </SmartButton>
   );
 
   const renderEmptyState = () => (
-    <View style={styles.emptyStateContainer}>
-      <Ionicons 
-        name="chatbubbles-outline" 
-        size={64} 
-        color={Colors.light.muted} 
-      />
-      <Text style={styles.emptyStateTitle}>Aucun message</Text>
-      <Text style={styles.emptyStateSubtitle}>
-        Vos conversations apparaîtront ici.
+    <View style={styles.emptyState}>
+      <Ionicons name="chatbubbles-outline" size={80} color={Colors.light.muted} />
+      <Text style={styles.emptyStateTitle}>Aucune conversation</Text>
+      <Text style={styles.emptyStateText}>
+        Commencez à discuter avec d'autres cuisiniers en commentant leurs recettes !
       </Text>
-      <SmartButton
-        style={styles.newMessageButton}
-        textStyle={styles.newMessageButtonText}
-        onPress={handleNewMessage}
-        disabled={true} // Disabled for now
-      >
-        Nouveau message
-      </SmartButton>
+      
+      <View style={styles.emptyStateCTAs}>
+        <SmartButton 
+          style={styles.emptyCTAButton}
+          onPress={handleNewMessage}
+          accessibilityLabel="Créer une nouvelle conversation"
+        >
+          <Ionicons name="add" size={20} color={Colors.light.background} />
+          <Text style={styles.emptyCTAButtonText}>Nouvelle conversation</Text>
+        </SmartButton>
+        
+        <SmartButton 
+          style={[styles.emptyCTAButton, styles.secondaryCTAButton]}
+          onPress={() => router.push('/community')}
+          accessibilityLabel="Découvrir la communauté"
+        >
+          <Ionicons name="people" size={20} color={Colors.light.primary} />
+          <Text style={[styles.emptyCTAButtonText, styles.secondaryCTAButtonText]}>
+            Découvrir la communauté
+          </Text>
+        </SmartButton>
+      </View>
     </View>
   );
 
-  const renderSkeletonLoader = () => (
-    <View style={styles.skeletonContainer}>
-      {[1, 2, 3, 4, 5].map(index => (
-        <SkeletonConversationItem key={index} />
-      ))}
-    </View>
-  );
+  const handleNewMessage = () => {
+    // For now, navigate to a mock thread
+    router.push('/messages/thread/new');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Messages</Text>
-      </View>
-
-      {/* Search */}
+      {/* Search bar */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={Colors.light.muted} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Rechercher des conversations..."
-          placeholderTextColor={Colors.light.muted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={20} color={Colors.light.muted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Rechercher une conversation..."
+            placeholderTextColor={Colors.light.muted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <SmartButton 
+              onPress={() => setSearchQuery('')}
+              accessibilityLabel="Effacer la recherche"
+            >
+              <Ionicons name="close-circle" size={20} color={Colors.light.muted} />
+            </SmartButton>
+          )}
+        </View>
       </View>
 
-      {/* Content */}
+      {/* Conversations list */}
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.light.primary}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
         {isLoading ? (
-          renderSkeletonLoader()
-        ) : filteredConversations.length === 0 ? (
-          renderEmptyState()
+          <View style={styles.conversationsList}>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <SkeletonConversationItem key={index} />
+            ))}
+          </View>
+        ) : filteredConversations.length > 0 ? (
+          <View style={styles.conversationsList}>
+            {filteredConversations.map(renderConversationItem)}
+          </View>
+        ) : searchQuery.length > 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="search" size={80} color={Colors.light.muted} />
+            <Text style={styles.emptyStateTitle}>Aucun résultat</Text>
+            <Text style={styles.emptyStateText}>
+              Aucune conversation ne correspond à votre recherche "{searchQuery}"
+            </Text>
+          </View>
         ) : (
-          filteredConversations.map(renderConversationItem)
+          renderEmptyState()
         )}
       </ScrollView>
+
+      {/* New message button */}
+      <SmartButton 
+        style={styles.newMessageButton} 
+        onPress={handleNewMessage}
+        accessibilityLabel="Nouvelle conversation"
+      >
+        <Ionicons name="add" size={24} color={Colors.light.background} />
+      </SmartButton>
     </SafeAreaView>
   );
 }
@@ -216,31 +217,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.light.background,
   },
-  header: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+  searchContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
+    backgroundColor: Colors.light.background,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
   },
-  headerTitle: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
-    color: Colors.light.text,
-  },
-  searchContainer: {
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: Colors.light.card,
+    borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    backgroundColor: Colors.light.card,
-    margin: Spacing.md,
-    borderRadius: BorderRadius.md,
   },
   searchInput: {
     flex: 1,
-    marginLeft: Spacing.xs,
     fontSize: FontSize.md,
     color: Colors.light.text,
+    marginLeft: Spacing.sm,
+    paddingVertical: 4,
   },
   scrollView: {
     flex: 1,
@@ -248,48 +246,48 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
-  skeletonContainer: {
-    paddingHorizontal: Spacing.md,
+  conversationsList: {
+    paddingVertical: Spacing.sm,
   },
   conversationItem: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.light.background,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
-    backgroundColor: Colors.light.background,
   },
   avatarContainer: {
     position: 'relative',
-    marginRight: Spacing.sm,
+    marginRight: Spacing.md,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
+    color: Colors.light.background,
     fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: Colors.light.secondary,
+    fontWeight: FontWeight.semibold,
   },
   onlineIndicator: {
     position: 'absolute',
     bottom: 2,
     right: 2,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     backgroundColor: Colors.light.success,
     borderWidth: 2,
     borderColor: Colors.light.background,
   },
   conversationContent: {
     flex: 1,
-    justifyContent: 'center',
   },
   conversationHeader: {
     flexDirection: 'row',
@@ -299,9 +297,8 @@ const styles = StyleSheet.create({
   },
   participantName: {
     fontSize: FontSize.md,
-    fontWeight: FontWeight.semiBold,
+    fontWeight: FontWeight.semibold,
     color: Colors.light.text,
-    flex: 1,
   },
   conversationMeta: {
     flexDirection: 'row',
@@ -310,7 +307,6 @@ const styles = StyleSheet.create({
   messageTime: {
     fontSize: FontSize.sm,
     color: Colors.light.muted,
-    marginRight: Spacing.xs,
   },
   unreadBadge: {
     backgroundColor: Colors.light.primary,
@@ -319,12 +315,12 @@ const styles = StyleSheet.create({
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 6,
+    marginLeft: Spacing.sm,
   },
   unreadCount: {
+    color: Colors.light.background,
     fontSize: FontSize.xs,
     fontWeight: FontWeight.bold,
-    color: Colors.light.secondary,
   },
   lastMessage: {
     fontSize: FontSize.sm,
@@ -332,39 +328,67 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   unreadMessage: {
-    fontWeight: FontWeight.semiBold,
     color: Colors.light.text,
+    fontWeight: FontWeight.medium,
   },
-  emptyStateContainer: {
+  emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
   },
   emptyStateTitle: {
     fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.semibold,
     color: Colors.light.text,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xs,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
-  emptyStateSubtitle: {
+  emptyStateText: {
     fontSize: FontSize.md,
     color: Colors.light.muted,
     textAlign: 'center',
-    marginBottom: Spacing.lg,
+    lineHeight: 22,
+    marginBottom: Spacing.xl,
+  },
+  emptyStateCTAs: {
+    width: '100%',
+    gap: Spacing.md,
+  },
+  emptyCTAButton: {
+    flexDirection: 'row',
+    backgroundColor: Colors.light.primary,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.medium,
+  },
+  secondaryCTAButton: {
+    backgroundColor: Colors.light.background,
+    borderWidth: 2,
+    borderColor: Colors.light.primary,
+  },
+  emptyCTAButtonText: {
+    color: Colors.light.background,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semibold,
+    marginLeft: Spacing.sm,
+  },
+  secondaryCTAButtonText: {
+    color: Colors.light.primary,
   },
   newMessageButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: Colors.light.primary,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    opacity: 0.6, // Disabled state
-  },
-  newMessageButtonText: {
-    color: Colors.light.secondary,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semiBold,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Shadow.large,
   },
 });
