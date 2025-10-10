@@ -154,8 +154,16 @@ api.interceptors.response.use(
 export const authApi = {
   async login(data: LoginData): Promise<AuthResponse> {
     try {
-      console.log('🔑 Attempting login for:', data.email);
-      const response = await api.post('/auth/login', data);
+      console.log('🔑 Login payload:', { email: data.email, password: '***' });
+      const response = await api.post('/auth/login', 
+        { 
+          email: data.email.trim(), 
+          password: data.password.trim() 
+        },
+        { 
+          headers: { 'Content-Type': 'application/json' } 
+        }
+      );
       console.log('✅ Login successful');
       return response.data;
     } catch (error: any) {
