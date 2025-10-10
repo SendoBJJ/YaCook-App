@@ -144,7 +144,7 @@ export default function EditProfileScreen() {
         <View style={styles.buttonSection}>
           <SmartButton
             onPress={handleSave}
-            loading={loading}
+            loading={isSaving}
             style={styles.saveButton}
           >
             <Text style={styles.saveButtonText}>Enregistrer les modifications</Text>
