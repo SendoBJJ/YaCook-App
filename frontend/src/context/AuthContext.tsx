@@ -87,8 +87,17 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     return () => { mounted = false; };
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (rawEmail: any, rawPassword: any) => {
     try {
+      const email = (rawEmail ?? '').toString().trim().toLowerCase();
+      const password = (rawPassword ?? '').toString();
+
+      if (!email || !password) {
+        throw new Error("Veuillez saisir un email et un mot de passe.");
+      }
+
+      console.log("Login payload", { email, password: "***" });
+
       const response = await authApi.login({ email, password });
 
       // Store tokens and user data
