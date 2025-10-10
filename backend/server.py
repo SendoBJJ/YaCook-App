@@ -109,6 +109,14 @@ app.add_middleware(
     max_age=600,
 )
 
+# Generic OPTIONS handler for all routes to handle preflight requests
+@app.options("/{full_path:path}")
+async def options_handler(request: Request, full_path: str):
+    """Handle OPTIONS requests for all routes."""
+    origin = request.headers.get("origin", "")
+    logger.debug(f"OPTIONS request - Origin: {origin}, Path: /{full_path}")
+    return Response(status_code=204)
+
 # JWT Helper Functions
 def create_access_token(data: dict) -> str:
     """Create access token."""
