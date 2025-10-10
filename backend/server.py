@@ -224,6 +224,23 @@ async def health_check():
             detail=f"Service unhealthy: {str(e)}"
         )
 
+# Whoami endpoint for debugging routing issues
+@app.get("/api/whoami")
+async def whoami():
+    """Identify which backend instance is responding."""
+    import socket
+    import os
+    
+    return {
+        "message": "YaCook API Instance",
+        "hostname": socket.gethostname(),
+        "pid": os.getpid(),
+        "version": "1.0.0",
+        "timestamp": datetime.utcnow().isoformat(),
+        "environment": os.getenv("ENVIRONMENT", "unknown"),
+        "instance_id": os.getenv("INSTANCE_ID", socket.gethostname())
+    }
+
 # Authentication endpoints
 @app.post("/api/auth/register", response_model=Token)
 async def register(user_data: UserCreate, background_tasks: BackgroundTasks):
