@@ -46,7 +46,7 @@ export default function EditProfileScreen() {
   const [lastName, setLastName] = useState(nameParts.slice(1).join(' ') || '');
   const [email, setEmail] = useState(user?.email || '');
   const [bio, setBio] = useState(''); // Bio not available in simplified structure
-  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) {
