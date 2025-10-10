@@ -13,7 +13,7 @@
 ### 2. ✅ API Base URL Fixed (`src/services/api.ts`)
 ```typescript
 // ✅ API URL construction fixed
-const API_BASE_URL = "https://meal-app-preview.preview.emergentagent.com/api"
+const API_BASE_URL = "https://chef-companion-9.preview.emergentagent.com/api"
 // No more /api/api duplication issues
 ```
 
@@ -21,7 +21,7 @@ const API_BASE_URL = "https://meal-app-preview.preview.emergentagent.com/api"
 ```python
 # ✅ CORS headers configured for web access
 allow_origins=[
-    "https://meal-app-preview.preview.emergentagent.com",
+    "https://chef-companion-9.preview.emergentagent.com",
     "https://app.emergent.sh",
     "http://localhost:3000",
     "http://localhost:19006"
@@ -75,7 +75,7 @@ allow_origins=[
 ```
 
 ## WEB PREVIEW
-- **URL**: https://meal-app-preview.preview.emergentagent.com
+- **URL**: https://chef-companion-9.preview.emergentagent.com
 - **Status**: ✅ FULLY FUNCTIONAL on web browsers
 - **Mobile**: ✅ QR code available for Expo Go testing
 

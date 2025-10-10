@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class YaCookAuthTester:
-    def __init__(self, base_url: str = "https://meal-app-preview.preview.emergentagent.com"):
+    def __init__(self, base_url: str = "https://chef-companion-9.preview.emergentagent.com"):
         self.base_url = base_url
         self.session: Optional[aiohttp.ClientSession] = None
         self.test_results: List[Dict[str, Any]] = []
@@ -280,7 +280,7 @@ class YaCookAuthTester:
             async with self.session.options(
                 f"{self.base_url}/api/auth/login",
                 headers={
-                    "Origin": "https://meal-app-preview.preview.emergentagent.com",
+                    "Origin": "https://chef-companion-9.preview.emergentagent.com",
                     "Access-Control-Request-Method": "POST",
                     "Access-Control-Request-Headers": "Content-Type, Authorization"
                 }
@@ -313,7 +313,7 @@ class YaCookAuthTester:
                 json={"email": "test@example.com", "password": "testpassword123"},
                 headers={
                     "Content-Type": "application/json",
-                    "Origin": "https://meal-app-preview.preview.emergentagent.com"
+                    "Origin": "https://chef-companion-9.preview.emergentagent.com"
                 }
             ) as response:
                 

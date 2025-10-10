@@ -90,7 +90,7 @@ async def lifespan(app: FastAPI):
             "http://localhost:19006",
             "http://localhost:3000", 
             "https://app.yacook.app",
-            "https://meal-app-preview.preview.emergentagent.com",
+            "https://chef-companion-9.preview.emergentagent.com",
             "https://app.emergent.sh"
         ]
         logger.info(f"🌐 CORS allowed origins: {allowed_origins}")
@@ -127,7 +127,7 @@ app.add_middleware(
         "http://localhost:19006",
         "http://localhost:3000",
         "https://app.yacook.app",
-        "https://meal-app-preview.preview.emergentagent.com",
+        "https://chef-companion-9.preview.emergentagent.com",
         "https://app.emergent.sh",
     ],
     allow_origin_regex=r"https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$",
