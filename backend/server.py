@@ -335,7 +335,7 @@ async def register(user_data: UserCreate, background_tasks: BackgroundTasks):
         )
 
 @app.post("/api/auth/login", response_model=Token)
-async def login(request: Request):
+async def login(request: Request, response: Response):
     """Login user - accepts both JSON and form data."""
     try:
         # Try to parse as JSON first, fall back to form data
