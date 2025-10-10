@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authApi, tokenManager, healthApi } from '../services/api';
 import { resolveApiBase } from '../utils/apiBase';
+import { normalizeAuthPayload } from '../utils/emailUtils';
 
 type User = { id: string; email: string; name?: string };
 type AuthContextValue = {
