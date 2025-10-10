@@ -289,13 +289,34 @@ async def register(user_data: UserCreate, background_tasks: BackgroundTasks):
         )
 
 @app.post("/api/auth/login", response_model=Token)
-async def login(user_credentials: UserLogin):
-    """Login user."""
+async def login(request: Request):
+    """Login user - accepts both JSON and form data."""
     try:
+        # Try to parse as JSON first, fall back to form data
+        try:
+            data = await request.json()
+            logger.info(f"Login attempt with JSON payload keys: {list(data.keys()) if data else 'empty'}")
+        except Exception:
+            form = await request.form()
+            data = dict(form)
+            logger.info(f"Login attempt with form payload keys: {list(data.keys()) if data else 'empty'}")
+        
+        # Extract credentials from either JSON or form
+        email = (data.get("email") or data.get("username") or "").strip()
+        password = (data.get("password") or "").strip()
+        
+        logger.info(f"Parsed login credentials - email: '{email[:10]}...', password: {'***' if password else 'empty'}")
+        
+        if not email or not password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email et mot de passe requis."
+            )
+        
         db = database_service.get_database()
         
         # Find user by email
-        user = await db.users.find_one({"email": user_credentials.email.lower()})
+        user = await db.users.find_one({"email": email.lower()})
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
