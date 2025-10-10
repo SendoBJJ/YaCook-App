@@ -1097,6 +1097,263 @@ async def get_unread_notifications_count(
             detail="Erreur lors de la récupération du nombre de notifications"
         )
 
+# Messages/Chat endpoints
+@app.get("/api/conversations", response_model=ConversationList)
+async def get_conversations(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get user's conversations list."""
+    try:
+        user_id = current_user["user_id"]
+        
+        # Get conversations from messages collection
+        pipeline = [
+            {
+                "$match": {
+                    "$or": [
+                        {"from_user_id": ObjectId(user_id)},
+                        {"to_user_id": ObjectId(user_id)}
+                    ]
+                }
+            },
+            {
+                "$sort": {"created_at": -1}
+            },
+            {
+                "$group": {
+                    "_id": {
+                        "$cond": [
+                            {"$eq": ["$from_user_id", ObjectId(user_id)]},
+                            "$to_user_id",
+                            "$from_user_id"
+                        ]
+                    },
+                    "last_message": {"$first": "$content"},
+                    "last_message_time": {"$first": "$created_at"},
+                    "unread_count": {
+                        "$sum": {
+                            "$cond": [
+                                {
+                                    "$and": [
+                                        {"$eq": ["$to_user_id", ObjectId(user_id)]},
+                                        {"$eq": ["$read_at", None]}
+                                    ]
+                                },
+                                1,
+                                0
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "_id",
+                    "foreignField": "_id",
+                    "as": "participant"
+                }
+            },
+            {
+                "$unwind": "$participant"
+            }
+        ]
+        
+        conversations_data = await database_service.database["messages"].aggregate(pipeline).to_list(None)
+        
+        conversations = []
+        for conv in conversations_data:
+            participant = conv["participant"]
+            participant_name = f"{participant.get('first_name', '')} {participant.get('last_name', '')}".strip()
+            if not participant_name:
+                participant_name = participant.get('display_name', participant.get('email', 'Utilisateur'))
+            
+            conversations.append(ConversationResponse(
+                participant_id=str(conv["_id"]),
+                participant_name=participant_name,
+                participant_avatar=participant.get("avatar_url"),
+                last_message=conv["last_message"],
+                last_message_time=conv["last_message_time"],
+                unread_count=conv["unread_count"],
+                is_online=False  # TODO: Implement online status
+            ))
+        
+        return ConversationList(
+            conversations=conversations,
+            total_count=len(conversations)
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting conversations: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la récupération des conversations"
+        )
+
+@app.get("/api/conversations/{participant_id}/messages", response_model=MessageList)
+async def get_conversation_messages(
+    participant_id: str,
+    page: int = 1,
+    per_page: int = 50,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get messages in a conversation."""
+    try:
+        user_id = current_user["user_id"]
+        
+        # Validate participant exists
+        participant = await database_service.database["users"].find_one({"_id": ObjectId(participant_id)})
+        if not participant:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Utilisateur non trouvé"
+            )
+        
+        skip = (page - 1) * per_page
+        
+        # Get messages between users
+        messages_data = await database_service.database["messages"].find({
+            "$or": [
+                {"from_user_id": ObjectId(user_id), "to_user_id": ObjectId(participant_id)},
+                {"from_user_id": ObjectId(participant_id), "to_user_id": ObjectId(user_id)}
+            ]
+        }).sort("created_at", -1).skip(skip).limit(per_page).to_list(None)
+        
+        # Get total count
+        total_count = await database_service.database["messages"].count_documents({
+            "$or": [
+                {"from_user_id": ObjectId(user_id), "to_user_id": ObjectId(participant_id)},
+                {"from_user_id": ObjectId(participant_id), "to_user_id": ObjectId(user_id)}
+            ]
+        })
+        
+        # Get user info for message responses
+        from_user = await database_service.database["users"].find_one({"_id": ObjectId(user_id)})
+        from_user_name = f"{from_user.get('first_name', '')} {from_user.get('last_name', '')}".strip()
+        if not from_user_name:
+            from_user_name = from_user.get('display_name', from_user.get('email', 'Vous'))
+            
+        participant_name = f"{participant.get('first_name', '')} {participant.get('last_name', '')}".strip()
+        if not participant_name:
+            participant_name = participant.get('display_name', participant.get('email', 'Utilisateur'))
+        
+        messages = []
+        for msg in messages_data:
+            is_from_current_user = str(msg["from_user_id"]) == user_id
+            
+            messages.append(MessageResponse(
+                id=str(msg["_id"]),
+                content=msg["content"],
+                from_user_id=str(msg["from_user_id"]),
+                from_user_name=from_user_name if is_from_current_user else participant_name,
+                to_user_id=str(msg["to_user_id"]),
+                to_user_name=participant_name if is_from_current_user else from_user_name,
+                read_at=msg.get("read_at"),
+                created_at=msg["created_at"],
+                updated_at=msg["updated_at"]
+            ))
+        
+        # Mark messages as read (messages TO current user from participant)
+        await database_service.database["messages"].update_many(
+            {
+                "from_user_id": ObjectId(participant_id),
+                "to_user_id": ObjectId(user_id),
+                "read_at": None
+            },
+            {
+                "$set": {
+                    "read_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        return MessageList(
+            messages=messages,
+            total_count=total_count,
+            page=page,
+            per_page=per_page,
+            has_next=skip + len(messages) < total_count
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting conversation messages: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la récupération des messages"
+        )
+
+@app.post("/api/conversations/{participant_id}/messages", response_model=MessageResponse)
+async def send_message(
+    participant_id: str,
+    message_data: MessageCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send a message to a user."""
+    try:
+        user_id = current_user["user_id"]
+        
+        # Validate participant exists
+        participant = await database_service.database["users"].find_one({"_id": ObjectId(participant_id)})
+        if not participant:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Utilisateur non trouvé"
+            )
+        
+        # Prevent sending messages to self
+        if participant_id == user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Impossible d'envoyer un message à soi-même"
+            )
+        
+        # Create message document
+        message_doc = {
+            "content": message_data.content,
+            "from_user_id": ObjectId(user_id),
+            "to_user_id": ObjectId(participant_id),
+            "read_at": None,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Insert message
+        result = await database_service.database["messages"].insert_one(message_doc)
+        
+        # Get user info for response
+        from_user = await database_service.database["users"].find_one({"_id": ObjectId(user_id)})
+        from_user_name = f"{from_user.get('first_name', '')} {from_user.get('last_name', '')}".strip()
+        if not from_user_name:
+            from_user_name = from_user.get('display_name', from_user.get('email', 'Vous'))
+            
+        participant_name = f"{participant.get('first_name', '')} {participant.get('last_name', '')}".strip()
+        if not participant_name:
+            participant_name = participant.get('display_name', participant.get('email', 'Utilisateur'))
+        
+        return MessageResponse(
+            id=str(result.inserted_id),
+            content=message_data.content,
+            from_user_id=user_id,
+            from_user_name=from_user_name,
+            to_user_id=participant_id,
+            to_user_name=participant_name,
+            read_at=None,
+            created_at=message_doc["created_at"],
+            updated_at=message_doc["updated_at"]
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error sending message: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de l'envoi du message"
+        )
+
 if __name__ == "__main__":
     uvicorn.run(
         "server:app",
