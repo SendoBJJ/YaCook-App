@@ -42,6 +42,10 @@ from models.notification import (
     NotificationCreate, NotificationResponse, NotificationList,
     NotificationUpdate, NotificationMarkAllRead
 )
+from models.message import (
+    MessageCreate, MessageUpdate, MessageResponse, MessageList,
+    ConversationResponse, ConversationList
+)
 
 # Import JWT utilities
 from jose import JWTError, jwt
