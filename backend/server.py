@@ -124,20 +124,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware - configured for Platform Router & Production
+# CORS middleware - preview-friendly configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000", 
-        "http://localhost:19006",
-        "http://127.0.0.1:19006",
-        "https://app.yacook.app",
-    ],
-    allow_origin_regex=r"https:\/\/.*\.preview\.emergentagent\.com$",
-    allow_credentials=True,
+    allow_origins=["*"],          # preview-friendly
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=False,      # we use Bearer tokens, not cookies
     expose_headers=["X-Total-Count"],
     max_age=600,
 )
