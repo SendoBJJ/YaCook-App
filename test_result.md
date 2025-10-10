@@ -621,9 +621,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Notification System Frontend - Phase 2 Implementation - COMPLETED"
+    - "Tab Bar Cleanup & Profile Tab Integration"
+    - "Profile Home Screen Implementation" 
+    - "Profile Settings Screen Implementation"
+    - "Profile Edit Screen Implementation"
   stuck_tasks:
     - "AI Meal Plan Generation - server error (500 status) - UI safeguards implemented"
+    - "Platform Router Integration - Kubernetes ingress not routing /api/* requests from preview domain"
   test_all: false
   test_priority: "high_first"
 
