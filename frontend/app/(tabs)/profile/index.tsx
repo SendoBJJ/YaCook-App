@@ -50,28 +50,30 @@ const ProfileMenuItem: React.FC<ProfileMenuItemProps> = ({
 );
 
 export default function ProfileScreen() {
-  // Simplified render to avoid $$typeof errors
-  try {
-    if (__DEV__) {
-      // eslint-disable-next-line no-console
-      console.log('ProfileScreen: Rendering with minimal components...');
-    }
+  const router = useRouter();
+  const { user, loading, logout } = useAuth();
 
+  if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
-        <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>Profil</Text>
-        <Text style={{ fontSize: 16, color: '#666' }}>Profile screen is working!</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: 16, color: Colors.light.muted }}>
+            Chargement...
+          </Text>
+        </View>
+      </SafeAreaView>
     );
-  } catch (error) {
-    if (__DEV__) {
-      // eslint-disable-next-line no-console
-      console.error('ProfileScreen render error:', error);
-    }
+  }
+
+  if (!user) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Error rendering profile</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontSize: 16, color: Colors.light.muted }}>
+            Utilisateur non connecté
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
