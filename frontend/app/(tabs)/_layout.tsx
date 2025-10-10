@@ -60,7 +60,7 @@ export default function TabLayout() {
         options={{
           title: AppTexts.tabs.scan,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="scan" size={size} color={color} />
+            <Ionicons name="qr-code-outline" size={size} color={color} />
           ),
           headerTitle: AppTexts.scan.title,
         }}
@@ -70,7 +70,7 @@ export default function TabLayout() {
         options={{
           title: AppTexts.tabs.messages,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="mail" size={size} color={color} />
+            <Ionicons name="chatbubble-outline" size={size} color={color} />
           ),
           headerTitle: AppTexts.messages.title,
         }}
