@@ -87,7 +87,12 @@ async def lifespan(app: FastAPI):
         # Check .env loading
         import os
         env_loaded = os.path.exists(".env")
+        # Database connection info (sanitized)
+        db = database_service.get_database()
+        mongo_host = os.getenv("MONGO_URL", "").replace("mongodb://", "").split("/")[0] if os.getenv("MONGO_URL") else "unknown"
+        
         logger.info(f"📄 .env file loaded: {env_loaded}")
+        logger.info(f"🗄️ Database: {db.name} on host: {mongo_host[:20]}***")
         
         # Log allowed origins (no secrets)
         allowed_origins = [
