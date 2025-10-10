@@ -172,7 +172,7 @@ export default function LoginScreen() {
 
             <SmartButton
               style={styles.socialButton}
-              onPress={() => Alert.alert('Apple OAuth', 'Fonctionnalité bientôt disponible')}
+              onPress={() => showToast('Fonctionnalité bientôt disponible', 'info')}
               accessibilityLabel="Se connecter avec Apple"
             >
               <Ionicons name="logo-apple" size={20} color={Colors.light.text} />
