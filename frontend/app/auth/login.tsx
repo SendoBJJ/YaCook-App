@@ -163,7 +163,7 @@ export default function LoginScreen() {
 
             <SmartButton
               style={styles.socialButton}
-              onPress={() => Alert.alert('Google OAuth', 'Fonctionnalité bientôt disponible')}
+              onPress={() => showToast('Fonctionnalité bientôt disponible', 'info')}
               accessibilityLabel="Se connecter avec Google"
             >
               <Ionicons name="logo-google" size={20} color={Colors.light.text} />
