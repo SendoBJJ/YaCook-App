@@ -113,6 +113,30 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleUnitsChange = () => {
+    Alert.alert(
+      'Unités',
+      'Choisissez le système d\'unités',
+      [
+        { text: 'Métrique (kg, g, L, ml)', onPress: () => setUnits('métrique') },
+        { text: 'Impérial (lb, oz, fl oz)', onPress: () => setUnits('impérial') },
+        { text: 'Annuler', style: 'cancel' },
+      ]
+    );
+  };
+
+  const toggleFoodPreference = (preference: string) => {
+    setFoodPreferences(prev => ({
+      ...prev,
+      [preference]: !prev[preference],
+    }));
+    // TODO: Save to backend or local storage
+  };
+
+  const handleChangePassword = () => {
+    Alert.alert('Changer le mot de passe', 'Cette fonctionnalité sera disponible prochainement.');
+  };
+
   const handleDeleteAccount = () => {
     Alert.alert(
       'Supprimer le compte',
