@@ -58,6 +58,12 @@ export default function ProfileScreen() {
     console.log('useAuth type:', typeof useAuth);
     // eslint-disable-next-line no-console
     console.log('useRouter type:', typeof useRouter);
+    // eslint-disable-next-line no-console
+    console.log('SmartButton type:', typeof SmartButton);
+    // eslint-disable-next-line no-console
+    console.log('SafeAreaView type:', typeof SafeAreaView);
+    // eslint-disable-next-line no-console
+    console.log('Ionicons type:', typeof Ionicons);
   }
 
   const { user, logout, loading } = useAuth();
@@ -66,6 +72,10 @@ export default function ProfileScreen() {
   let router;
   try {
     router = useRouter();
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log('Router obtained successfully:', typeof router);
+    }
   } catch (error) {
     if (__DEV__) {
       // eslint-disable-next-line no-console
