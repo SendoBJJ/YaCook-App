@@ -486,6 +486,148 @@ async def login(request: Request, response: Response):
             detail="Erreur lors de la connexion"
         )
 
+@app.post("/api/auth/social-login", response_model=Token)
+async def social_login(request: Request, response: Response):
+    """Login with Google or Apple ID token."""
+    try:
+        data = await request.json()
+        provider = data.get("provider", "").lower()
+        id_token_str = data.get("id_token", "").strip()
+        nonce = data.get("nonce")  # Optional, used by Apple
+        
+        logger.info(f"Social login attempt with provider: {provider}")
+        
+        if not provider or not id_token_str:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Provider et id_token requis"
+            )
+        
+        if provider not in ["google", "apple"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Provider doit être 'google' ou 'apple'"
+            )
+        
+        # Verify the token with the provider
+        try:
+            if provider == "google":
+                user_info = social_auth_service.verify_google_token(id_token_str)
+            else:  # apple
+                user_info = social_auth_service.verify_apple_token(id_token_str, nonce)
+        except ValueError as e:
+            logger.error(f"Social token verification failed: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Connexion sociale invalide, réessayez. ({str(e)})"
+            )
+        
+        email = user_info.get('email', '').lower()
+        provider_sub = user_info.get('sub', '')
+        
+        if not email or not provider_sub:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email ou identifiant provider manquant"
+            )
+        
+        db = database_service.get_database()
+        
+        # Find or create user
+        user = await db.users.find_one({"email": email})
+        
+        if user:
+            # User exists - update provider info if needed
+            update_data = {
+                "last_login": datetime.utcnow(),
+                "provider_id": provider_sub
+            }
+            
+            # Update avatar if provided by provider and not already set
+            if not user.get("avatar_url") and user_info.get('picture'):
+                update_data["avatar_url"] = user_info['picture']
+            
+            await db.users.update_one(
+                {"_id": user["_id"]},
+                {"$set": update_data}
+            )
+            
+            logger.info(f"Existing user logged in via {provider}: {email[:10]}...")
+        else:
+            # Create new user
+            new_user = {
+                "email": email,
+                "auth_provider": provider,
+                "provider_id": provider_sub,
+                "email_verified": user_info.get('email_verified', True),
+                "is_active": True,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+                "last_login": datetime.utcnow(),
+                "language": "fr",
+                "profile_public": False,
+                "analytics_consent": False,
+                "notifications_enabled": True,
+                "plan": "free"
+            }
+            
+            # Add optional fields
+            if user_info.get('given_name'):
+                new_user["first_name"] = user_info['given_name']
+            if user_info.get('family_name'):
+                new_user["last_name"] = user_info['family_name']
+            if user_info.get('name'):
+                new_user["display_name"] = user_info['name']
+            if user_info.get('picture'):
+                new_user["avatar_url"] = user_info['picture']
+            
+            result = await db.users.insert_one(new_user)
+            user = await db.users.find_one({"_id": result.inserted_id})
+            
+            logger.info(f"New user created via {provider}: {email[:10]}...")
+        
+        # Add instance header for debugging
+        import socket
+        import os
+        instance_id = os.getenv("INSTANCE_ID", socket.gethostname())
+        response.headers["X-YaCook-Instance"] = instance_id
+        
+        # Check if user is active
+        if not user.get("is_active", True):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Compte désactivé"
+            )
+        
+        user_id = str(user["_id"])
+        
+        # Create tokens
+        access_token = create_access_token({"sub": user_id})
+        refresh_token = create_refresh_token({"sub": user_id})
+        
+        # Create user response
+        user_response = UserResponse(
+            id=user_id,
+            **{k: v for k, v in user.items() if k != "_id" and k != "password_hash"}
+        )
+        
+        return Token(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            user=user_response
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Social login error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Service indisponible, réessayez."
+        )
+
 # Product/Barcode endpoints
 @app.get("/api/products/{barcode}", response_model=ProductResponse)
 async def get_product(barcode: str, language: str = "fr"):
