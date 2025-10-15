@@ -11,7 +11,7 @@ import Constants from 'expo-constants';
 
 import { client } from '../api/client';
 import { saveToken } from '../utils/tokenStorage';
-import { useToast } from '../hooks/useToast';
+import { useToast } from '../components/Toast';
 
 // Needed for web to properly redirect back
 WebBrowser.maybeCompleteAuthSession();
