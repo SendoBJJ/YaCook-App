@@ -84,12 +84,13 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       const { email, password } = payload;
 
       if (!email || !password) {
+        showToast("Veuillez saisir un email et un mot de passe.", "error");
         throw new Error("Veuillez saisir un email et un mot de passe.");
       }
 
       console.log("Login payload", { email, password: "***" });
 
-      const response = await authApi.login({ email, password });
+      const response = await api.post('/auth/login', { email, password });
 
       // Store tokens and user data
       await tokenManager.setTokens(response.access_token, response.refresh_token);
