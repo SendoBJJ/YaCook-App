@@ -5,7 +5,14 @@ import { tokenStorage } from '../utils/tokenStorage';
 import api from '../api/client';
 import { useToast } from '../components/Toast';
 
-type User = { id: string; email: string; name?: string };
+type User = { 
+  id: string; 
+  email: string; 
+  name?: string;
+  plan?: 'free' | 'premium';
+  premium_until?: string | null;
+};
+
 type AuthContextValue = {
   user: User | null;
   loading: boolean;
