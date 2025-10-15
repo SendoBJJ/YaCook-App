@@ -331,4 +331,9 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
     fontWeight: FontWeight.medium,
   },
+  appleButton: {
+    width: '100%',
+    height: 48,
+    marginBottom: Spacing.md,
+  },
 });
