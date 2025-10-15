@@ -446,11 +446,35 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: Spacing.xs,
   },
+  cardTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.warning + '20',
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+    gap: 4,
+  },
+  premiumBadgeText: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.medium,
+    color: Colors.light.warning,
+  },
   generateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.light.primary,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.sm,
+  },
+  lockedButton: {
+    backgroundColor: Colors.light.warning,
   },
   generateButtonText: {
     color: Colors.light.background,
