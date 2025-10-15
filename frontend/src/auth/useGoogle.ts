@@ -21,9 +21,10 @@ export const useGoogle = () => {
   const { showToast } = useToast();
 
   // Get OAuth client IDs from environment
-  const iosClientId = Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_IOS_ID || '';
-  const androidClientId = Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_ANDROID_ID || '';
-  const webClientId = Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_WEB_ID || '';
+  // Note: For demo/testing without real credentials, these will be empty
+  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_ID || '';
+  const androidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_ID || '';
+  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_ID || '';
 
   // Create redirect URI
   const redirectUri = makeRedirectUri({
