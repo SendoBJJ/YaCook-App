@@ -148,7 +148,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
             });
 
             // Show success toast
-            showToast("Connexion réussie ✅", "success");
+            showToast("Connexion réussie !", "success");
             
             console.log('✅ Login successful, redirecting to dashboard');
             
