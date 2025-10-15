@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, useColorScheme, AccessibilityInfo, Platform } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme, AccessibilityInfo, Platform, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
