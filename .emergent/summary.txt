@@ -1,122 +1,135 @@
 <analysis>
-The AI engineer's work spanned several critical phases, primarily addressing environmental instability and implementing core features. Initial efforts focused on UI polish (e.g., , ) and hardening authentication. A significant portion involved battling persistent  and  connection issues, CORS errors, and Metro bundler caching problems. A major technical hurdle was correctly handling  incompatibility on the web, resolved by implementing .
+The AI engineer successfully progressed the YaCook application towards production readiness, tackling a comprehensive set of features and infrastructure challenges. Initial efforts focused on setting up the environment, diagnosing and restarting services, and then addressing critical connectivity issues. A significant portion of the work involved implementing a robust platform router, centralized Axios client, web-safe authentication, and a detailed profile section. A recurring blocker was the Kubernetes ingress configuration, which initially prevented the preview domain from properly routing  requests to the backend. This was a persistent debugging challenge until the correct preview URL and platform routing were finally confirmed. Subsequently, the focus shifted to refining the authentication flow, including email normalization, French-localized error messages, and a complete signup/login UX. The last task involves refining token management and handling login loops with a robust interceptor.
+Context & Goal
 
-Key progress includes the successful implementation and testing of the backend notification system and foundational community features. A pivotal moment was rectifying the frontend's API base URL resolution to leverage the platform's internal router (), eliminating reliance on external tunnels. The agent successfully addressed repeated syntax errors related to French apostrophes, which were exacerbated by Metro caching. The work culminated in preparing deployment artifacts and beginning the implementation of a refined tab bar and user profile section.
+YaCook app (Expo/React Native + FastAPI + MongoDB, French UI).
+
+Target: production-ready build (no fake data, web preview uses relative /api, robust deploy).
+
+Delivered
+
+Platform Router & CORS working; frontend uses relative /api, centralized Axios client, useful logging.
+
+Auth: login/register, email normalization, web+native token storage, French toasts, redirects.
+
+In-progress critical fix (401 loop / expired tokens):
+
+Do not add Authorization on /auth/*.
+
+Axios response interceptor on 401 (non-auth paths): clear token, redirect to login, show toast “Session expirée…”.
+
+On app bootstrap, call /api/whoami; if 401 → clear token and stay on login.
+
+UI/UX: TabBar (5 tabs), Profile (avatar/info/edit/settings/logout), Community (real API, paging + pull-to-refresh + empty state), Notifications (unread badge + polling), Shopping List (sections/qty), French i18n, SmartButton/loading, skeletons, toasts.
+
+Scan: OpenFoodFacts via backend (toast on “Produit introuvable”).
+
+Messages: backend models ready + inbox screen with true empty state (API wiring pending).
+
+Code Map (key files)
+
+frontend/src/api/client.ts: centralized Axios; isAuthPath; conditional token injection; 401 interceptor → clear token + redirect + dispatch auth error event.
+
+frontend/src/context/AuthContext.tsx: login/logout/register, bootstrap whoami, listens to auth error event (listener to finalize).
+
+frontend/src/utils/{apiBase,emailUtils,tokenStorage,webSafeStorage}.ts.
+
+backend/server.py + services: /api/whoami, /api/auth/login, logging, Argon2, CORS.
+
+Remaining Tasks (actionable)
+
+Finish the auth error listener in AuthContext:
+
+When interceptor dispatches an auth error event (401 on non-auth path), show French toast and redirect to /auth/login.
+
+Messages: wire messagesApi (list + thread), mark as read, French errors.
+
+Cloudinary: avatar & media uploads (replace placeholders).
+
+Docs / ENV: .env.example, README, ENVIRONMENT.md (EAS builds, Nginx/Cloudflare).
+
+Pre-prod QA: screenshots (Scan success/failure, feed, notifications, shopping list, profile) + short clip.
+
+Post-Fork Verification (expected)
+
+POST /api/auth/login without Authorization → 200 + token stored.
+
+Protected endpoints (/api/posts, /api/notifications/unread-count) with Authorization: Bearer ….
+
+If token invalid/expired → 401 → clear token + redirect to login + toast “Session expirée…”.
+
+On app bootstrap, GET /api/whoami: 200 if valid session; otherwise clear token and stay on login.
+
+Immediate Next Step for the Agent
+
+Implement the auth error event listener in AuthContext.tsx and ensure the interceptor dispatch is wired end-to-end.
+
+Prove with console logs & screenshots:
+
+No Authorization header on /auth/*.
+
+401 on protected route triggers toast + redirect.
+
+Successful login → token stored → subsequent protected requests include Authorization.
+
 </analysis>
-
 <product_requirements>
-The project involves building and enhancing YaCook, a mobile-first (iOS/Android) nutrition and meal-planning app, localized in French with metric units.
+The goal is to deliver a stable, production-ready YaCook app (Expo/React Native + FastAPI + MongoDB) with a French UI. Key non-negotiables include: no fake content, web preview calling backend via relative , and robust deployment.
 
-**Initial MVP:** Authentication, dashboard, community feed, barcode scanner, and messaging.
-
-**Phase 0 (Completed):** Focused on wiring CTAs, empty states, skeleton loaders, and button states.
-**Phase 0 Polish (Completed):** Replaced touchable components with , hardened authentication (token refresh, secure logout), and removed seeded data.
-
-**Phase 1 (In Progress):** Built Community feature foundation.
-- Integrated Cloudinary for media uploads (signed-upload flow).
-- Connected community feed to  with pagination and infinite scroll.
-- Developed detailed recipe/question viewing screens.
-
-**Phase 2 (Started):** Enhanced community engagement.
-- Implemented a full comments system.
-- Developed user profiles.
-- Integrated advanced feed filtering/searching.
-- **Added real-time in-app notifications:** Bell with unread badges, dedicated inbox screen (All, Mentions, Comments), deep-linking, mark-read actions, pull-to-refresh, infinite scroll, skeleton loaders, empty states, error toasts, and accessibility. Basic push notifications and email hooks were also outlined.
-
-**Recent Additions (User-requested):**
-- **Platform Router Integration:** Ensure frontend uses relative  for API calls in preview environments to leverage platform routing, avoiding external tunneling services.
-- **Tab Bar Cleanup + Profile Tab:** Remove debug tabs, keep 5 production tabs (Dashboard, Community, Scan, Messages, Profile). Create a new Profile tab with user info, links to Settings, Edit profile, and Logout functionality.
+**Implemented features so far:**
+-   **Platform Router & Connectivity:** Frontend uses relative  for web preview, centralized Axios client with auth interceptors,  helper, and proper backend CORS.
+-   **Bottom Tab Bar:** Exactly 5 tabs (Dashboard, Community, Scan, Messages, Profile) with correct order, French labels, icons, and brand colors.
+-   **Profile Section:** Instagram-like design with user avatar/name/email, actions (Edit Profile, Settings, Logout),  integration, name/bio editing, and settings for units/dietary prefs/notifications.
+-   **Community:** Feed wired to  with pagination, pull-to-refresh, empty states, post detail/comments, and a composer for recipes/questions with media (Cloudinary placeholder).
+-   **Scan (OpenFoodFacts):** Barcode scanning using  calling  via backend to map product info, displaying toasts for Produit introuvable.
+-   **Messages (1-to-1):** Backend API structure with MongoDB models created, frontend displays a true empty state, pending full API integration.
+-   **Notifications:** Bell icon with unread badge via  polling, notifications inbox screen, and mark-read/mark-all endpoints.
+-   **Shopping List:** Create/view weekly lists with items (checked, qty, unit), totals, sections, and empty states.
+-   **Reliability & UX Polish:** Centralized error handling with French toasts, skeleton loaders,  for loading states, i18n for French labels, and accessibility considerations (partially addressed, ongoing).
+-   **Auth Flow:** Robust login/register with email normalization, web-safe token storage (localStorage/SecureStore fallback), French error messages, and success toasts with redirection.
 </product_requirements>
-
 <key_technical_concepts>
-- **Full-Stack:** Expo (React Native) frontend, FastAPI (Python) backend, MongoDB database.
-- **Authentication:** JWT-based, with  for cross-platform (SecureStore/localStorage) token persistence.
-- **Media Management:** Cloudinary for signed image uploads.
-- **API Communication:** Axios with interceptors for JWT injection and 401 handling, platform router for  prefixing.
-- **Real-time:** WebSocket/SSE for notifications.
-- **Development Tunneling:** , ,  (attempted and ultimately replaced by platform router).
+-   **Full-stack Architecture:** Expo/React Native frontend, FastAPI backend, MongoDB database.
+-   **Routing:** Expo Router (file-based) for frontend navigation,  prefix for backend routes.
+-   **API Client:** Axios for HTTP requests with interceptors for token injection, error handling, and retries.
+-   **Authentication:** JWT-based using  (React Context),  for native,  for web. Argon2 for password hashing.
+-   **UI/UX:** React Native components,  for interactive elements, French i18n, custom  component.
+-   **External Integrations:** OpenFoodFacts API for barcode scanning, Cloudinary (placeholder) for media uploads.
 </key_technical_concepts>
-
 <code_architecture>
-The application is a monorepo with a  (Expo/React Native) and  (FastAPI) directory.
 
 
-- ****
-  - **Importance:** Main FastAPI entry point, handles API routes, CORS.
-  - **Changes:** Repeatedly updated  origins to address CORS issues from dynamic tunnel URLs and then to support the Emergent platform router (including , ,  origins). Added  endpoint. Integrated notification API endpoints (, ). Added a generic  handler. Modified  function for startup diagnostics to log CORS configuration. Integrated notification creation into comment endpoint.
-- ****
-  - **Importance:** A new utility file to centralize API base URL resolution.
-  - **Changes:** Created to dynamically return  when running in the  domain, and fall back to environment variables ( / ) or  otherwise. This was crucial for resolving persistent tunneling issues.
-- ****
-  - **Importance:** Crucial cross-platform token storage abstraction.
-  - **Changes:** Created to abstract  for native and  for web.
-- ****
-  - **Importance:** Centralizes frontend API calls.
-  - **Changes:** Refactored to use . New API methods for posts, comments, notifications, and user profiles were added. Most recently, updated to use  from .
-- ****
-  - **Importance:** User login screen.
-  - **Changes:**  replaced with . Debugging logs added.
-- ****
-  - **Importance:** Frontend environment variables.
-  - **Changes:** Frequently updated  to point to various , , and  URLs during debugging. Later updated to support platform router.
-- ****
-  - **Importance:** Community feed screen.
-  - **Changes:** Enhanced to fetch real posts.  integration. Search/filter added. Repeatedly modified to fix syntax errors related to French apostrophes () which Metro bundler was caching. Temporarily replaced with  for debugging. Later restored. Integrated  in the header.
-- ****
-  - **Importance:** New component to display unread notification count.
-  - **Changes:** Created to show a bell icon with a badge for unread notifications, navigates to notifications screen.
-- ****
-  - **Importance:** New screen for notification inbox.
-  - **Changes:** Created to display all notifications, with sections/tabs for filtering, infinite scroll, and mark all as read functionality. Includes skeleton loaders.
-- ****
-  - **Importance:** Provides loading states.
-  - **Changes:** Added  for notification list items.
-- ****
-  - **Importance:** Custom tab icon for Community tab.
-  - **Changes:** Created to display a small dot/badge for unread notifications on the Community tab.
-- ****
-  - **Importance:** Defines the main tab bar layout.
-  - **Changes:** Modified to integrate  for the Community tab badge. Will be further updated to add the new Profile tab and remove debug entries.
-- ****
-  - **Importance:** Defines the Pydantic model for notifications.
-  - **Changes:** Created to structure notification data in MongoDB.
-- ****
-  - **Importance:** Handles notification logic.
-  - **Changes:** Created to manage creating, fetching, and marking notifications as read.
-- ** directory**
-  - **Importance:** Contains deployment-related artifacts.
-  - **Changes:** New directory created to hold , production  files, and  guide.
-- ** directory**
-  - **Importance:** New directory for the user profile feature.
-  - **Changes:** Created to house , , , and .
+-   **/app/frontend/src/utils/apiBase.ts**: Defines the API base URL,  for web preview,  or  for native/local. Important for platform-agnostic API calls. *Updated: Simplified  to ensure consistent  for web and configurable for native.*
+-   **/app/frontend/src/api/client.ts**: Centralized Axios client. Configured with , , and . Includes request interceptor to add  (conditionally, skipping auth paths) and response interceptor to handle 401s (clear token, redirect to login, show toast). *Created and updated to centralize HTTP requests, replace , and implement robust auth interceptors.*
+-   **/app/frontend/src/context/AuthContext.tsx**: Manages user authentication state, provides , ,  functions via  hook. Integrates  (now ), , and . Handles UI redirection and French error/success toasts. *Significant updates for web-safe token storage, email normalization, French error/success messages, and login loop/401 handling.*
+-   **/app/frontend/src/utils/tokenStorage.ts**: Utility for storing authentication tokens. Uses  for native and  for web, with  for Safari iOS iframe compatibility. *Updated to use  for consistency.*
+-   **/app/frontend/src/utils/emailUtils.ts**: Helper function  to trim and lowercase email strings. *Created for consistent email handling across auth flows.*
+-   **/app/frontend/src/components/Toast.tsx**: A sophisticated component for displaying temporary French notifications (success, error, info). *Confirmed existence and leveraged for UX improvements.*
+-   **/app/frontend/app/(auth)/login.tsx & register.tsx**: Login and registration screens. Use  functions, local state for form inputs,  for loading states, and  for feedback. *Updated to use , , and improved French error/success messages with redirection.*
+-   **/app/backend/server.py**: Main FastAPI application. Contains all API routes (prefixed with ), includes CORS configuration, and integrates various backend services. *Updated with new  endpoint, defensive login route (JSON/form support, logging), updated CORS, and auth instrumentation logging.*
+-   **/app/backend/services/auth_service.py**: Handles user authentication logic, including password hashing (argon2id), token generation, and user validation. *Updated with  and extensive logging for debugging auth issues.*
+-   **/app/backend/models/message.py**: Pydantic model for messages and conversations. *Created as part of messages feature implementation.*
+-   **/app/frontend/app/(tabs)/messages.tsx**: Messages inbox screen. *Updated to display a true empty state after resolving syntax errors from old mock data. API integration is pending.*
+-   **/app/frontend/src/services/messagesApi.ts**: Placeholder for messaging API calls. *Created to define API structure for future full integration.*
 </code_architecture>
-
 <pending_tasks>
-- **Complete Tab Bar Cleanup and Profile Tab Implementation:**
-    - Update  to include the new Profile tab, ensure correct tab order, and remove any debug-related tab entries.
-    - Implement the full functionality for , , and , including wiring logout.
-- **Wire Notifications End-to-End:** Integrate the  and  screen with real-time updates and full functionality.
-- **Run Automated Frontend Checks:** Perform comprehensive automated tests covering authentication, community feed, notifications, and shopping list.
-- **Prepare Test Build:** If automated tests pass, prepare a test build (web preview + iOS/Android) for manual verification.
+-   Complete full API integration for the Messages feature (beyond current empty state).
+-   Implement Cloudinary integration for avatar and media uploads (currently placeholders).
+-   Finalize documentation (,  updates, ).
+-   Address remaining production readiness steps (deployment notes for Nginx/Cloudflare, EAS builds).
+-   Provide all required screenshots and video clips for acceptance criteria (e.g., Scan success/failure, Messages with threads).
 </pending_tasks>
-
 <current_work>
-The immediate work is focused on implementing the user's latest request to refactor the application's tab bar and introduce a new Profile section.
-
-The AI engineer has:
-1.  **Examined the existing tab structure:** Verified  for current tab definitions and confirmed the  color and  constants are correctly defined for the new Profile tab.
-2.  **Cleaned up debug files:** Removed  and  from the  directory.
-3.  **Created the new Profile tab structure:**
-    *   Created the directory .
-    *   Created  to handle nested navigation within the profile section.
-    *   Created  as the main profile screen, which will display user information and action links.
-    *   Created  as a placeholder for future settings.
-    *   Created  as a placeholder for profile editing.
-
-The next step is to integrate these new profile components into the main tab bar defined in , ensuring the correct order and icons are used, and that debug tabs are fully removed. This includes wiring the navigation for the Profile tab and its sub-screens (Settings, Edit Profile) and connecting the logout action.
+The immediate work involved fixing a persistent login loop and 401 Unauthorized errors caused by expired or invalid tokens. This required significant updates to the core authentication stack.
+1.  **Centralized Axios Client ()**:
+    *   Refined the  helper to accurately detect authentication-related endpoints (, , ) and prevent sending  headers to them, avoiding unnecessary 401s during login.
+    *   Enhanced the response interceptor: if a  status is received for a *non-auth* path, it now dispatches a custom event, clears the stored token, and triggers a redirection to the login screen, displaying a Session expirée, veuillez vous reconnecter. toast message.
+2.  **AuthContext ()**:
+    *   The  was updated to listen for the custom auth error event dispatched by the Axios interceptor.
+    *   Improved the application's bootstrap logic: on startup, it calls  to validate the current session. If this call returns a , the stored token is cleared, and the user remains on the login screen, effectively preventing a login loop with an invalid token.
+    *   The login function's success and failure handling were also updated to align with the new token management and error propagation mechanisms.
+The current work is at the stage of *adding an event listener for auth errors* within the  to fully integrate the interceptor's behavior with the UI's toast and navigation.
 </current_work>
-
 <optional_next_step>
-Update  to integrate the new Profile tab and configure all 5 production tabs.
+Complete the implementation of the event listener for auth errors in  to handle session expiration messages and redirection.
 </optional_next_step>
-

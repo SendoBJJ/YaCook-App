@@ -42,7 +42,7 @@ AI meal plan generation endpoint (POST /api/ai/generate-meal-plan) returns 500 s
 
 ### Request Example
 ```bash
-curl -X POST "https://chef-companion-9.preview.emergentagent.com/api/ai/generate-meal-plan" \
+curl -X POST "https://yacook-native.preview.emergentagent.com/api/ai/generate-meal-plan" \
   -H "Authorization: Bearer [JWT_TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{
