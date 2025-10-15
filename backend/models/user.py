@@ -110,6 +110,8 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: datetime
     last_login: Optional[datetime] = None
+    plan: UserPlan = Field(default=UserPlan.FREE, description="User subscription plan")
+    premium_until: Optional[datetime] = Field(None, description="Premium subscription expiry")
 
 class UserLogin(BaseModel):
     email: str = Field(..., description="User email")
