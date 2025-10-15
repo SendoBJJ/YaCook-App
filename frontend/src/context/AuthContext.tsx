@@ -104,7 +104,12 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     
     initAuth();
     
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('auth-error', handleAuthError as EventListener);
+      }
+    };
   }, []);
 
   const login = async (rawEmail: any, rawPassword: any) => {
