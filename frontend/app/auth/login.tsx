@@ -28,6 +28,10 @@ export default function LoginScreen() {
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Social login hooks
+  const { signInWithGoogle, loading: googleLoading } = useGoogle();
+  const { signInWithApple, loading: appleLoading, isAvailable: appleIsAvailable } = useApple();
 
   // Cross-platform safe setters (handles RN onChangeText and web onChange)
   const toStr = (v: any) => typeof v === 'string' ? v : (v?.target?.value ?? '');
