@@ -85,20 +85,37 @@ export const useGoogle = () => {
 
   // Trigger Google Sign In
   const signInWithGoogle = async () => {
+    console.log('🔵 Google Sign In clicked');
+    console.log('📝 Client IDs configured:', { 
+      ios: !!iosClientId, 
+      android: !!androidClientId, 
+      web: !!webClientId 
+    });
+    
     // Check if credentials are configured
     if (!iosClientId && !androidClientId && !webClientId) {
+      console.warn('⚠️ No Google client IDs configured');
       showToast('Configuration Google manquante', 'error');
       return;
     }
 
+    // Check if request is ready
+    if (!request) {
+      console.error('❌ Google auth request not initialized');
+      showToast('Configuration Google invalide', 'error');
+      return;
+    }
+
     try {
+      console.log('🚀 Starting Google OAuth flow...');
       const result = await promptAsync();
+      console.log('📬 Google OAuth result:', result?.type);
       
       if (result) {
         await handleGoogleResponse(result.type, result.params);
       }
     } catch (error) {
-      console.error('Google auth error:', error);
+      console.error('❌ Google auth error:', error);
       showToast('Erreur lors de la connexion Google', 'error');
     }
   };
