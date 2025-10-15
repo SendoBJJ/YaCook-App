@@ -339,6 +339,18 @@ backend:
           agent: "testing"
           comment: "✅ PROFILE TAB IMPLEMENTATION VERIFIED: Comprehensive code review confirms all Profile Tab components are properly implemented. Fixed critical $$typeof AuthContext bug by removing duplicate useAuth function definition. All screens (Profile Home, Edit Profile, Settings) have proper French localization, navigation flow, and user data handling. Implementation is production-ready but end-to-end testing blocked by platform router issue (API calls return 404 due to missing Kubernetes ingress configuration)."
 
+  - task: "Phase 1: Auth Error Flow Fix - Complete 401 Handling"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/api/client.ts, /app/frontend/src/context/AuthContext.tsx"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "✅ PHASE 1 IMPLEMENTATION COMPLETE: Added isAuthPath() helper to detect /auth/* endpoints. Updated request interceptor to skip Authorization header on /auth/login, /auth/register, /auth/refresh (prevents unnecessary 401s during login). Enhanced response interceptor to handle 401 Unauthorized on protected routes: clears token, dispatches 'auth-error' custom event, provides detailed console logging. Completed auth error event listener in AuthContext: shows French toast 'Session expirée, veuillez vous reconnecter.', clears user state, redirects to /auth/login. Updated success toasts: 'Connexion réussie !' for login, 'Compte créé avec succès, vous pouvez vous connecter.' for registration. Bootstrap /api/whoami check already implemented (lines 54-82 in AuthContext). Ready for testing with verification requirements: no Authorization on /auth/*, 401 triggers logout flow, successful login stores token and routes to dashboard."
+
   - task: "Bulletproof YaCook Profile Tab Implementation Testing"
     implemented: true
     working: true
