@@ -64,6 +64,23 @@ client.interceptors.response.use(
       return client.request(originalRequest);
     }
     
+    // Handle 402 Payment Required (premium required)
+    if (error.response?.status === 402 || error.response?.data?.detail === 'premium_required') {
+      console.log('💎 402 Premium Required:', originalRequest.url);
+      
+      // Dispatch custom event for premium requirement
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('premium-required', {
+          detail: { 
+            message: 'Pour générer un plan de repas avec l\'IA, passez à YaCook Premium.' 
+          }
+        }));
+        console.log('📢 Premium required event dispatched');
+      }
+      
+      return Promise.reject(error);
+    }
+    
     // Handle 401 Unauthorized (expired/invalid token)
     if (error.response?.status === 401) {
       // Skip 401 handling for auth endpoints (they're supposed to return 401 on bad credentials)
