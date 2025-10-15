@@ -72,6 +72,9 @@ class CloudinaryService:
             if params.public_id:
                 params_to_sign["public_id"] = params.public_id
             
+            if params.transformation:
+                params_to_sign["transformation"] = params.transformation
+            
             if params.tags:
                 # Filter and clean tags
                 clean_tags = [tag.strip().lower() for tag in params.tags if tag.strip()]
