@@ -190,6 +190,33 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except JWTError:
         raise credentials_exception
 
+async def require_premium(current_user: dict = Depends(get_current_user)) -> dict:
+    """Require premium subscription for endpoint access."""
+    from models.user import UserInDB, UserPlan
+    from datetime import datetime
+    
+    # Convert dict to UserInDB model to use is_premium() method
+    try:
+        user = UserInDB(**current_user)
+    except Exception as e:
+        logger.error(f"Error converting user to UserInDB: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+    
+    # Check if user has premium access
+    if not user.is_premium():
+        logger.info(f"Premium access denied for user: {user.email} (plan: {user.plan})")
+        raise HTTPException(
+            status_code=402,  # Payment Required
+            detail="premium_required",
+            headers={"X-Premium-Required": "true"}
+        )
+    
+    logger.info(f"Premium access granted for user: {user.email}")
+    return current_user
+
 # Root endpoint
 @app.get("/")
 async def root():
