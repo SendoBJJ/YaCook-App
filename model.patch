@@ -1,284 +1,400 @@
 diff --git a/frontend/src/context/AuthContext.tsx b/frontend/src/context/AuthContext.tsx
-index 73c07e1..0eb7fd1 100644
+index 0eb7fd1..e4bcd1d 100644
 --- a/frontend/src/context/AuthContext.tsx
 +++ b/frontend/src/context/AuthContext.tsx
-@@ -1,7 +1,9 @@
- import React, { createContext, useContext, useEffect, useState } from 'react';
--import { authApi, tokenManager, healthApi } from '../services/api';
- import { resolveApiBase } from '../utils/apiBase';
- import { normalizeAuthPayload } from '../utils/emailUtils';
-+import { tokenStorage } from '../utils/tokenStorage';
-+import api from '../utils/api';
-+import { useToast } from '../components/Toast';
+@@ -18,10 +18,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
+ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+   const [user, setUser] = useState<User | null>(null);
+   const [loading, setLoading] = useState(true);
++  const { showToast } = useToast();
  
- type User = { id: string; email: string; name?: string };
- type AuthContextValue = {
+   useEffect(() => {
+     let mounted = true;
+-    (async () => {
++    
++    const initAuth = async () => {
+       try {
+         setLoading(true);
+         
+@@ -30,63 +32,46 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
+         
+         // Background ping to /api/health
+         try {
+-          await healthApi.check();
+-          console.log('✅ Health check passed');
++          const healthResponse = await api.get('/health');
++          if (healthResponse.status === 200) {
++            console.log('✅ Health check passed');
++          }
+         } catch (error) {
+           console.error('❌ Health check failed - Serveur indisponible');
+-          // Show non-blocking banner (TODO: implement banner UI)
+-          if (typeof window !== 'undefined') {
+-            window.dispatchEvent(new CustomEvent('healthCheckFailed', {
+-              detail: { message: 'Serveur indisponible' }
+-            }));
+-          }
+         }
+-        
+-        // Check if user data exists in storage
+-        const storedUser = await tokenManager.getUserData();
+-        if (storedUser && mounted) {
+-          // Transform to our simplified user type
+-          setUser({
+-            id: storedUser.id,
+-            name: storedUser.first_name && storedUser.last_name 
+-              ? `${storedUser.first_name} ${storedUser.last_name}` 
+-              : storedUser.first_name || storedUser.display_name,
+-            email: storedUser.email
+-          });
+-          
+-          // Try to refresh user data if we have a token
++
++        // Try to get stored token and validate user
++        const token = await tokenStorage.get('access_token');
++        if (token) {
+           try {
+-            const currentUser = await authApi.getCurrentUser();
+-            if (mounted) {
+-              setUser({
+-                id: currentUser.id,
+-                name: currentUser.first_name && currentUser.last_name 
+-                  ? `${currentUser.first_name} ${currentUser.last_name}` 
+-                  : currentUser.first_name || currentUser.display_name,
+-                email: currentUser.email
+-              });
+-              await tokenManager.setUserData(currentUser);
++            // Call /api/whoami to get current user
++            const whoamiResponse = await api.get('/whoami');
++            if (whoamiResponse.status === 200 && mounted) {
++              // Set user from token payload or make another call to get user details
++              const userData = await api.get('/auth/me');
++              if (userData.status === 200 && mounted) {
++                const userInfo = userData.data;
++                setUser({
++                  id: userInfo.id,
++                  email: userInfo.email,
++                  name: `${userInfo.first_name || ''} ${userInfo.last_name || ''}`.trim() || userInfo.display_name || userInfo.email,
++                });
++              }
+             }
+           } catch (error) {
+-            // If refresh fails, clear stored data
+-            console.warn('Failed to refresh user data on init:', error);
+-            if (mounted) {
+-              await tokenManager.clearTokens();
+-              setUser(null);
+-            }
++            console.log('Token invalid, clearing storage');
++            await tokenStorage.remove('access_token');
+           }
+         }
+       } catch (error) {
+-        console.error('Failed to initialize auth:', error);
+-        if (mounted) {
+-          setUser(null);
+-        }
++        console.error('Auth initialization error:', error);
+       } finally {
+-        if (mounted) {
+-          setLoading(false);
+-        }
++        if (mounted) setLoading(false);
+       }
+-    })();
++    };
++    
++    initAuth();
++    
+     return () => { mounted = false; };
+   }, []);
+ 
 diff --git a/model.patch b/model.patch
-index e49f6bb..e69de29 100644
+index 175933c..61066bf 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,264 +0,0 @@
--diff --git a/frontend/app/auth/login.tsx b/frontend/app/auth/login.tsx
--index 2ea5ea6..0a23d41 100644
----- a/frontend/app/auth/login.tsx
--+++ b/frontend/app/auth/login.tsx
--@@ -7,7 +7,6 @@ import {
--   KeyboardAvoidingView,
--   Platform,
--   ScrollView,
---  Alert,
-- } from 'react-native';
-- import { Link, router } from 'expo-router';
-- import { SafeAreaView } from 'react-native-safe-area-context';
--@@ -21,6 +20,7 @@ import { useToast } from '../../src/components/Toast';
+@@ -1,284 +0,0 @@
+-diff --git a/frontend/src/context/AuthContext.tsx b/frontend/src/context/AuthContext.tsx
+-index 73c07e1..0eb7fd1 100644
+---- a/frontend/src/context/AuthContext.tsx
+-+++ b/frontend/src/context/AuthContext.tsx
+-@@ -1,7 +1,9 @@
+- import React, { createContext, useContext, useEffect, useState } from 'react';
+--import { authApi, tokenManager, healthApi } from '../services/api';
+- import { resolveApiBase } from '../utils/apiBase';
+- import { normalizeAuthPayload } from '../utils/emailUtils';
+-+import { tokenStorage } from '../utils/tokenStorage';
+-+import api from '../utils/api';
+-+import { useToast } from '../components/Toast';
 - 
-- export default function LoginScreen() {
--   const { login } = useAuth();
--+  const { showToast, ToastComponent } = useToast();
--   const [email, setEmail] = useState<string>('');
--   const [password, setPassword] = useState<string>('');
--   const [isLoading, setIsLoading] = useState(false);
--@@ -36,7 +36,7 @@ export default function LoginScreen() {
--     
--     if (!email.trim() || !password.trim()) {
--       console.log('❌ Validation failed: empty fields');
---      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
--+      showToast('Veuillez remplir tous les champs', 'error');
--       return;
--     }
-- 
--@@ -69,7 +69,7 @@ export default function LoginScreen() {
--         errorMessage = 'Problème de connexion — vérifiez votre internet';
--       }
--       
---      Alert.alert('Erreur de connexion', errorMessage);
--+      showToast(errorMessage, 'error');
--     } finally {
--       console.log('🏁 Login process finished');
--       setIsLoading(false);
--@@ -162,7 +162,7 @@ export default function LoginScreen() {
-- 
--             <SmartButton
--               style={styles.socialButton}
---              onPress={() => Alert.alert('Google OAuth', 'Fonctionnalité bientôt disponible')}
--+              onPress={() => showToast('Fonctionnalité bientôt disponible', 'info')}
--               accessibilityLabel="Se connecter avec Google"
--             >
--               <Ionicons name="logo-google" size={20} color={Colors.light.text} />
--@@ -171,7 +171,7 @@ export default function LoginScreen() {
-- 
--             <SmartButton
--               style={styles.socialButton}
---              onPress={() => Alert.alert('Apple OAuth', 'Fonctionnalité bientôt disponible')}
--+              onPress={() => showToast('Fonctionnalité bientôt disponible', 'info')}
--               accessibilityLabel="Se connecter avec Apple"
--             >
--               <Ionicons name="logo-apple" size={20} color={Colors.light.text} />
--@@ -180,6 +180,7 @@ export default function LoginScreen() {
--           </View>
--         </ScrollView>
--       </KeyboardAvoidingView>
--+      <ToastComponent />
--     </SafeAreaView>
--   );
-- }
+- type User = { id: string; email: string; name?: string };
+- type AuthContextValue = {
 -diff --git a/model.patch b/model.patch
--index d1686f1..e69de29 100644
+-index e49f6bb..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,195 +0,0 @@
---diff --git a/backend/server.py b/backend/server.py
---index 45a8866..cb85093 100644
------ a/backend/server.py
---+++ b/backend/server.py
---@@ -1,4 +1,4 @@
----from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks, Request
---+from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks, Request, Response
--- from fastapi.responses import Response
--- from fastapi.middleware.cors import CORSMiddleware
--- from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+-@@ -1,264 +0,0 @@
+--diff --git a/frontend/app/auth/login.tsx b/frontend/app/auth/login.tsx
+--index 2ea5ea6..0a23d41 100644
+----- a/frontend/app/auth/login.tsx
+--+++ b/frontend/app/auth/login.tsx
+--@@ -7,7 +7,6 @@ import {
+--   KeyboardAvoidingView,
+--   Platform,
+--   ScrollView,
+---  Alert,
+-- } from 'react-native';
+-- import { Link, router } from 'expo-router';
+-- import { SafeAreaView } from 'react-native-safe-area-context';
+--@@ -21,6 +20,7 @@ import { useToast } from '../../src/components/Toast';
+-- 
+-- export default function LoginScreen() {
+--   const { login } = useAuth();
+--+  const { showToast, ToastComponent } = useToast();
+--   const [email, setEmail] = useState<string>('');
+--   const [password, setPassword] = useState<string>('');
+--   const [isLoading, setIsLoading] = useState(false);
+--@@ -36,7 +36,7 @@ export default function LoginScreen() {
+--     
+--     if (!email.trim() || !password.trim()) {
+--       console.log('❌ Validation failed: empty fields');
+---      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+--+      showToast('Veuillez remplir tous les champs', 'error');
+--       return;
+--     }
+-- 
+--@@ -69,7 +69,7 @@ export default function LoginScreen() {
+--         errorMessage = 'Problème de connexion — vérifiez votre internet';
+--       }
+--       
+---      Alert.alert('Erreur de connexion', errorMessage);
+--+      showToast(errorMessage, 'error');
+--     } finally {
+--       console.log('🏁 Login process finished');
+--       setIsLoading(false);
+--@@ -162,7 +162,7 @@ export default function LoginScreen() {
+-- 
+--             <SmartButton
+--               style={styles.socialButton}
+---              onPress={() => Alert.alert('Google OAuth', 'Fonctionnalité bientôt disponible')}
+--+              onPress={() => showToast('Fonctionnalité bientôt disponible', 'info')}
+--               accessibilityLabel="Se connecter avec Google"
+--             >
+--               <Ionicons name="logo-google" size={20} color={Colors.light.text} />
+--@@ -171,7 +171,7 @@ export default function LoginScreen() {
+-- 
+--             <SmartButton
+--               style={styles.socialButton}
+---              onPress={() => Alert.alert('Apple OAuth', 'Fonctionnalité bientôt disponible')}
+--+              onPress={() => showToast('Fonctionnalité bientôt disponible', 'info')}
+--               accessibilityLabel="Se connecter avec Apple"
+--             >
+--               <Ionicons name="logo-apple" size={20} color={Colors.light.text} />
+--@@ -180,6 +180,7 @@ export default function LoginScreen() {
+--           </View>
+--         </ScrollView>
+--       </KeyboardAvoidingView>
+--+      <ToastComponent />
+--     </SafeAreaView>
+--   );
+-- }
 --diff --git a/model.patch b/model.patch
---index dcea799..e69de29 100644
+--index d1686f1..e69de29 100644
 ----- a/model.patch
 --+++ b/model.patch
---@@ -1,180 +0,0 @@
+--@@ -1,195 +0,0 @@
 ---diff --git a/backend/server.py b/backend/server.py
----index 2518906..696082b 100644
+---index 45a8866..cb85093 100644
 ------ a/backend/server.py
 ---+++ b/backend/server.py
----@@ -103,11 +103,11 @@ async def lifespan(app: FastAPI):
----             "https://app.emergent.sh"
----         ]
----         logger.info(f"🌐 CORS allowed origins: {allowed_origins}")
-----        logger.info(f"🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
----+        logger.info("🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
----         
----         # Log API base path
-----        logger.info(f"🚀 API base path: /api")
-----        logger.info(f"✅ OPTIONS handler registered for all routes")
----+        logger.info("🚀 API base path: /api")
----+        logger.info("✅ OPTIONS handler registered for all routes")
----         
----         logger.info("YaCook API started successfully")
----         logger.info("=" * 50)
----@@ -224,6 +224,23 @@ async def health_check():
----             detail=f"Service unhealthy: {str(e)}"
----         )
---- 
----+# Whoami endpoint for debugging routing issues
----+@app.get("/api/whoami")
----+async def whoami():
----+    """Identify which backend instance is responding."""
----+    import socket
----+    import os
----+    
----+    return {
----+        "message": "YaCook API Instance",
----+        "hostname": socket.gethostname(),
----+        "pid": os.getpid(),
----+        "version": "1.0.0",
----+        "timestamp": datetime.utcnow().isoformat(),
----+        "environment": os.getenv("ENVIRONMENT", "unknown"),
----+        "instance_id": os.getenv("INSTANCE_ID", socket.gethostname())
----+    }
----+
---- # Authentication endpoints
---- @app.post("/api/auth/register", response_model=Token)
---- async def register(user_data: UserCreate, background_tasks: BackgroundTasks):
+---@@ -1,4 +1,4 @@
+----from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks, Request
+---+from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks, Request, Response
+--- from fastapi.responses import Response
+--- from fastapi.middleware.cors import CORSMiddleware
+--- from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 ---diff --git a/model.patch b/model.patch
----index 098a00f..e69de29 100644
+---index dcea799..e69de29 100644
 ------ a/model.patch
 ---+++ b/model.patch
----@@ -1,132 +0,0 @@
+---@@ -1,180 +0,0 @@
 ----diff --git a/backend/server.py b/backend/server.py
-----index 91ec152..aa27196 100644
+----index 2518906..696082b 100644
 ------- a/backend/server.py
 ----+++ b/backend/server.py
-----@@ -87,7 +87,12 @@ async def lifespan(app: FastAPI):
-----         # Check .env loading
-----         import os
-----         env_loaded = os.path.exists(".env")
-----+        # Database connection info (sanitized)
-----+        db = database_service.get_database()
-----+        mongo_host = os.getenv("MONGO_URL", "").replace("mongodb://", "").split("/")[0] if os.getenv("MONGO_URL") else "unknown"
-----+        
-----         logger.info(f"📄 .env file loaded: {env_loaded}")
-----+        logger.info(f"🗄️ Database: {db.name} on host: {mongo_host[:20]}***")
+----@@ -103,11 +103,11 @@ async def lifespan(app: FastAPI):
+----             "https://app.emergent.sh"
+----         ]
+----         logger.info(f"🌐 CORS allowed origins: {allowed_origins}")
+-----        logger.info(f"🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
+----+        logger.info("🔗 CORS origin regex: r'https:\/\/.*\.(preview\.emergentagent\.com|trycloudflare\.com|railway\.app)$'")
 ----         
-----         # Log allowed origins (no secrets)
-----         allowed_origins = [
+----         # Log API base path
+-----        logger.info(f"🚀 API base path: /api")
+-----        logger.info(f"✅ OPTIONS handler registered for all routes")
+----+        logger.info("🚀 API base path: /api")
+----+        logger.info("✅ OPTIONS handler registered for all routes")
+----         
+----         logger.info("YaCook API started successfully")
+----         logger.info("=" * 50)
+----@@ -224,6 +224,23 @@ async def health_check():
+----             detail=f"Service unhealthy: {str(e)}"
+----         )
+---- 
+----+# Whoami endpoint for debugging routing issues
+----+@app.get("/api/whoami")
+----+async def whoami():
+----+    """Identify which backend instance is responding."""
+----+    import socket
+----+    import os
+----+    
+----+    return {
+----+        "message": "YaCook API Instance",
+----+        "hostname": socket.gethostname(),
+----+        "pid": os.getpid(),
+----+        "version": "1.0.0",
+----+        "timestamp": datetime.utcnow().isoformat(),
+----+        "environment": os.getenv("ENVIRONMENT", "unknown"),
+----+        "instance_id": os.getenv("INSTANCE_ID", socket.gethostname())
+----+    }
+----+
+---- # Authentication endpoints
+---- @app.post("/api/auth/register", response_model=Token)
+---- async def register(user_data: UserCreate, background_tasks: BackgroundTasks):
 ----diff --git a/model.patch b/model.patch
-----index 12c1d01..e69de29 100644
+----index 098a00f..e69de29 100644
 ------- a/model.patch
 ----+++ b/model.patch
-----@@ -1,110 +0,0 @@
------diff --git a/frontend/src/utils/tokenStorage.ts b/frontend/src/utils/tokenStorage.ts
------index 7a46078..66c7a8a 100644
--------- a/frontend/src/utils/tokenStorage.ts
------+++ b/frontend/src/utils/tokenStorage.ts
------@@ -1,22 +1,9 @@
-------import * as SecureStore from "expo-secure-store";
-------import { Platform } from "react-native";
-------
-------async function secureAvailable(): Promise<boolean> {
-------  try {
-------    return Platform.OS !== "web" && (await SecureStore.isAvailableAsync());
-------  } catch {
-------    return false;
-------  }
-------}
------+import { saveToken, loadToken } from './webSafeStorage';
------ 
------ export const tokenStorage = {
------   async get(key: string): Promise<string | null> {
------     try {
-------      if (await secureAvailable()) {
-------        return await SecureStore.getItemAsync(key);
-------      }
-------      // Web fallback to localStorage
-------      return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
------+      return await loadToken(key);
------     } catch (error) {
------       console.warn(`Failed to get ${key} from storage:`, error);
------       return null;
------@@ -25,43 +12,17 @@ export const tokenStorage = {
------ 
------   async set(key: string, value: string): Promise<void> {
------     try {
-------      if (await secureAvailable()) {
-------        await SecureStore.setItemAsync(key, value);
-------        return;
-------      }
-------      // Web fallback to localStorage
-------      if (typeof localStorage !== "undefined") {
-------        localStorage.setItem(key, value);
-------      }
------+      await saveToken(key, value);
------     } catch (error) {
------       console.warn(`Failed to set ${key} in storage:`, error);
-------      throw error;
------     }
------   },
------ 
-------  async del(key: string): Promise<void> {
------+  async remove(key: string): Promise<void> {
------     try {
-------      if (await secureAvailable()) {
-------        await SecureStore.deleteItemAsync(key);
-------        return;
-------      }
-------      // Web fallback to localStorage
-------      if (typeof localStorage !== "undefined") {
-------        localStorage.removeItem(key);
-------      }
------+      await saveToken(key, null);
------     } catch (error) {
-------      console.warn(`Failed to delete ${key} from storage:`, error);
-------      throw error;
------+      console.warn(`Failed to remove ${key} from storage:`, error);
------     }
------   },
-------
-------  async clear(): Promise<void> {
-------    try {
-------      const keys = ['access_token', 'refresh_token', 'user_data'];
-------      await Promise.all(keys.map(key => this.del(key)));
-------    } catch (error) {
-------      console.warn('Failed to clear storage:', error);
-------      throw error;
-------    }
-------  }
------ };
------\ No newline at end of file
+----@@ -1,132 +0,0 @@
+-----diff --git a/backend/server.py b/backend/server.py
+-----index 91ec152..aa27196 100644
+-------- a/backend/server.py
+-----+++ b/backend/server.py
+-----@@ -87,7 +87,12 @@ async def lifespan(app: FastAPI):
+-----         # Check .env loading
+-----         import os
+-----         env_loaded = os.path.exists(".env")
+-----+        # Database connection info (sanitized)
+-----+        db = database_service.get_database()
+-----+        mongo_host = os.getenv("MONGO_URL", "").replace("mongodb://", "").split("/")[0] if os.getenv("MONGO_URL") else "unknown"
+-----+        
+-----         logger.info(f"📄 .env file loaded: {env_loaded}")
+-----+        logger.info(f"🗄️ Database: {db.name} on host: {mongo_host[:20]}***")
+-----         
+-----         # Log allowed origins (no secrets)
+-----         allowed_origins = [
 -----diff --git a/model.patch b/model.patch
------index d3d0cce..e69de29 100644
+-----index 12c1d01..e69de29 100644
 -------- a/model.patch
 -----+++ b/model.patch
------@@ -1,27 +0,0 @@
-------diff --git a/frontend/src/services/api.ts b/frontend/src/services/api.ts
-------index a0b1143..ddcb7c9 100644
---------- a/frontend/src/services/api.ts
-------+++ b/frontend/src/services/api.ts
-------@@ -1,12 +1,9 @@
--------import axios from 'axios';
------- import { tokenStorage } from '../utils/tokenStorage';
------- import { AuthResponse, LoginData, RegisterData, User } from '../types';
------- import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
--------import { apiBase } from '../utils/apiBase';
------- import httpClient from '../api/client';
+-----@@ -1,110 +0,0 @@
+------diff --git a/frontend/src/utils/tokenStorage.ts b/frontend/src/utils/tokenStorage.ts
+------index 7a46078..66c7a8a 100644
+--------- a/frontend/src/utils/tokenStorage.ts
+------+++ b/frontend/src/utils/tokenStorage.ts
+------@@ -1,22 +1,9 @@
+-------import * as SecureStore from "expo-secure-store";
+-------import { Platform } from "react-native";
+-------
+-------async function secureAvailable(): Promise<boolean> {
+-------  try {
+-------    return Platform.OS !== "web" && (await SecureStore.isAvailableAsync());
+-------  } catch {
+-------    return false;
+-------  }
+-------}
+------+import { saveToken, loadToken } from './webSafeStorage';
 ------ 
--------// Log API base URL at startup
--------console.log('API Base URL:', apiBase());
-------+// Using centralized HTTP client
+------ export const tokenStorage = {
+------   async get(key: string): Promise<string | null> {
+------     try {
+-------      if (await secureAvailable()) {
+-------        return await SecureStore.getItemAsync(key);
+-------      }
+-------      // Web fallback to localStorage
+-------      return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
+------+      return await loadToken(key);
+------     } catch (error) {
+------       console.warn(`Failed to get ${key} from storage:`, error);
+------       return null;
+------@@ -25,43 +12,17 @@ export const tokenStorage = {
 ------ 
------- // Token storage keys
------- const ACCESS_TOKEN_KEY = 'access_token';
-------@@ -118,7 +115,7 @@ api.interceptors.response.use(
-------       try {
-------         const refreshToken = await tokenManager.getRefreshToken();
-------         if (refreshToken) {
--------          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-------+          const response = await api.post('/auth/refresh', {
-------             refresh_token: refreshToken,
-------           });
+------   async set(key: string, value: string): Promise<void> {
+------     try {
+-------      if (await secureAvailable()) {
+-------        await SecureStore.setItemAsync(key, value);
+-------        return;
+-------      }
+-------      // Web fallback to localStorage
+-------      if (typeof localStorage !== "undefined") {
+-------        localStorage.setItem(key, value);
+-------      }
+------+      await saveToken(key, value);
+------     } catch (error) {
+------       console.warn(`Failed to set ${key} in storage:`, error);
+-------      throw error;
+------     }
+------   },
 ------ 
+-------  async del(key: string): Promise<void> {
+------+  async remove(key: string): Promise<void> {
+------     try {
+-------      if (await secureAvailable()) {
+-------        await SecureStore.deleteItemAsync(key);
+-------        return;
+-------      }
+-------      // Web fallback to localStorage
+-------      if (typeof localStorage !== "undefined") {
+-------        localStorage.removeItem(key);
+-------      }
+------+      await saveToken(key, null);
+------     } catch (error) {
+-------      console.warn(`Failed to delete ${key} from storage:`, error);
+-------      throw error;
+------+      console.warn(`Failed to remove ${key} from storage:`, error);
+------     }
+------   },
+-------
+-------  async clear(): Promise<void> {
+-------    try {
+-------      const keys = ['access_token', 'refresh_token', 'user_data'];
+-------      await Promise.all(keys.map(key => this.del(key)));
+-------    } catch (error) {
+-------      console.warn('Failed to clear storage:', error);
+-------      throw error;
+-------    }
+-------  }
+------ };
+------\ No newline at end of file
+------diff --git a/model.patch b/model.patch
+------index d3d0cce..e69de29 100644
+--------- a/model.patch
+------+++ b/model.patch
+------@@ -1,27 +0,0 @@
+-------diff --git a/frontend/src/services/api.ts b/frontend/src/services/api.ts
+-------index a0b1143..ddcb7c9 100644
+---------- a/frontend/src/services/api.ts
+-------+++ b/frontend/src/services/api.ts
+-------@@ -1,12 +1,9 @@
+--------import axios from 'axios';
+------- import { tokenStorage } from '../utils/tokenStorage';
+------- import { AuthResponse, LoginData, RegisterData, User } from '../types';
+------- import { NotificationList, NotificationCounts, MarkReadResponse } from '../types/notification';
+--------import { apiBase } from '../utils/apiBase';
+------- import httpClient from '../api/client';
+------- 
+--------// Log API base URL at startup
+--------console.log('API Base URL:', apiBase());
+-------+// Using centralized HTTP client
+------- 
+------- // Token storage keys
+------- const ACCESS_TOKEN_KEY = 'access_token';
+-------@@ -118,7 +115,7 @@ api.interceptors.response.use(
+-------       try {
+-------         const refreshToken = await tokenManager.getRefreshToken();
+-------         if (refreshToken) {
+--------          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+-------+          const response = await api.post('/auth/refresh', {
+-------             refresh_token: refreshToken,
+-------           });
+------- 
