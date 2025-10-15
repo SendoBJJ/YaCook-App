@@ -11,6 +11,7 @@ from typing import Optional, List
 # Import services and models
 from services.database_service import database_service
 from services.auth_service import auth_service
+from services.social_auth_service import social_auth_service
 from services.openfoodfacts_service import openfoodfacts_service
 from services.ai_service import ai_service
 from services.cloudinary_service import cloudinary_service, SignatureRequest, SignatureResponse
