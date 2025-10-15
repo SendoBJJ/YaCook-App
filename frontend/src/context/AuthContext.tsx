@@ -209,7 +209,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       
       if (response.status === 200 || response.status === 201) {
         // Show success toast
-        showToast("Compte créé 🎉", "success");
+        showToast("Compte créé avec succès, vous pouvez vous connecter.", "success");
         
         console.log('✅ Registration successful');
         
