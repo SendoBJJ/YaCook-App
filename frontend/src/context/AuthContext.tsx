@@ -24,6 +24,15 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   useEffect(() => {
     let mounted = true;
     
+    // Listen for auth errors from axios interceptor
+    const handleAuthError = (event: CustomEvent) => {
+      showToast(event.detail.message, "error");
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth-error', handleAuthError as EventListener);
+    }
+    
     const initAuth = async () => {
       try {
         setLoading(true);
