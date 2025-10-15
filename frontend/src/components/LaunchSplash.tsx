@@ -13,27 +13,27 @@ import Animated, {
 import { SvgXml } from 'react-native-svg';
 import { Colors } from '../constants/Colors';
 
-// SVG Logo inline
+// SVG Logo inline - Using YaCook brand color #15A055
 const logoSvg = `<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g id="logo">
-    <path d="M60 100 L60 130 C60 135 65 140 70 140 L130 140 C135 140 140 135 140 130 L140 100 Z" fill="#2FA45A"/>
-    <path d="M70 100 C70 85 75 75 85 72 C85 62 92 55 100 55 C108 55 115 62 115 72 C125 75 130 85 130 100 Z" fill="#2FA45A"/>
-    <rect x="60" y="95" width="80" height="10" fill="#1E7A3D" rx="2"/>
+    <path d="M60 100 L60 130 C60 135 65 140 70 140 L130 140 C135 140 140 135 140 130 L140 100 Z" fill="#15A055"/>
+    <path d="M70 100 C70 85 75 75 85 72 C85 62 92 55 100 55 C108 55 115 62 115 72 C125 75 130 85 130 100 Z" fill="#15A055"/>
+    <rect x="60" y="95" width="80" height="10" fill="#0D7A3F" rx="2"/>
     <path d="M75 110 L75 125" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
     <path d="M85 110 L85 128" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
     <path d="M100 110 L100 130" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
     <path d="M115 110 L115 128" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
     <path d="M125 110 L125 125" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
     <g transform="translate(35, 120)">
-      <rect x="0" y="0" width="3" height="35" fill="#2FA45A" rx="1.5"/>
-      <rect x="-5" y="0" width="2" height="15" fill="#2FA45A" rx="1"/>
-      <rect x="6" y="0" width="2" height="15" fill="#2FA45A" rx="1"/>
+      <rect x="0" y="0" width="3" height="35" fill="#15A055" rx="1.5"/>
+      <rect x="-5" y="0" width="2" height="15" fill="#15A055" rx="1"/>
+      <rect x="6" y="0" width="2" height="15" fill="#15A055" rx="1"/>
     </g>
     <g transform="translate(162, 120)">
-      <rect x="0" y="0" width="3" height="35" fill="#2FA45A" rx="1.5"/>
-      <ellipse cx="1.5" cy="-5" rx="6" ry="8" fill="#2FA45A"/>
+      <rect x="0" y="0" width="3" height="35" fill="#15A055" rx="1.5"/>
+      <ellipse cx="1.5" cy="-5" rx="6" ry="8" fill="#15A055"/>
     </g>
-    <text x="100" y="175" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#2FA45A" text-anchor="middle" letter-spacing="1">
+    <text x="100" y="175" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#15A055" text-anchor="middle" letter-spacing="1">
       YaCook
     </text>
   </g>
