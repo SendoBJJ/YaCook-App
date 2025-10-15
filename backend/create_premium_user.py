@@ -18,6 +18,7 @@ async def create_premium_user():
     auth_service = AuthService()
     
     # Connect to database
+    await db_service.connect()
     db = db_service.get_database()
     
     # Premium user credentials
