@@ -11,12 +11,15 @@ import {
 import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useAuth } from '../../src/context/AuthContext';
 import { Colors } from '../../src/constants/Colors';
 import { AppTexts } from '../../src/constants/Texts';
 import { Spacing, BorderRadius, FontSize, FontWeight } from '../../src/constants/Layout';
 import { SmartButton } from '../../src/components/SmartButton';
 import { useToast } from '../../src/components/Toast';
+import { useGoogle } from '../../src/auth/useGoogle';
+import { useApple } from '../../src/auth/useApple';
 
 export default function LoginScreen() {
   const { login } = useAuth();
