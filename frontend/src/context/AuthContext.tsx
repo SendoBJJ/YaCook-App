@@ -152,6 +152,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
               id: userInfo.id,
               email: userInfo.email,
               name: `${userInfo.first_name || ''} ${userInfo.last_name || ''}`.trim() || userInfo.display_name || userInfo.email,
+              plan: userInfo.plan || 'free',
+              premium_until: userInfo.premium_until || null,
             });
 
             // Show success toast
