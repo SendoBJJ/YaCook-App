@@ -1,0 +1,111 @@
+/**
+ * Google Authentication Hook
+ * Handles Google Sign In using expo-auth-session
+ */
+import { useState } from 'react';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
+import { router } from 'expo-router';
+import Constants from 'expo-constants';
+
+import { client } from '../api/client';
+import { saveToken } from '../utils/tokenStorage';
+import { useToast } from '../hooks/useToast';
+
+// Needed for web to properly redirect back
+WebBrowser.maybeCompleteAuthSession();
+
+export const useGoogle = () => {
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
+
+  // Get OAuth client IDs from environment
+  const iosClientId = Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_IOS_ID || '';
+  const androidClientId = Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_ANDROID_ID || '';
+  const webClientId = Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_WEB_ID || '';
+
+  // Create redirect URI
+  const redirectUri = makeRedirectUri({
+    scheme: 'yacook',
+    path: 'auth/callback'
+  });
+
+  // Configure Google auth request
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId,
+    androidClientId,
+    webClientId,
+    redirectUri,
+    scopes: ['profile', 'email']
+  });
+
+  // Handle authentication response
+  const handleGoogleResponse = async (responseType: any, params: any) => {
+    if (responseType === 'success') {
+      const { id_token } = params;
+      
+      if (!id_token) {
+        showToast('Aucun token reçu de Google', 'error');
+        return;
+      }
+
+      setLoading(true);
+      
+      try {
+        // Send id_token to backend
+        const { data } = await client.post('/auth/social-login', {
+          provider: 'google',
+          id_token
+        });
+
+        // Store token
+        await saveToken(data.access_token);
+
+        // Fetch user info to validate token
+        await client.get('/whoami');
+
+        showToast('Connexion réussie ✅', 'success');
+        router.replace('/');
+      } catch (error: any) {
+        console.error('Google login error:', error);
+        
+        if (error.response?.status === 401) {
+          showToast('Connexion sociale invalide, réessayez.', 'error');
+        } else {
+          showToast('Service indisponible, réessayez.', 'error');
+        }
+      } finally {
+        setLoading(false);
+      }
+    } else if (responseType === 'error') {
+      showToast('Connexion Google annulée', 'info');
+    }
+  };
+
+  // Trigger Google Sign In
+  const signInWithGoogle = async () => {
+    // Check if credentials are configured
+    if (!iosClientId && !androidClientId && !webClientId) {
+      showToast('Configuration Google manquante', 'error');
+      return;
+    }
+
+    try {
+      const result = await promptAsync();
+      
+      if (result) {
+        await handleGoogleResponse(result.type, result.params);
+      }
+    } catch (error) {
+      console.error('Google auth error:', error);
+      showToast('Erreur lors de la connexion Google', 'error');
+    }
+  };
+
+  return {
+    signInWithGoogle,
+    loading,
+    request
+  };
+};
