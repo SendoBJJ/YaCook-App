@@ -18,10 +18,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    
+    const initAuth = async () => {
       try {
         setLoading(true);
         
@@ -30,63 +32,46 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
         
         // Background ping to /api/health
         try {
-          await healthApi.check();
-          console.log('✅ Health check passed');
+          const healthResponse = await api.get('/health');
+          if (healthResponse.status === 200) {
+            console.log('✅ Health check passed');
+          }
         } catch (error) {
           console.error('❌ Health check failed - Serveur indisponible');
-          // Show non-blocking banner (TODO: implement banner UI)
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('healthCheckFailed', {
-              detail: { message: 'Serveur indisponible' }
-            }));
-          }
         }
-        
-        // Check if user data exists in storage
-        const storedUser = await tokenManager.getUserData();
-        if (storedUser && mounted) {
-          // Transform to our simplified user type
-          setUser({
-            id: storedUser.id,
-            name: storedUser.first_name && storedUser.last_name 
-              ? `${storedUser.first_name} ${storedUser.last_name}` 
-              : storedUser.first_name || storedUser.display_name,
-            email: storedUser.email
-          });
-          
-          // Try to refresh user data if we have a token
+
+        // Try to get stored token and validate user
+        const token = await tokenStorage.get('access_token');
+        if (token) {
           try {
-            const currentUser = await authApi.getCurrentUser();
-            if (mounted) {
-              setUser({
-                id: currentUser.id,
-                name: currentUser.first_name && currentUser.last_name 
-                  ? `${currentUser.first_name} ${currentUser.last_name}` 
-                  : currentUser.first_name || currentUser.display_name,
-                email: currentUser.email
-              });
-              await tokenManager.setUserData(currentUser);
+            // Call /api/whoami to get current user
+            const whoamiResponse = await api.get('/whoami');
+            if (whoamiResponse.status === 200 && mounted) {
+              // Set user from token payload or make another call to get user details
+              const userData = await api.get('/auth/me');
+              if (userData.status === 200 && mounted) {
+                const userInfo = userData.data;
+                setUser({
+                  id: userInfo.id,
+                  email: userInfo.email,
+                  name: `${userInfo.first_name || ''} ${userInfo.last_name || ''}`.trim() || userInfo.display_name || userInfo.email,
+                });
+              }
             }
           } catch (error) {
-            // If refresh fails, clear stored data
-            console.warn('Failed to refresh user data on init:', error);
-            if (mounted) {
-              await tokenManager.clearTokens();
-              setUser(null);
-            }
+            console.log('Token invalid, clearing storage');
+            await tokenStorage.remove('access_token');
           }
         }
       } catch (error) {
-        console.error('Failed to initialize auth:', error);
-        if (mounted) {
-          setUser(null);
-        }
+        console.error('Auth initialization error:', error);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
-    })();
+    };
+    
+    initAuth();
+    
     return () => { mounted = false; };
   }, []);
 
