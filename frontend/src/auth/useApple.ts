@@ -10,7 +10,7 @@ import { router } from 'expo-router';
 
 import { client } from '../api/client';
 import { saveToken } from '../utils/tokenStorage';
-import { useToast } from '../hooks/useToast';
+import { useToast } from '../components/Toast';
 
 export const useApple = () => {
   const [loading, setLoading] = useState(false);
