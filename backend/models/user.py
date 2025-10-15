@@ -89,6 +89,14 @@ class UserInDB(UserBase):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     last_login: Optional[datetime] = None
     
+    def is_premium(self) -> bool:
+        """Check if user has active premium subscription"""
+        if self.plan != UserPlan.PREMIUM:
+            return False
+        if self.premium_until is None:
+            return True  # Lifetime premium
+        return datetime.utcnow() < self.premium_until
+    
     class Config:
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
