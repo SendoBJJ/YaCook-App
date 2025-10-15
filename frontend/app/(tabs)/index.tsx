@@ -53,6 +53,28 @@ export default function DashboardScreen() {
   }, []);
 
   const generateMealPlan = async () => {
+    // Check if user has premium before calling API
+    if (user?.plan !== 'premium') {
+      console.log('💎 Non-premium user attempting to generate meal plan');
+      
+      // Show premium required toast with navigation to paywall
+      Alert.alert(
+        'Fonctionnalité Premium',
+        'Pour générer un plan de repas avec l\'IA, passez à YaCook Premium.',
+        [
+          {
+            text: 'Plus tard',
+            style: 'cancel'
+          },
+          {
+            text: 'Voir l\'abonnement',
+            onPress: () => router.push('/paywall')
+          }
+        ]
+      );
+      return; // Do not call API
+    }
+    
     try {
       setIsGenerating(true);
       const response = await aiApi.generateMealPlan({
