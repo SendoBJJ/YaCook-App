@@ -177,15 +177,31 @@ export default function DashboardScreen() {
       return (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Plan de repas IA</Text>
+            <View style={styles.cardTitleContainer}>
+              <Text style={styles.cardTitle}>Plan de repas IA</Text>
+              {user?.plan !== 'premium' && (
+                <View style={styles.premiumBadge}>
+                  <Ionicons name="star" size={12} color={Colors.light.warning} />
+                  <Text style={styles.premiumBadgeText}>Premium</Text>
+                </View>
+              )}
+            </View>
             <SmartButton 
-              style={styles.generateButton}
+              style={[
+                styles.generateButton,
+                user?.plan !== 'premium' && styles.lockedButton
+              ]}
               onPress={generateMealPlan}
               disabled={isGenerating}
               loading={isGenerating}
-              accessibilityLabel="Générer un plan de repas"
+              accessibilityLabel={user?.plan === 'premium' ? "Générer un plan de repas" : "Débloquer avec Premium"}
             >
-              <Text style={styles.generateButtonText}>Générer</Text>
+              {user?.plan !== 'premium' && (
+                <Ionicons name="lock-closed" size={16} color="#fff" style={{ marginRight: 4 }} />
+              )}
+              <Text style={styles.generateButtonText}>
+                {user?.plan === 'premium' ? 'Générer' : 'Débloquer'}
+              </Text>
             </SmartButton>
           </View>
           {isGenerating ? (
