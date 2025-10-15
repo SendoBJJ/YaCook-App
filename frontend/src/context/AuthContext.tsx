@@ -131,15 +131,22 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       const detail = error.response?.data?.detail;
       
       if (status === 401) {
-        message = 'Email ou mot de passe incorrect.';
+        message = 'Email ou mot de passe incorrect';
+        showToast(message, "error");
       } else if (status === 404) {
-        message = 'Service indisponible. Réessayez plus tard.';
+        message = 'Service indisponible';
+        showToast(message, "error");
       } else if (status === 422) {
-        message = 'Données invalides. Vérifiez votre email et mot de passe.';
+        message = 'Saisie invalide';
+        showToast(message, "error");
       } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         message = 'Erreur de connexion. Réessayez.';
+        showToast(message, "error");
       } else if (detail) {
         message = detail;
+        showToast(message, "error");
+      } else {
+        showToast(message, "error");
       }
       
       throw new Error(message);
