@@ -51,8 +51,28 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       }
     };
     
+    // Listen for premium required from axios interceptor (402 responses)
+    const handlePremiumRequired = async (event: CustomEvent) => {
+      console.log('💎 Premium required event received:', event.detail.message);
+      
+      // Show info toast
+      showToast(event.detail.message, "info");
+      
+      // Navigate to paywall after a short delay
+      setTimeout(async () => {
+        try {
+          const { router } = await import('expo-router');
+          router.push('/paywall');
+          console.log('✅ Navigated to paywall screen');
+        } catch (error) {
+          console.error('Failed to navigate to paywall:', error);
+        }
+      }, 1000);
+    };
+    
     if (typeof window !== 'undefined') {
       window.addEventListener('auth-error', handleAuthError as EventListener);
+      window.addEventListener('premium-required', handlePremiumRequired as EventListener);
     }
     
     const initAuth = async () => {
