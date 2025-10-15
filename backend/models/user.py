@@ -25,6 +25,10 @@ class AuthProvider(str, Enum):
     GOOGLE = "google"
     APPLE = "apple"
 
+class UserPlan(str, Enum):
+    FREE = "free"
+    PREMIUM = "premium"
+
 class UserBase(BaseModel):
     email: str = Field(..., description="User email address")
     first_name: Optional[str] = Field(None, max_length=50, description="First name")
