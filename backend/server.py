@@ -545,7 +545,7 @@ async def generate_meal_plan(
     days: int = 7,
     daily_calories: Optional[int] = None,
     dietary_restrictions: Optional[List[str]] = None,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_premium)
 ):
     """Generate meal plan using AI."""
     try:
