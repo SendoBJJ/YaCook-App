@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { resolveApiBase } from '../utils/apiBase';
 import { normalizeAuthPayload } from '../utils/emailUtils';
 import { tokenStorage } from '../utils/tokenStorage';
-import api from '../utils/api';
+import api from '../api/client';
 import { useToast } from '../components/Toast';
 
 type User = { id: string; email: string; name?: string };
