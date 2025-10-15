@@ -154,6 +154,54 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     }
   };
 
+  const register = async (userData: { email: string; password: string; first_name: string; last_name?: string }) => {
+    try {
+      const payload = {
+        email: userData.email.trim().toLowerCase(),
+        password: userData.password.trim(),
+        first_name: userData.first_name.trim(),
+        last_name: userData.last_name?.trim() || '',
+      };
+
+      console.log("Register payload", { email: payload.email, firstName: payload.first_name });
+
+      const response = await api.post('/auth/register', payload);
+      
+      if (response.status === 200 || response.status === 201) {
+        // Show success toast
+        showToast("Compte créé 🎉", "success");
+        
+        console.log('✅ Registration successful');
+        
+        // Redirect to login with email pre-filled
+        const { router } = await import('expo-router');
+        router.replace(`/auth/login?email=${encodeURIComponent(payload.email)}`);
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      
+      // Provide French error messages
+      let message = 'Erreur lors de la création du compte';
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail;
+      
+      if (status === 409 || detail?.includes('existe déjà')) {
+        message = 'Cet email existe déjà';
+        showToast(message, "error");
+      } else if (status === 422) {
+        message = 'Données invalides. Vérifiez vos informations.';
+        showToast(message, "error");
+      } else if (detail) {
+        message = detail;
+        showToast(message, "error");
+      } else {
+        showToast(message, "error");
+      }
+      
+      throw new Error(message);
+    }
+  };
+
   const logout = async () => {
     try {
       await tokenStorage.remove('access_token');
