@@ -135,6 +135,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       mounted = false;
       if (typeof window !== 'undefined') {
         window.removeEventListener('auth-error', handleAuthError as EventListener);
+        window.removeEventListener('premium-required', handlePremiumRequired as EventListener);
       }
     };
   }, []);
