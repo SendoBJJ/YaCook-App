@@ -96,7 +96,7 @@ export const useGoogle = () => {
     // Check if credentials are configured
     if (!iosClientId && !androidClientId && !webClientId) {
       console.warn('⚠️ No Google client IDs configured');
-      showToast('Configuration Google manquante', 'error');
+      showToast('Configuration Google manquante. Ajoutez vos OAuth credentials pour activer.', 'error');
       return;
     }
 
