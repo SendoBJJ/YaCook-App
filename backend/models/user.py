@@ -47,6 +47,10 @@ class UserBase(BaseModel):
     profile_public: bool = Field(default=False, description="Public profile visibility")
     analytics_consent: bool = Field(default=False, description="Analytics consent")
     notifications_enabled: bool = Field(default=True, description="Push notifications enabled")
+    
+    # Premium subscription
+    plan: UserPlan = Field(default=UserPlan.FREE, description="User subscription plan")
+    premium_until: Optional[datetime] = Field(None, description="Premium subscription expiry")
 
 class UserCreate(UserBase):
     password: Optional[str] = Field(None, min_length=8, description="Password for email auth")
