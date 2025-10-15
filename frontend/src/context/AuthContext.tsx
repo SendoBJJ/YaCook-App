@@ -91,19 +91,37 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       console.log("Login payload", { email, password: "***" });
 
       const response = await api.post('/auth/login', { email, password });
+      
+      if (response.status === 200 && response.data.access_token) {
+        // Save token
+        await tokenStorage.set('access_token', response.data.access_token);
+        
+        // Get user details via whoami
+        try {
+          const userResponse = await api.get('/whoami');
+          if (userResponse.status === 200) {
+            // Set authenticated user
+            const userInfo = response.data.user;
+            setUser({
+              id: userInfo.id,
+              email: userInfo.email,
+              name: `${userInfo.first_name || ''} ${userInfo.last_name || ''}`.trim() || userInfo.display_name || userInfo.email,
+            });
 
-      // Store tokens and user data
-      await tokenManager.setTokens(response.access_token, response.refresh_token);
-      await tokenManager.setUserData(response.user);
-
-      // Set simplified user state
-      setUser({
-        id: response.user.id,
-        name: response.user.first_name && response.user.last_name 
-          ? `${response.user.first_name} ${response.user.last_name}` 
-          : response.user.first_name || response.user.display_name,
-        email: response.user.email
-      });
+            // Show success toast
+            showToast("Connexion réussie ✅", "success");
+            
+            console.log('✅ Login successful');
+            
+            // Redirect to main app
+            const { router } = await import('expo-router');
+            router.replace('/');
+          }
+        } catch (whoamiError) {
+          console.error('Failed to get user info after login:', whoamiError);
+          showToast("Erreur de connexion", "error");
+        }
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       
