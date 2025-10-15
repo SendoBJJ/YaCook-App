@@ -167,23 +167,39 @@ export default function LoginScreen() {
               <View style={styles.divider} />
             </View>
 
+            {/* Google Sign In */}
             <SmartButton
               style={styles.socialButton}
-              onPress={() => showToast('Fonctionnalité bientôt disponible', 'info')}
+              onPress={signInWithGoogle}
+              disabled={googleLoading || isLoading}
+              loading={googleLoading}
               accessibilityLabel="Se connecter avec Google"
             >
               <Ionicons name="logo-google" size={20} color={Colors.light.text} />
               <Text style={styles.socialButtonText}>Continuer avec Google</Text>
             </SmartButton>
 
-            <SmartButton
-              style={styles.socialButton}
-              onPress={() => showToast('Fonctionnalité bientôt disponible', 'info')}
-              accessibilityLabel="Se connecter avec Apple"
-            >
-              <Ionicons name="logo-apple" size={20} color={Colors.light.text} />
-              <Text style={styles.socialButtonText}>Continuer avec Apple</Text>
-            </SmartButton>
+            {/* Apple Sign In - Only show on iOS if available */}
+            {Platform.OS === 'ios' && appleIsAvailable ? (
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                cornerRadius={BorderRadius.md}
+                style={styles.appleButton}
+                onPress={signInWithApple}
+              />
+            ) : Platform.OS !== 'ios' ? (
+              <SmartButton
+                style={styles.socialButton}
+                onPress={signInWithApple}
+                disabled={appleLoading || isLoading}
+                loading={appleLoading}
+                accessibilityLabel="Se connecter avec Apple"
+              >
+                <Ionicons name="logo-apple" size={20} color={Colors.light.text} />
+                <Text style={styles.socialButtonText}>Se connecter avec Apple</Text>
+              </SmartButton>
+            ) : null}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
