@@ -155,13 +155,17 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
   const logout = async () => {
     try {
-      await authApi.logout();
-    } catch (error) {
-      console.warn('Logout request failed:', error);
-    } finally {
-      // Always clear local state
+      await tokenStorage.remove('access_token');
       setUser(null);
-      await tokenManager.clearTokens();
+      
+      // Redirect to login
+      const { router } = await import('expo-router');
+      router.replace('/auth/login');
+      
+      console.log('✅ Logout successful');
+    } catch (error) {
+      console.error('Logout error:', error);
+      showToast("Erreur lors de la déconnexion", "error");
     }
   };
 
