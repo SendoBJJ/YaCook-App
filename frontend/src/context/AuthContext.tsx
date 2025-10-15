@@ -85,11 +85,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
   const login = async (rawEmail: any, rawPassword: any) => {
     try {
-      const payload = normalizeAuthPayload(
-        (rawEmail ?? '').toString(), 
-        (rawPassword ?? '').toString()
-      );
-      const { email, password } = payload;
+      // Normalize email to trim and lowercase
+      const email = (rawEmail ?? '').toString().trim().toLowerCase();
+      const password = (rawPassword ?? '').toString().trim();
 
       if (!email || !password) {
         showToast("Veuillez saisir un email et un mot de passe.", "error");
@@ -98,17 +96,21 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
       console.log("Login payload", { email, password: "***" });
 
+      // Call login API (no Authorization header will be sent due to isAuthPath)
       const response = await api.post('/auth/login', { email, password });
       
       if (response.status === 200 && response.data.access_token) {
         // Save token
         await tokenStorage.set('access_token', response.data.access_token);
+        console.log('🔑 Token saved successfully');
         
-        // Get user details via whoami
+        // Call /api/whoami to validate token and get instance info
         try {
-          const userResponse = await api.get('/whoami');
-          if (userResponse.status === 200) {
-            // Set authenticated user
+          const whoamiResponse = await api.get('/whoami');
+          if (whoamiResponse.status === 200) {
+            console.log('✅ Token validated via /api/whoami');
+            
+            // Set authenticated user from login response
             const userInfo = response.data.user;
             setUser({
               id: userInfo.id,
@@ -119,15 +121,17 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
             // Show success toast
             showToast("Connexion réussie ✅", "success");
             
-            console.log('✅ Login successful');
+            console.log('✅ Login successful, redirecting to dashboard');
             
             // Redirect to main app
             const { router } = await import('expo-router');
             router.replace('/');
           }
-        } catch (whoamiError) {
-          console.error('Failed to get user info after login:', whoamiError);
-          showToast("Erreur de connexion", "error");
+        } catch (whoamiError: any) {
+          console.error('Failed to validate token after login:', whoamiError);
+          // Clear invalid token
+          await tokenStorage.remove('access_token');
+          showToast("Erreur de validation du token", "error");
         }
       }
     } catch (error: any) {
