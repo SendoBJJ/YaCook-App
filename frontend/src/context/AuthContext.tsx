@@ -24,9 +24,24 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   useEffect(() => {
     let mounted = true;
     
-    // Listen for auth errors from axios interceptor
-    const handleAuthError = (event: CustomEvent) => {
+    // Listen for auth errors from axios interceptor (401 on protected routes)
+    const handleAuthError = async (event: CustomEvent) => {
+      console.log('🚨 Auth error event received in AuthContext:', event.detail.message);
+      
+      // Show French toast
       showToast(event.detail.message, "error");
+      
+      // Clear user state
+      setUser(null);
+      
+      // Redirect to login screen
+      try {
+        const { router } = await import('expo-router');
+        router.replace('/auth/login');
+        console.log('✅ Redirected to login screen');
+      } catch (error) {
+        console.error('Failed to redirect to login:', error);
+      }
     };
     
     if (typeof window !== 'undefined') {
