@@ -98,7 +98,7 @@ async def lifespan(app: FastAPI):
             "http://localhost:19006",
             "http://localhost:3000", 
             "https://app.yacook.app",
-            "https://french-recipe-app.preview.emergentagent.com",
+            "https://yacook-launch.preview.emergentagent.com",
             "https://app.emergent.sh"
         ]
         logger.info(f"🌐 CORS allowed origins: {allowed_origins}")

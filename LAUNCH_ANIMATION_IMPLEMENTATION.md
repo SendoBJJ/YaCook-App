@@ -391,7 +391,7 @@ const colorScheme = useColorScheme();
 - Testing on Web browsers
 - Recording demo videos
 
-**Preview URL**: https://french-recipe-app.preview.emergentagent.com
+**Preview URL**: https://yacook-launch.preview.emergentagent.com
 
 **Note**: On web, the animation plays but native splash is not as seamless. For best experience, test on iOS/Android via Expo Go or EAS build.
 

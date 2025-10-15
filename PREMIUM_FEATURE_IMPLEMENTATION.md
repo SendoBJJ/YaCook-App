@@ -330,23 +330,23 @@ Auto-navigate to /paywall after 1 second
 ### Backend Verification
 ```bash
 # Test with free user
-curl -X POST https://french-recipe-app.preview.emergentagent.com/api/auth/login \
+curl -X POST https://yacook-launch.preview.emergentagent.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test.auth@yacook.fr","password":"TestPassword123!"}'
 # Copy access_token
 
-curl -X POST https://french-recipe-app.preview.emergentagent.com/api/ai/generate-meal-plan \
+curl -X POST https://yacook-launch.preview.emergentagent.com/api/ai/generate-meal-plan \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json"
 # Expected: HTTP 402 with detail: "premium_required"
 
 # Test with premium user
-curl -X POST https://french-recipe-app.preview.emergentagent.com/api/auth/login \
+curl -X POST https://yacook-launch.preview.emergentagent.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test.premium@yacook.fr","password":"PremiumPass123!"}'
 # Copy access_token
 
-curl -X POST https://french-recipe-app.preview.emergentagent.com/api/ai/generate-meal-plan \
+curl -X POST https://yacook-launch.preview.emergentagent.com/api/ai/generate-meal-plan \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json"
 # Expected: HTTP 200 with meal plan data
@@ -422,7 +422,7 @@ curl -X POST https://french-recipe-app.preview.emergentagent.com/api/ai/generate
 - Free user: `test.auth@yacook.fr` / `TestPassword123!`
 - Premium user: `test.premium@yacook.fr` / `PremiumPass123!`
 
-**Preview URL**: https://french-recipe-app.preview.emergentagent.com
+**Preview URL**: https://yacook-launch.preview.emergentagent.com
 
 ---
 

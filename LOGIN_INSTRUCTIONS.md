@@ -38,10 +38,10 @@ These credentials are already created and ready to use:
 - **Email**: `test.auth@yacook.fr`
 - **Password**: `TestPassword123!`
 
-👉 Go to https://french-recipe-app.preview.emergentagent.com and login with these credentials.
+👉 Go to https://yacook-launch.preview.emergentagent.com and login with these credentials.
 
 ### Option 2: Create Your Own Account
-1. Go to https://french-recipe-app.preview.emergentagent.com
+1. Go to https://yacook-launch.preview.emergentagent.com
 2. Click "S'inscrire" (Sign up) at the bottom
 3. Fill in the registration form:
    - First name: Your first name
