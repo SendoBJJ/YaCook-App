@@ -644,6 +644,53 @@ async def get_product(barcode: str, language: str = "fr"):
             detail="Erreur lors de la récupération du produit"
         )
 
+@app.post("/api/scan/photo")
+async def scan_photo(
+    file: UploadFile = File(...),
+    language: str = "fr",
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Scan a product photo using AI and match to Open Food Facts.
+    Returns product information or candidate matches.
+    """
+    try:
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith('image/'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Le fichier doit être une image (JPEG, PNG, WebP)"
+            )
+        
+        # Read image data
+        image_data = await file.read()
+        
+        # Validate file size (8 MB limit)
+        from services.photo_scan_service import photo_scan_service
+        if not photo_scan_service.validate_image_size(len(image_data), max_mb=8):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="L'image est trop volumineuse (max 8 MB)"
+            )
+        
+        logger.info(f"📸 Processing photo scan for user: {current_user.get('email', 'unknown')[:10]}...")
+        
+        # Process the photo
+        result = await photo_scan_service.process_photo(image_data, language)
+        
+        logger.info(f"✅ Photo scan complete - matched: {result.get('matched', False)}, confidence: {result.get('confidence', 0)}")
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing photo scan: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors du traitement de la photo"
+        )
+
 # AI Recipe Generation endpoint
 @app.post("/api/ai/generate-recipe")
 async def generate_recipe(
