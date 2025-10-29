@@ -1,0 +1,30 @@
+[33mWARNING: The legacy expo-cli does not support Node +17. Migrate to the new local Expo CLI: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421.[39m
+[14:23:37] Starting project at /app/frontend
+[14:23:37] Some dependencies are incompatible with the installed expo package version:
+[14:23:37]  - expo-blur - expected version: ~15.0.7 - actual version installed: 14.1.5
+[14:23:37]  - expo-constants - expected version: ~18.0.9 - actual version installed: 17.1.7
+[14:23:37]  - expo-font - expected version: ~14.0.9 - actual version installed: 13.3.2
+[14:23:37]  - expo-haptics - expected version: ~15.0.7 - actual version installed: 14.1.4
+[14:23:37]  - expo-linking - expected version: ~8.0.8 - actual version installed: 7.1.7
+[14:23:37]  - expo-router - expected version: ~6.0.11 - actual version installed: 5.1.7
+[14:23:37]  - expo-splash-screen - expected version: ~31.0.10 - actual version installed: 0.30.10
+[14:23:37]  - expo-status-bar - expected version: ~3.0.8 - actual version installed: 2.2.3
+[14:23:37]  - expo-symbols - expected version: ~1.0.7 - actual version installed: 0.4.5
+[14:23:37]  - expo-system-ui - expected version: ~6.0.7 - actual version installed: 5.0.11
+[14:23:37]  - expo-web-browser - expected version: ~15.0.8 - actual version installed: 14.2.0
+[14:23:37]  - react - expected version: 19.1.0 - actual version installed: 19.0.0
+[14:23:37]  - react-dom - expected version: 19.1.0 - actual version installed: 19.0.0
+[14:23:37]  - react-native - expected version: 0.81.4 - actual version installed: 0.79.5
+[14:23:37]  - react-native-gesture-handler - expected version: ~2.28.0 - actual version installed: 2.24.0
+[14:23:37]  - react-native-reanimated - expected version: ~4.1.1 - actual version installed: 3.17.5
+[14:23:37]  - react-native-svg - expected version: 15.12.1 - actual version installed: 15.14.0
+[14:23:37]  - react-native-web - expected version: ~0.21.0 - actual version installed: 0.20.0
+[14:23:37]  - react-native-webview - expected version: 13.15.0 - actual version installed: 13.13.5
+[14:23:37] Your project may not work correctly until you install the correct versions of the packages.
+To install the correct versions of these packages, please run: expo doctor --fix-dependencies,
+or install individual packages by running expo install [package-name ...]
+[14:23:37] ExpoMetroConfig.loadAsync is not a function
+[14:23:37] TypeError: ExpoMetroConfig.loadAsync is not a function
+    at runMetroDevServerAsync (/usr/lib/node_modules/expo-cli/node_modules/@expo/dev-server/src/MetroDevServer.ts:86:45)
+    at startDevServerAsync (/usr/lib/node_modules/expo-cli/node_modules/xdl/src/start/startDevServerAsync.ts:75:77)
+    at startAsync (/usr/lib/node_modules/expo-cli/node_modules/xdl/src/start/startAsync.ts:84:41)
