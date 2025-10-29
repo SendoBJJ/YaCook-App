@@ -8,23 +8,71 @@ import {
   ActivityIndicator,
   ScrollView,
   Modal,
+  Image,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarCodeScanner } from 'expo-barcode-scanner';
+import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { productsApi } from '../../src/services/api';
+import { client } from '../../src/api/client';
 import { Colors } from '../../src/constants/Colors';
 import { AppTexts } from '../../src/constants/Texts';
 import { Spacing, BorderRadius, FontSize, FontWeight, Shadow } from '../../src/constants/Layout';
 import { Product } from '../../src/types';
+import { SmartButton } from '../../src/components/SmartButton';
+import { useToast } from '../../src/components/Toast';
+
+type ScanMode = 'barcode' | 'photo';
+
+type PhotoScanResult = {
+  matched: boolean;
+  confidence?: number;
+  product?: {
+    ean?: string;
+    name: string;
+    brand?: string;
+    image?: string;
+    quantity?: string;
+    nutriments?: any;
+    nutriscore_grade?: string;
+    ingredients_text?: string;
+    allergens_tags?: string[];
+    categories_tags?: string[];
+  };
+  candidates?: Array<{
+    code?: string;
+    name: string;
+    brand?: string;
+    image?: string;
+    confidence: number;
+    nutriscore_grade?: string;
+  }>;
+  error?: string;
+  message?: string;
+};
 
 export default function ScanScreen() {
+  // Mode selection
+  const [scanMode, setScanMode] = useState<ScanMode>('barcode');
+  
+  // Barcode scanning state
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  
+  // Photo scanning state
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [photoResult, setPhotoResult] = useState<PhotoScanResult | null>(null);
+  
+  // Common state
   const [isLoading, setIsLoading] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  
+  const { showToast, ToastComponent } = useToast();
 
   useEffect(() => {
     requestCameraPermission();
@@ -40,6 +88,7 @@ export default function ScanScreen() {
     }
   };
 
+  // Barcode scanning handlers
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
     if (scanned || isLoading) return;
     
@@ -53,23 +102,13 @@ export default function ScanScreen() {
         setProduct(response.product);
         setShowProductModal(true);
       } else {
-        Alert.alert(
-          AppTexts.scan.productNotFound,
-          'Ce produit n\'est pas encore dans notre base de données.',
-          [
-            { text: 'OK', onPress: () => resetScan() }
-          ]
-        );
+        showToast('Produit non trouvé dans la base de données', 'error');
+        resetScan();
       }
     } catch (error) {
       console.error('Error scanning product:', error);
-      Alert.alert(
-        'Erreur',
-        'Impossible de récupérer les informations du produit.',
-        [
-          { text: 'Réessayer', onPress: () => resetScan() }
-        ]
-      );
+      showToast('Impossible de récupérer les informations du produit', 'error');
+      resetScan();
     } finally {
       setIsLoading(false);
     }
@@ -91,6 +130,191 @@ export default function ScanScreen() {
     resetScan();
   };
 
+  // Photo scanning handlers
+  const requestMediaPermissions = async (type: 'camera' | 'library'): Promise<boolean> => {
+    try {
+      let status;
+      if (type === 'camera') {
+        const result = await ImagePicker.requestCameraPermissionsAsync();
+        status = result.status;
+      } else {
+        const result = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        status = result.status;
+      }
+      
+      if (status !== 'granted') {
+        showToast('Accès refusé à l\'appareil photo/la galerie', 'error');
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Permission error:', error);
+      return false;
+    }
+  };
+
+  const pickImageFromCamera = async () => {
+    const hasPermission = await requestMediaPermissions('camera');
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const uri = result.assets[0].uri;
+        const fileSize = result.assets[0].fileSize || 0;
+        
+        // Check file size (8 MB limit)
+        if (fileSize > 8 * 1024 * 1024) {
+          showToast('Image trop lourde (max. 8 Mo)', 'error');
+          return;
+        }
+        
+        setSelectedImage(uri);
+        setPhotoResult(null);
+      }
+    } catch (error) {
+      console.error('Camera error:', error);
+      showToast('Erreur lors de la prise de photo', 'error');
+    }
+  };
+
+  const pickImageFromGallery = async () => {
+    const hasPermission = await requestMediaPermissions('library');
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const uri = result.assets[0].uri;
+        const fileSize = result.assets[0].fileSize || 0;
+        
+        // Check file size (8 MB limit)
+        if (fileSize > 8 * 1024 * 1024) {
+          showToast('Image trop lourde (max. 8 Mo)', 'error');
+          return;
+        }
+        
+        setSelectedImage(uri);
+        setPhotoResult(null);
+      }
+    } catch (error) {
+      console.error('Gallery error:', error);
+      showToast('Erreur lors de la sélection de l\'image', 'error');
+    }
+  };
+
+  const removeSelectedImage = () => {
+    setSelectedImage(null);
+    setPhotoResult(null);
+  };
+
+  const analyzePhoto = async () => {
+    if (!selectedImage) return;
+
+    setIsAnalyzing(true);
+    setPhotoResult(null);
+
+    try {
+      // Create form data
+      const formData = new FormData();
+      
+      // Extract filename from URI
+      const filename = selectedImage.split('/').pop() || 'photo.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : 'image/jpeg';
+      
+      // Append file
+      formData.append('file', {
+        uri: selectedImage,
+        name: filename,
+        type: type,
+      } as any);
+
+      console.log('📸 Analyzing photo...');
+      
+      // Call API
+      const response = await client.post('/scan/photo', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        params: {
+          language: 'fr'
+        }
+      });
+
+      console.log('✅ Photo analysis result:', response.data);
+      
+      const result = response.data as PhotoScanResult;
+      setPhotoResult(result);
+
+      if (result.matched && result.product) {
+        showToast('Analyse terminée ✅', 'success');
+      } else if (result.candidates && result.candidates.length > 0) {
+        showToast('Plusieurs produits possibles', 'info');
+      } else {
+        showToast(
+          result.error || 'Produit introuvable. Réessayez avec une photo de l\'emballage face avant.',
+          'error'
+        );
+      }
+    } catch (error: any) {
+      console.error('Photo analysis error:', error);
+      
+      if (error.response?.status === 400) {
+        showToast('Image invalide ou trop lourde (max. 8 Mo)', 'error');
+      } else if (error.response?.status === 401) {
+        showToast('Session expirée, veuillez vous reconnecter', 'error');
+      } else {
+        showToast('Service indisponible, réessayez', 'error');
+      }
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const selectCandidate = async (candidate: any) => {
+    if (!candidate.code) {
+      showToast('Code produit manquant', 'error');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await productsApi.getProductByBarcode(candidate.code, 'fr');
+      
+      if (response.success && response.product) {
+        setProduct(response.product);
+        setShowProductModal(true);
+      } else {
+        showToast('Impossible de charger les détails du produit', 'error');
+      }
+    } catch (error) {
+      console.error('Error loading candidate:', error);
+      showToast('Erreur lors du chargement', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const switchToBarcodeMode = () => {
+    setScanMode('barcode');
+    setSelectedImage(null);
+    setPhotoResult(null);
+  };
+
+  // Render helpers
   const renderNutrimentValue = (value: number | undefined, unit: string = 'g') => {
     if (value === undefined || value === null) return 'N/A';
     return `${value.toFixed(1)} ${unit}`;
@@ -107,6 +331,312 @@ export default function ScanScreen() {
     }
   };
 
+  // Render mode selector
+  const renderModeSelector = () => (
+    <View style={styles.modeSelector}>
+      <TouchableOpacity
+        style={[
+          styles.modeButton,
+          scanMode === 'barcode' && styles.modeButtonActive
+        ]}
+        onPress={() => setScanMode('barcode')}
+      >
+        <Ionicons 
+          name="barcode-outline" 
+          size={20} 
+          color={scanMode === 'barcode' ? Colors.light.primary : Colors.light.muted} 
+        />
+        <Text style={[
+          styles.modeButtonText,
+          scanMode === 'barcode' && styles.modeButtonTextActive
+        ]}>
+          Code-barres
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.modeButton,
+          scanMode === 'photo' && styles.modeButtonActive
+        ]}
+        onPress={() => setScanMode('photo')}
+      >
+        <Ionicons 
+          name="camera-outline" 
+          size={20} 
+          color={scanMode === 'photo' ? Colors.light.primary : Colors.light.muted} 
+        />
+        <Text style={[
+          styles.modeButtonText,
+          scanMode === 'photo' && styles.modeButtonTextActive
+        ]}>
+          Photo (IA)
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Render barcode panel
+  const renderBarcodePanel = () => {
+    if (hasPermission === null) {
+      return (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={Colors.light.primary} />
+          <Text style={styles.centerText}>Demande d'autorisation...</Text>
+        </View>
+      );
+    }
+
+    if (hasPermission === false) {
+      return (
+        <View style={styles.centerContainer}>
+          <Ionicons name="camera-off" size={64} color={Colors.light.muted} />
+          <Text style={styles.centerTitle}>Accès caméra requis</Text>
+          <Text style={styles.centerText}>
+            Veuillez autoriser l'accès à la caméra dans les paramètres
+          </Text>
+          <SmartButton
+            style={styles.permissionButton}
+            onPress={requestCameraPermission}
+          >
+            <Text style={styles.buttonText}>Autoriser</Text>
+          </SmartButton>
+        </View>
+      );
+    }
+
+    if (!isScanning) {
+      return (
+        <View style={styles.centerContainer}>
+          <Ionicons name="barcode" size={64} color={Colors.light.primary} />
+          <Text style={styles.centerTitle}>Scanner un code-barres</Text>
+          <Text style={styles.centerText}>
+            Placez le code-barres dans le cadre pour scanner
+          </Text>
+          <SmartButton
+            style={styles.startButton}
+            onPress={startScanning}
+          >
+            <Ionicons name="scan" size={20} color={Colors.light.background} />
+            <Text style={styles.buttonText}>Commencer le scan</Text>
+          </SmartButton>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.scannerContainer}>
+        <BarCodeScanner
+          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+          style={StyleSheet.absoluteFillObject}
+        />
+        
+        <View style={styles.scannerOverlay}>
+          <View style={styles.scannerFrame} />
+          <Text style={styles.scannerHint}>
+            Placez le code-barres dans le cadre
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={stopScanning}
+        >
+          <Ionicons name="close" size={24} color={Colors.light.background} />
+        </TouchableOpacity>
+
+        {isLoading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color={Colors.light.background} />
+            <Text style={styles.loadingText}>Recherche du produit...</Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  // Render photo panel
+  const renderPhotoPanel = () => (
+    <ScrollView style={styles.photoPanel} contentContainerStyle={styles.photoPanelContent}>
+      <Text style={styles.panelTitle}>Scanner avec l'IA</Text>
+      <Text style={styles.panelHint}>
+        Astuce : prenez la face avant nette, bien éclairée
+      </Text>
+
+      {/* Image picker buttons */}
+      {!selectedImage && (
+        <View style={styles.photoActions}>
+          <SmartButton
+            style={styles.photoButton}
+            onPress={pickImageFromCamera}
+          >
+            <Ionicons name="camera" size={24} color={Colors.light.background} />
+            <Text style={styles.photoButtonText}>Prendre une photo</Text>
+          </SmartButton>
+
+          <SmartButton
+            style={styles.photoButton}
+            onPress={pickImageFromGallery}
+          >
+            <Ionicons name="images" size={24} color={Colors.light.background} />
+            <Text style={styles.photoButtonText}>Choisir depuis la galerie</Text>
+          </SmartButton>
+        </View>
+      )}
+
+      {/* Image preview */}
+      {selectedImage && (
+        <View style={styles.imagePreviewContainer}>
+          <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+          <TouchableOpacity
+            style={styles.removeImageButton}
+            onPress={removeSelectedImage}
+          >
+            <Ionicons name="close-circle" size={32} color={Colors.light.error} />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Analyze button */}
+      {selectedImage && !photoResult && (
+        <SmartButton
+          style={styles.analyzeButton}
+          onPress={analyzePhoto}
+          disabled={isAnalyzing}
+          loading={isAnalyzing}
+        >
+          <Text style={styles.analyzeButtonText}>
+            {isAnalyzing ? 'Analyse en cours...' : 'Analyser'}
+          </Text>
+        </SmartButton>
+      )}
+
+      {/* Results */}
+      {photoResult && renderPhotoResults()}
+    </ScrollView>
+  );
+
+  // Render photo scan results
+  const renderPhotoResults = () => {
+    if (!photoResult) return null;
+
+    // Single match
+    if (photoResult.matched && photoResult.product) {
+      const prod = photoResult.product;
+      return (
+        <View style={styles.resultCard}>
+          <Text style={styles.resultTitle}>Produit trouvé ✅</Text>
+          <Text style={styles.confidenceText}>
+            Confiance: {((photoResult.confidence || 0) * 100).toFixed(0)}%
+          </Text>
+
+          {prod.image && (
+            <Image source={{ uri: prod.image }} style={styles.productImage} />
+          )}
+
+          <Text style={styles.productName}>{prod.name}</Text>
+          {prod.brand && <Text style={styles.productBrand}>{prod.brand}</Text>}
+          {prod.quantity && <Text style={styles.productQuantity}>{prod.quantity}</Text>}
+
+          {prod.nutriscore_grade && (
+            <View style={[styles.nutriScoreBadge, { backgroundColor: getNutriScoreColor(prod.nutriscore_grade) }]}>
+              <Text style={styles.nutriScoreText}>{prod.nutriscore_grade.toUpperCase()}</Text>
+            </View>
+          )}
+
+          <View style={styles.resultActions}>
+            <SmartButton
+              style={styles.resultButton}
+              onPress={() => {
+                // Navigate to details or add to list
+                showToast('Fonctionnalité à venir', 'info');
+              }}
+            >
+              <Text style={styles.resultButtonText}>Voir détails</Text>
+            </SmartButton>
+
+            <SmartButton
+              style={styles.analyzeButton}
+              onPress={removeSelectedImage}
+            >
+              <Text style={styles.analyzeButtonText}>Nouvelle analyse</Text>
+            </SmartButton>
+          </View>
+        </View>
+      );
+    }
+
+    // Candidates
+    if (photoResult.candidates && photoResult.candidates.length > 0) {
+      return (
+        <View style={styles.candidatesContainer}>
+          <Text style={styles.resultTitle}>Plusieurs produits possibles</Text>
+          <Text style={styles.candidatesHint}>Choisissez le bon produit :</Text>
+
+          {photoResult.candidates.map((candidate, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.candidateCard}
+              onPress={() => selectCandidate(candidate)}
+            >
+              {candidate.image && (
+                <Image source={{ uri: candidate.image }} style={styles.candidateImage} />
+              )}
+              
+              <View style={styles.candidateInfo}>
+                <Text style={styles.candidateName}>{candidate.name}</Text>
+                {candidate.brand && (
+                  <Text style={styles.candidateBrand}>{candidate.brand}</Text>
+                )}
+                <Text style={styles.candidateConfidence}>
+                  Confiance: {((candidate.confidence || 0) * 100).toFixed(0)}%
+                </Text>
+              </View>
+
+              <Ionicons name="chevron-forward" size={24} color={Colors.light.muted} />
+            </TouchableOpacity>
+          ))}
+
+          <SmartButton
+            style={styles.retryButton}
+            onPress={removeSelectedImage}
+          >
+            <Text style={styles.retryButtonText}>Nouvelle photo</Text>
+          </SmartButton>
+        </View>
+      );
+    }
+
+    // No match
+    return (
+      <View style={styles.noMatchContainer}>
+        <Ionicons name="sad-outline" size={64} color={Colors.light.muted} />
+        <Text style={styles.noMatchTitle}>Produit introuvable</Text>
+        <Text style={styles.noMatchText}>
+          Réessayez avec une photo de l'emballage face avant, bien éclairée
+        </Text>
+
+        <View style={styles.noMatchActions}>
+          <SmartButton
+            style={styles.switchButton}
+            onPress={switchToBarcodeMode}
+          >
+            <Ionicons name="barcode" size={20} color={Colors.light.background} />
+            <Text style={styles.switchButtonText}>Scanner le code-barres</Text>
+          </SmartButton>
+
+          <SmartButton
+            style={styles.retryButton}
+            onPress={removeSelectedImage}
+          >
+            <Text style={styles.retryButtonText}>Nouvelle photo</Text>
+          </SmartButton>
+        </View>
+      </View>
+    );
+  };
+
+  // Render product details modal (reused from barcode)
   const renderProductDetails = () => {
     if (!product) return null;
 
@@ -129,11 +659,11 @@ export default function ScanScreen() {
           <ScrollView style={styles.modalContent} contentContainerStyle={styles.modalScrollContent}>
             {/* Product name */}
             <View style={styles.productHeader}>
-              <Text style={styles.productName}>
+              <Text style={styles.productNameModal}>
                 {product.product_name_fr || product.product_name || 'Produit sans nom'}
               </Text>
               {product.brands && (
-                <Text style={styles.productBrand}>{product.brands}</Text>
+                <Text style={styles.productBrandModal}>{product.brands}</Text>
               )}
             </View>
 
@@ -150,7 +680,7 @@ export default function ScanScreen() {
             {/* Nutritional information */}
             {product.nutriments && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Valeurs nutritionnelles ({AppTexts.scan.per100g})</Text>
+                <Text style={styles.sectionTitle}>Valeurs nutritionnelles (pour 100g)</Text>
                 <View style={styles.nutrimentsList}>
                   <View style={styles.nutrimentRow}>
                     <Text style={styles.nutrimentLabel}>Calories</Text>
@@ -171,71 +701,11 @@ export default function ScanScreen() {
                     </Text>
                   </View>
                   <View style={styles.nutrimentRow}>
-                    <Text style={styles.nutrimentLabel}>Sucres</Text>
-                    <Text style={styles.nutrimentValue}>
-                      {renderNutrimentValue(product.nutriments.sugars)}
-                    </Text>
-                  </View>
-                  <View style={styles.nutrimentRow}>
-                    <Text style={styles.nutrimentLabel}>Fibres</Text>
-                    <Text style={styles.nutrimentValue}>
-                      {renderNutrimentValue(product.nutriments.fiber)}
-                    </Text>
-                  </View>
-                  <View style={styles.nutrimentRow}>
                     <Text style={styles.nutrimentLabel}>Protéines</Text>
                     <Text style={styles.nutrimentValue}>
                       {renderNutrimentValue(product.nutriments.proteins)}
                     </Text>
                   </View>
-                  <View style={styles.nutrimentRow}>
-                    <Text style={styles.nutrimentLabel}>Sel</Text>
-                    <Text style={styles.nutrimentValue}>
-                      {renderNutrimentValue(product.nutriments.salt)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {/* Ingredients */}
-            {(product.ingredients_text_fr || product.ingredients_text) && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Ingrédients</Text>
-                <Text style={styles.ingredientsText}>
-                  {product.ingredients_text_fr || product.ingredients_text}
-                </Text>
-              </View>
-            )}
-
-            {/* Allergens */}
-            {product.allergens_tags && product.allergens_tags.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Allergènes</Text>
-                <View style={styles.tagsContainer}>
-                  {product.allergens_tags.map((allergen, index) => (
-                    <View key={index} style={styles.allergenTag}>
-                      <Text style={styles.allergenText}>
-                        {allergen.replace('en:', '').replace(/-/g, ' ')}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* Categories */}
-            {product.categories_tags && product.categories_tags.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Catégories</Text>
-                <View style={styles.tagsContainer}>
-                  {product.categories_tags.slice(0, 5).map((category, index) => (
-                    <View key={index} style={styles.categoryTag}>
-                      <Text style={styles.categoryText}>
-                        {category.replace('en:', '').replace(/-/g, ' ')}
-                      </Text>
-                    </View>
-                  ))}
                 </View>
               </View>
             )}
@@ -249,7 +719,7 @@ export default function ScanScreen() {
                 resetScan();
               }}
             >
-              <Text style={styles.scanAgainButtonText}>Scanner un autre produit</Text>
+              <Text style={styles.scanAgainText}>Scanner un autre produit</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -257,105 +727,16 @@ export default function ScanScreen() {
     );
   };
 
-  const renderCameraView = () => (
-    <View style={styles.cameraContainer}>
-      <BarCodeScanner
-        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-        style={styles.camera}
-      >
-        <View style={styles.scannerOverlay}>
-          <View style={styles.scannerFrame}>
-            <View style={[styles.corner, styles.topLeft]} />
-            <View style={[styles.corner, styles.topRight]} />
-            <View style={[styles.corner, styles.bottomLeft]} />
-            <View style={[styles.corner, styles.bottomRight]} />
-            
-            {/* Scanning line animation */}
-            <View style={styles.scanLine} />
-          </View>
-          
-          <Text style={styles.scannerText}>
-            Placez le code-barres dans le cadre
-          </Text>
-          
-          {isLoading && (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color={Colors.light.background} />
-              <Text style={styles.loadingText}>Analyse du produit...</Text>
-            </View>
-          )}
-        </View>
-      </BarCodeScanner>
-      
-      <TouchableOpacity style={styles.stopButton} onPress={stopScanning}>
-        <Ionicons name="close" size={24} color={Colors.light.background} />
-      </TouchableOpacity>
-    </View>
-  );
-
-  if (hasPermission === null) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={Colors.light.primary} />
-          <Text style={styles.loadingText}>Demande d'autorisation caméra...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (hasPermission === false) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.centerContent}>
-          <Ionicons name="camera" size={64} color={Colors.light.muted} />
-          <Text style={styles.permissionTitle}>Accès caméra requis</Text>
-          <Text style={styles.permissionText}>
-            YaCook a besoin d'accéder à votre caméra pour scanner les codes-barres des produits.
-          </Text>
-          <TouchableOpacity style={styles.permissionButton} onPress={requestCameraPermission}>
-            <Text style={styles.permissionButtonText}>Autoriser l'accès</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (isScanning) {
-    return (
-      <>
-        {renderCameraView()}
-        {renderProductDetails()}
-      </>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.scanPrompt}>
-          <Ionicons name="scan-circle" size={120} color={Colors.light.primary} />
-          <Text style={styles.scanTitle}>Scanner un produit</Text>
-          <Text style={styles.scanDescription}>
-            Scannez le code-barres d'un produit pour obtenir ses informations nutritionnelles et ses ingrédients.
-          </Text>
-          
-          <TouchableOpacity style={styles.startScanButton} onPress={startScanning}>
-            <Ionicons name="camera" size={24} color={Colors.light.background} />
-            <Text style={styles.startScanButtonText}>Commencer le scan</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {/* Recent scans placeholder */}
-        <View style={styles.recentScans}>
-          <Text style={styles.recentScansTitle}>Derniers scans</Text>
-          <Text style={styles.recentScansEmpty}>
-            Aucun scan récent. Commencez par scanner votre premier produit !
-          </Text>
-        </View>
-      </View>
+      {renderModeSelector()}
       
+      <View style={styles.content}>
+        {scanMode === 'barcode' ? renderBarcodePanel() : renderPhotoPanel()}
+      </View>
+
       {renderProductDetails()}
+      <ToastComponent />
     </SafeAreaView>
   );
 }
@@ -365,157 +746,120 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.light.background,
   },
-  centerContent: {
+  content: {
+    flex: 1,
+  },
+  
+  // Mode selector
+  modeSelector: {
+    flexDirection: 'row',
+    backgroundColor: Colors.light.background,
+    padding: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  modeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+  },
+  modeButtonActive: {
+    backgroundColor: Colors.light.primaryLight,
+  },
+  modeButtonText: {
+    fontSize: FontSize.md,
+    color: Colors.light.muted,
+    fontWeight: FontWeight.medium,
+  },
+  modeButtonTextActive: {
+    color: Colors.light.primary,
+    fontWeight: FontWeight.semiBold,
+  },
+
+  // Center container
+  centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
   },
-  content: {
-    flex: 1,
-    padding: Spacing.lg,
-  },
-  scanPrompt: {
-    alignItems: 'center',
-    marginTop: Spacing.xxl,
-  },
-  scanTitle: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.bold,
-    color: Colors.light.text,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.md,
-  },
-  scanDescription: {
-    fontSize: FontSize.md,
-    color: Colors.light.muted,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: Spacing.xl,
-  },
-  startScanButton: {
-    flexDirection: 'row',
-    backgroundColor: Colors.light.primary,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: BorderRadius.lg,
-    alignItems: 'center',
-    ...Shadow.medium,
-  },
-  startScanButtonText: {
-    color: Colors.light.background,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
-    marginLeft: Spacing.sm,
-  },
-  recentScans: {
-    marginTop: Spacing.xxl,
-  },
-  recentScansTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
-    color: Colors.light.text,
-    marginBottom: Spacing.md,
-  },
-  recentScansEmpty: {
-    fontSize: FontSize.md,
-    color: Colors.light.muted,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  permissionTitle: {
+  centerTitle: {
     fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.semiBold,
     color: Colors.light.text,
     marginTop: Spacing.lg,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
-  permissionText: {
+  centerText: {
     fontSize: FontSize.md,
     color: Colors.light.muted,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   permissionButton: {
     backgroundColor: Colors.light.primary,
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xl,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.lg,
   },
-  permissionButtonText: {
+  buttonText: {
     color: Colors.light.background,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
   },
-  cameraContainer: {
-    flex: 1,
+  startButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.light.primary,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.lg,
   },
-  camera: {
+
+  // Scanner
+  scannerContainer: {
     flex: 1,
+    position: 'relative',
   },
   scannerOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   scannerFrame: {
     width: 250,
-    height: 150,
-    position: 'relative',
-  },
-  corner: {
-    position: 'absolute',
-    width: 20,
-    height: 20,
+    height: 250,
+    borderWidth: 2,
     borderColor: Colors.light.primary,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: 'transparent',
   },
-  topLeft: {
-    top: 0,
-    left: 0,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-  },
-  topRight: {
-    top: 0,
-    right: 0,
-    borderTopWidth: 3,
-    borderRightWidth: 3,
-  },
-  bottomLeft: {
-    bottom: 0,
-    left: 0,
-    borderBottomWidth: 3,
-    borderLeftWidth: 3,
-  },
-  bottomRight: {
-    bottom: 0,
-    right: 0,
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-  },
-  scanLine: {
-    position: 'absolute',
-    top: '50%',
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: Colors.light.primary,
-  },
-  scannerText: {
+  scannerHint: {
     color: Colors.light.background,
     fontSize: FontSize.md,
     marginTop: Spacing.xl,
     textAlign: 'center',
   },
-  loadingOverlay: {
+  closeButton: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    top: Spacing.xl,
+    right: Spacing.xl,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 50,
+    padding: Spacing.sm,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -524,17 +868,248 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     marginTop: Spacing.md,
   },
-  stopButton: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 25,
-    width: 50,
-    height: 50,
+
+  // Photo panel
+  photoPanel: {
+    flex: 1,
+  },
+  photoPanelContent: {
+    padding: Spacing.lg,
+  },
+  panelTitle: {
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.semiBold,
+    color: Colors.light.text,
+    marginBottom: Spacing.sm,
+  },
+  panelHint: {
+    fontSize: FontSize.sm,
+    color: Colors.light.muted,
+    marginBottom: Spacing.xl,
+  },
+  photoActions: {
+    gap: Spacing.md,
+  },
+  photoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.light.primary,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  photoButtonText: {
+    color: Colors.light.background,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+  },
+
+  // Image preview
+  imagePreviewContainer: {
+    position: 'relative',
+    marginBottom: Spacing.lg,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 300,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.light.border,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: Spacing.sm,
+    right: Spacing.sm,
+    backgroundColor: Colors.light.background,
+    borderRadius: 50,
+  },
+
+  // Analyze button
+  analyzeButton: {
+    backgroundColor: Colors.light.primary,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  analyzeButtonText: {
+    color: Colors.light.background,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semiBold,
+  },
+
+  // Results
+  resultCard: {
+    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    marginBottom: Spacing.lg,
+  },
+  resultTitle: {
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semiBold,
+    color: Colors.light.text,
+    marginBottom: Spacing.sm,
+  },
+  confidenceText: {
+    fontSize: FontSize.sm,
+    color: Colors.light.muted,
+    marginBottom: Spacing.md,
+  },
+  productImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
+    backgroundColor: Colors.light.border,
+  },
+  productName: {
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semiBold,
+    color: Colors.light.text,
+    marginBottom: Spacing.xs,
+  },
+  productBrand: {
+    fontSize: FontSize.md,
+    color: Colors.light.muted,
+    marginBottom: Spacing.xs,
+  },
+  productQuantity: {
+    fontSize: FontSize.sm,
+    color: Colors.light.muted,
+    marginBottom: Spacing.md,
+  },
+  nutriScoreBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    marginBottom: Spacing.md,
+  },
+  nutriScoreText: {
+    color: Colors.light.background,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.bold,
+  },
+  resultActions: {
+    gap: Spacing.sm,
+  },
+  resultButton: {
+    backgroundColor: Colors.light.background,
+    borderWidth: 1,
+    borderColor: Colors.light.primary,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
   },
+  resultButtonText: {
+    color: Colors.light.primary,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+  },
+
+  // Candidates
+  candidatesContainer: {
+    marginBottom: Spacing.lg,
+  },
+  candidatesHint: {
+    fontSize: FontSize.sm,
+    color: Colors.light.muted,
+    marginBottom: Spacing.md,
+  },
+  candidateCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  candidateImage: {
+    width: 60,
+    height: 60,
+    borderRadius: BorderRadius.sm,
+    marginRight: Spacing.md,
+    backgroundColor: Colors.light.border,
+  },
+  candidateInfo: {
+    flex: 1,
+  },
+  candidateName: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+    color: Colors.light.text,
+  },
+  candidateBrand: {
+    fontSize: FontSize.sm,
+    color: Colors.light.muted,
+    marginTop: Spacing.xs,
+  },
+  candidateConfidence: {
+    fontSize: FontSize.xs,
+    color: Colors.light.primary,
+    marginTop: Spacing.xs,
+  },
+
+  // No match
+  noMatchContainer: {
+    alignItems: 'center',
+    padding: Spacing.xl,
+    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  noMatchTitle: {
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.semiBold,
+    color: Colors.light.text,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  noMatchText: {
+    fontSize: FontSize.sm,
+    color: Colors.light.muted,
+    textAlign: 'center',
+    marginBottom: Spacing.lg,
+  },
+  noMatchActions: {
+    width: '100%',
+    gap: Spacing.sm,
+  },
+  switchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.light.primary,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  switchButtonText: {
+    color: Colors.light.background,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+  },
+  retryButton: {
+    backgroundColor: Colors.light.background,
+    borderWidth: 1,
+    borderColor: Colors.light.primary,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  retryButtonText: {
+    color: Colors.light.primary,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
+  },
+
+  // Modal
   modalContainer: {
     flex: 1,
     backgroundColor: Colors.light.background,
@@ -549,7 +1124,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
+    fontWeight: FontWeight.semiBold,
     color: Colors.light.text,
   },
   modalContent: {
@@ -557,50 +1132,37 @@ const styles = StyleSheet.create({
   },
   modalScrollContent: {
     padding: Spacing.lg,
-    paddingBottom: 100,
   },
   productHeader: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
-  productName: {
+  productNameModal: {
     fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.semiBold,
     color: Colors.light.text,
     marginBottom: Spacing.xs,
   },
-  productBrand: {
-    fontSize: FontSize.lg,
+  productBrandModal: {
+    fontSize: FontSize.md,
     color: Colors.light.muted,
   },
   section: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   sectionTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.semiBold,
     color: Colors.light.text,
     marginBottom: Spacing.md,
   },
-  nutriScoreBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-  },
-  nutriScoreText: {
-    color: Colors.light.background,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-  },
   nutrimentsList: {
-    backgroundColor: Colors.light.card,
+    backgroundColor: Colors.light.backgroundSecondary,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
   },
   nutrimentRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,
@@ -612,43 +1174,7 @@ const styles = StyleSheet.create({
   nutrimentValue: {
     fontSize: FontSize.md,
     fontWeight: FontWeight.medium,
-    color: Colors.light.text,
-  },
-  ingredientsText: {
-    fontSize: FontSize.md,
-    color: Colors.light.text,
-    lineHeight: 20,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  allergenTag: {
-    backgroundColor: Colors.light.error + '20',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.sm,
-    marginRight: Spacing.xs,
-    marginBottom: Spacing.xs,
-  },
-  allergenText: {
-    color: Colors.light.error,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    textTransform: 'capitalize',
-  },
-  categoryTag: {
-    backgroundColor: Colors.light.card,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.sm,
-    marginRight: Spacing.xs,
-    marginBottom: Spacing.xs,
-  },
-  categoryText: {
-    color: Colors.light.text,
-    fontSize: FontSize.sm,
-    textTransform: 'capitalize',
+    color: Colors.light.primary,
   },
   modalActions: {
     padding: Spacing.lg,
@@ -657,13 +1183,13 @@ const styles = StyleSheet.create({
   },
   scanAgainButton: {
     backgroundColor: Colors.light.primary,
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
   },
-  scanAgainButtonText: {
+  scanAgainText: {
     color: Colors.light.background,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.semibold,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.medium,
   },
 });
